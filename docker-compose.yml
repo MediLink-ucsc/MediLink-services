@@ -6,7 +6,7 @@ services:
     container_name: postgres
     environment:
       POSTGRESQL_USERNAME: admin
-      POSTGRESQL_PASSWORD: cantremember
+      POSTGRESQL_PASSWORD: medilink
       POSTGRES_DB: medilink
     ports:
       - "5432:5432"
@@ -17,7 +17,7 @@ services:
     image: redis/redis-stack:6.2.6-v19
     container_name: redis
     environment:
-      REDIS_ARGS: "--requirepass cantremember"
+      REDIS_ARGS: "--requirepass medilink"
     ports:
       - "6379:6379"
       - "8001:8001"
