@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import pythonService from "../services/pythonService";
+import pythonService from "../services/python.service";
 
 interface ExtractRequest extends Request {
   file?: Express.Multer.File;

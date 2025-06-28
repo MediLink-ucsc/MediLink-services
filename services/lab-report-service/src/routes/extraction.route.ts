@@ -1,6 +1,6 @@
 import express from "express";
-import extractionController from "../controllers/extractionController";
-import upload from "../middleware/upload";
+import extractionController from "../controllers/extraction.controller";
+import upload from "../middleware/upload.middleware";
 
 const extractionRouter = express.Router();
 

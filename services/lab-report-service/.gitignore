@@ -7,7 +7,7 @@ dist
 notes.md
 
 # uploads
-# uploads/
+uploads/
 
 # Python cache files
 __pycache__/
