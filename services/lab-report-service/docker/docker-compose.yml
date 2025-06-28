@@ -1,0 +1,15 @@
+services:
+  lab-report-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../uploads:/app/uploads
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - POPPLER_PATH=/usr/bin
+      - TESSERACT_PATH=/usr/bin/tesseract
+    restart: unless-stopped

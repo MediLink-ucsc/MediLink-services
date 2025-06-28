@@ -8,8 +8,9 @@ interface Config {
   LOG_LEVEL: string;
   REDIS_URL: string;
   AUTH_SERVICE_URL: string;
-  ACCOUNTS_SERVICE_URL: string;
-  TRANSACTION_SERVICE_URL: string;
+  INSTITUTION_SERVICE_URL: string;
+  PATIENT_RECORD_SERVICE_URL: string;
+  LAB_REPORT_SERVICE_URL: string;
   NODE_ENV: string;
 }
 
@@ -24,9 +25,11 @@ export const config: Config = {
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   REDIS_URL: process.env.REDIS_URL || 'redis://localhost:6379',
   AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
-  ACCOUNTS_SERVICE_URL:
-    process.env.ACCOUNTS_SERVICE_URL || 'http://localhost:3002',
-  TRANSACTION_SERVICE_URL:
-    process.env.TRANSACTION_SERVICE_URL || 'http://localhost:3003',
+  INSTITUTION_SERVICE_URL:
+    process.env.INSTITUTION_SERVICE_URL || 'http://localhost:3002',
+  PATIENT_RECORD_SERVICE_URL:
+    process.env.PATIENT_RECORD_SERVICE_URL || 'http://localhost:3003',
+  LAB_REPORT_SERVICE_URL:
+    process.env.LAB_REPORT_SERVICE_URL || 'http://localhost:3004',
   NODE_ENV: process.env.NODE_ENV || 'development',
 };
