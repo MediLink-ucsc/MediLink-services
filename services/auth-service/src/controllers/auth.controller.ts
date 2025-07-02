@@ -9,6 +9,16 @@ const registerSchema = z.object({
   password: z.string().min(6).max(100),
 });
 
+const registerPatientSchema = z.object({
+  firstName: z.string().min(3).max(50),
+  lastName: z.string().min(3).max(50),
+  email: z.string().email(),
+  password: z.string().min(6).max(100),
+  age: z.number().min(0),
+  gender: z.string(),
+  contactNumber: z.string(),
+});
+
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
@@ -21,24 +31,27 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
-  async register(req: Request, res: Response): Promise<any> {
-    const { firstName, lastName, email, password } = registerSchema.parse(
+  async patientRegister(req: Request, res: Response): Promise<any> {
+    const { firstName, lastName, email, password, age, gender, contactNumber } = registerPatientSchema.parse(
       req.body,
     );
 
-    const user = await this.authService.register({
+    const user = await this.authService.patientRegister({
       firstName,
       lastName,
       email,
       password,
+      age,
+      gender,
+      contactNumber,
     });
 
     return res.status(201).json(user);
   }
 
-  async login(req: Request, res: Response): Promise<any> {
+  async patientLogin(req: Request, res: Response): Promise<any> {
     const { email, password } = loginSchema.parse(req.body);
-    const { token } = await this.authService.login(email, password);
+    const { token } = await this.authService.patientLogin(email, password);
 
     return res.status(200).json({ token });
   }

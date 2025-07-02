@@ -22,6 +22,9 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  @Column({ default: 'PATIENT' })
+  role: string;
+
   @OneToOne(() => Credential, (credential) => credential.user)
   credential: Credential;
 

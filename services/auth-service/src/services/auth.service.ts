@@ -8,26 +8,32 @@ import redis from '../config/redis';
 import { Repository } from 'typeorm';
 import { Credential } from '../entity/credential.entity';
 import { User } from '../entity/user.entity';
+import { Patient } from '../entity/patient.entity';
 import { createError } from '../utils';
 import { publishUserRegistered } from '../events/producers/userRegistered.producer';
 
-interface RegisterDto {
+interface RegisterPatientDto {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  age: number;
+  gender: string;
+  contactNumber: string;
 }
 
 class AuthService {
   credentialRepository: Repository<Credential>;
   userRepository: Repository<User>;
+  patientRepository: Repository<Patient>;
 
   constructor() {
     this.credentialRepository = AppDataSource.getRepository(Credential);
     this.userRepository = AppDataSource.getRepository(User);
+    this.patientRepository = AppDataSource.getRepository(Patient);
   }
 
-  async register({ firstName, lastName, email, password }: RegisterDto) {
+  async patientRegister({ firstName, lastName, email, password, age, gender, contactNumber }: RegisterPatientDto) {
     const existing = await this.credentialRepository.findOneBy({ email });
 
     if (existing) {
@@ -40,6 +46,7 @@ class AuthService {
     user.firstName = firstName;
     user.lastName = lastName;
     user.email = email;
+    user.role = 'PATIENT';
 
     await this.userRepository.save(user);
 
@@ -50,15 +57,23 @@ class AuthService {
 
     await this.credentialRepository.save(credential);
 
+    const patient = new Patient();
+    patient.user = user;
+    patient.age = age;
+    patient.gender = gender;
+    patient.contactNumber = contactNumber;
+
+    await this.patientRepository.save(patient);
+
     await publishUserRegistered({
       key: user.id?.toString(),
-      value: user,
+      value: { ...user, patient },
     });
 
     return user;
   }
 
-  async login(email: string, password: string) {
+  async patientLogin(email: string, password: string) {
     const credential = await this.credentialRepository.findOne({
       where: { email },
       relations: ['user'],
@@ -77,12 +92,17 @@ class AuthService {
       throw createError('invalid credentials', 401);
     }
 
+    if (credential.user.role !== 'PATIENT') {
+    throw createError('not authorized as patient', 403);
+    }
+
     const token = jwt.sign(
       {
         id: credential.user.id,
         email: credential.email,
         firstName: credential.user.firstName,
         lastName: credential.user.lastName,
+        role: credential.user.role,
       },
       config.JWT_SECRET,
       { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
@@ -99,6 +119,7 @@ class AuthService {
       firstName: credential.user.firstName,
       lastName: credential.user.lastName,
       email: credential.email,
+      role: credential.user.role,
     };
   }
 
