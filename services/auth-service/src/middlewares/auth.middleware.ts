@@ -3,7 +3,12 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import redis from '../config/redis';
 
-const publicRoutes = ['/api/v1/auth/patient/login', '/api/v1/auth/patient/register', '/api/v1/auth/medvaultpro/login', '/api/v1/auth/medvaultpro/doctor/register'];
+const publicRoutes = ['/api/v1/auth/patient/login',
+    '/api/v1/auth/patient/register',
+    '/api/v1/auth/medvaultpro/login',
+    '/api/v1/auth/medvaultpro/doctor/register',
+    '/api/v1/auth/medvaultpro/labassistant/register',
+    '/api/v1/auth/medvaultpro/medicalstaff/register',];
 
 export const verifyToken = (
   req: Request,
