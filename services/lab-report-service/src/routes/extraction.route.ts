@@ -6,7 +6,7 @@ const extractionRouter = express.Router();
 
 // Route to handle extraction requests with file upload
 extractionRouter.post(
-  "/extract",
+  "/",
   upload.single("file"),
   extractionController.extractData
 );
