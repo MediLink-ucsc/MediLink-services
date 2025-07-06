@@ -32,14 +32,6 @@ export class LabResult {
   })
   createdAt: Date;
 
-  @Column({
-    name: "updatedAt",
-    type: "timestamp",
-    default: () => "CURRENT_TIMESTAMP",
-    onUpdate: "CURRENT_TIMESTAMP",
-  })
-  updatedAt: Date;
-
   @Column({ name: "status", default: "processed" })
   status: string; // processed, failed, pending
 }
