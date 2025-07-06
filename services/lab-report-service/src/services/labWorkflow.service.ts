@@ -3,6 +3,7 @@ import pythonService from "./python.service";
 import { CreateLabSampleDto } from "../dto/labSample.dto";
 import { LabSample } from "../entity/labSample.entity";
 import { LabResult } from "../entity/labResult.entity";
+import { publishLabSampleCreated } from "../events/producers/labSampleCreated.producer";
 
 export class LabWorkflowService {
   /**
@@ -16,6 +17,12 @@ export class LabWorkflowService {
       console.log(
         ` Lab sample created with ID: ${labSample.id} for patient: ${labSample.patientId}`
       );
+
+      await publishLabSampleCreated({
+        key: labSample.id.toString(),
+        value: labSample,
+      });
+
       return labSample;
     } catch (error) {
       console.error(" Failed to create lab sample:", error);

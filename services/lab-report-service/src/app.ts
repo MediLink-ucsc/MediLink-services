@@ -5,6 +5,7 @@ import express, { Application } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import logger from "./config/logger";
+import init from "./init";
 import { config } from "./config";
 import {
   extractionRouter,
@@ -31,6 +32,7 @@ app.use("/api/v1/labReport/workflow", labWorkflowRouter);
 // Start server
 AppDataSource.initialize()
   .then(async () => {
+    await init();
     logger.info("Database connection established successfully");
 
     app.listen(config.PORT, () => {
