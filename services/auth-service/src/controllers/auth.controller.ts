@@ -2,27 +2,26 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import AuthService from '../services/auth.service';
 
-const registerSchema = z.object({
-  firstName: z.string().min(3).max(50),
-  lastName: z.string().min(3).max(50),
-  email: z.string().email(),
-  password: z.string().min(6).max(100),
-});
+// const registerSchema = z.object({
+//   firstName: z.string().min(3).max(50),
+//   lastName: z.string().min(3).max(50),
+//   username: z.string().email(),
+//   password: z.string().min(6).max(100),
+// });
 
 const registerPatientSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
-  email: z.string().email(),
+  username: z.string(),
   password: z.string().min(6).max(100),
   age: z.number().min(0),
   gender: z.string(),
-  contactNumber: z.string(),
 });
 
 const registerDoctorSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
-  email: z.string().email(),
+  username: z.string().email(),
   password: z.string().min(6).max(100),
   licenseNumber: z.string().min(3).max(50),
   specialty: z.string().min(3).max(100),
@@ -37,7 +36,7 @@ const registerDoctorSchema = z.object({
 const registerLabAssistantSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
-  email: z.string().email(),
+  username: z.string().email(),
   password: z.string().min(6).max(100),
   qualification: z.string().min(2).max(100),
   department: z.string().min(2).max(100),
@@ -54,7 +53,7 @@ const registerLabAssistantSchema = z.object({
 const registerMedicalStaffSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
-  email: z.string().email(),
+  username: z.string().email(),
   password: z.string().min(6).max(100),
   position: z.string().min(2).max(100), 
   qualification: z.string().min(2).max(100).optional(),
@@ -68,12 +67,12 @@ const registerMedicalStaffSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  username: z.string(),
   password: z.string(),
 });
 
 const loginWithRoleSchema = z.object({
-  email: z.string().email(),
+  username: z.string().email(),
   password: z.string(),
   role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF']), 
 });
@@ -86,18 +85,17 @@ export class AuthController {
   }
 
   async patientRegister(req: Request, res: Response): Promise<any> {
-    const { firstName, lastName, email, password, age, gender, contactNumber } = registerPatientSchema.parse(
+    const { firstName, lastName, username, password, age, gender } = registerPatientSchema.parse(
       req.body,
     );
 
     const user = await this.authService.patientRegister({
       firstName,
       lastName,
-      email,
+      username,
       password,
       age,
       gender,
-      contactNumber,
     });
 
     return res.status(201).json(user);
@@ -107,12 +105,11 @@ export class AuthController {
   const {
     firstName,
     lastName,
-    email,
+    username,
     password,
     licenseNumber,
     specialty,
     yearsOfExperience,
-    contactNumber,
     hospitalId,
     hospitalName,
     gender,
@@ -122,12 +119,11 @@ export class AuthController {
   const doctor = await this.authService.doctorRegister({
     firstName,
     lastName,
-    email,
+    username,
     password,
     licenseNumber,
     specialty,
     yearsOfExperience,
-    contactNumber,
     hospitalId,
     hospitalName,
     gender,
@@ -141,12 +137,11 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
   const {
     firstName,
     lastName,
-    email,
+    username,
     password,
     qualification,
     department,
     yearsOfExperience,
-    contactNumber,
     labId,
     labName,
     hospitalId,
@@ -158,12 +153,11 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
   const user = await this.authService.labAssistantRegister({
     firstName,
     lastName,
-    email,
+    username,
     password,
     qualification,
     department,
     yearsOfExperience,
-    contactNumber,
     labId,
     labName,
     hospitalId,
@@ -179,13 +173,12 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
   const {
     firstName,
     lastName,
-    email,
+    username,
     password,
     position,
     qualification,
     department,
     yearsOfExperience,
-    contactNumber,
     hospitalId,
     hospitalName,
     gender,
@@ -195,13 +188,12 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
   const medicalStaff = await this.authService.medicalStaffRegister({
     firstName,
     lastName,
-    email,
+    username,
     password,
     position,
     qualification,
     department,
     yearsOfExperience,
-    contactNumber,
     hospitalId,
     hospitalName,
     gender,
@@ -214,20 +206,23 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
 
 
   async patientLogin(req: Request, res: Response): Promise<any> {
-    const { email, password } = loginSchema.parse(req.body);
-    const { token } = await this.authService.patientLogin(email, password);
+    const { username, password } = loginSchema.parse(req.body);
+    const { token } = await this.authService.patientLogin(username, password);
 
     return res.status(200).json({ token });
   }
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
-  const { email, password, role } = loginWithRoleSchema.parse(req.body);
-  const result = await this.authService.medvaultproLogin(email, password, role);
+  const { username, password, role } = loginWithRoleSchema.parse(req.body);
+  const result = await this.authService.medvaultproLogin(username, password, role);
 
   return res.status(200).json(result);
 }
 
   async logout(req: Request, res: Response): Promise<any> {
+    console.log('Req body:', req.body);
+    console.log('User ID:', req.userId);
+    console.log('Token:', req.token);
     await this.authService.logout(req.userId!, req.token);
 
     return res.status(200).json({ message: 'logged out successfully' });

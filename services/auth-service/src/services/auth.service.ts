@@ -18,23 +18,21 @@ import { publishUserRegistered } from '../events/producers/userRegistered.produc
 interface RegisterPatientDto {
   firstName: string;
   lastName: string;
-  email: string;
+  username: string;
   password: string;
   age: number;
   gender: string;
-  contactNumber: string;
 }
 
 interface RegisterDoctorDto {
   firstName: string;
   lastName: string;
-  email: string;
+  username: string;
   password: string;
 
   licenseNumber: string;
   specialty: string;
   yearsOfExperience: number;
-  contactNumber: string;
 
   hospitalId?: number;
   hospitalName?: string;
@@ -45,13 +43,12 @@ interface RegisterDoctorDto {
 interface RegisterLabAssistantDto {
   firstName: string;
   lastName: string;
-  email: string;
+  username: string;
   password: string;
 
   qualification: string;
   department: string;
   yearsOfExperience: number;
-  contactNumber: string;
 
   labId?: number;
   labName?: string;
@@ -64,14 +61,13 @@ interface RegisterLabAssistantDto {
 interface RegisterMedicalStaffDto {
   firstName: string;
   lastName: string;
-  email: string;
+  username: string;
   password: string;
 
   position: string;            
   qualification?: string;
   department?: string;
   yearsOfExperience: number;
-  contactNumber: string;
 
   hospitalId?: number;
   hospitalName?: string;
@@ -98,11 +94,11 @@ class AuthService {
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
   }
 
-  async patientRegister({ firstName, lastName, email, password, age, gender, contactNumber }: RegisterPatientDto) {
-    const existing = await this.credentialRepository.findOneBy({ email });
+  async patientRegister({ firstName, lastName, username, password, age, gender }: RegisterPatientDto) {
+    const existing = await this.credentialRepository.findOneBy({ username });
 
     if (existing) {
-      throw createError('email already in use', 400);
+      throw createError('contact number already in use', 400);
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -110,13 +106,13 @@ class AuthService {
     const user = new User();
     user.firstName = firstName;
     user.lastName = lastName;
-    user.email = email;
+    user.username = username;
     user.role = 'PATIENT';
 
     await this.userRepository.save(user);
 
     const credential = new Credential();
-    credential.email = email;
+    credential.username = username;
     credential.passwordHash = passwordHash;
     credential.user = user;
 
@@ -126,7 +122,6 @@ class AuthService {
     patient.user = user;
     patient.age = age;
     patient.gender = gender;
-    patient.contactNumber = contactNumber;
 
     await this.patientRepository.save(patient);
 
@@ -141,18 +136,17 @@ class AuthService {
   async doctorRegister({
   firstName,
   lastName,
-  email,
+  username,
   password,
   licenseNumber,
   specialty,
   yearsOfExperience,
-  contactNumber,
   hospitalId,
   hospitalName,
   gender,
   dateOfBirth,
 }: RegisterDoctorDto) {
-  const existing = await this.credentialRepository.findOneBy({ email });
+  const existing = await this.credentialRepository.findOneBy({ username });
   if (existing) {
     throw createError('email already in use', 400);
   }
@@ -162,13 +156,13 @@ class AuthService {
   const user = new User();
   user.firstName = firstName;
   user.lastName = lastName;
-  user.email = email;
+  user.username = username;
   user.role = 'DOCTOR';
 
   await this.userRepository.save(user);
 
   const credential = new Credential();
-  credential.email = email;
+  credential.username = username;
   credential.passwordHash = passwordHash;
   credential.user = user;
 
@@ -179,7 +173,6 @@ class AuthService {
   doctor.licenseNumber = licenseNumber;
   doctor.specialty = specialty;
   doctor.yearsOfExperience = yearsOfExperience;
-  doctor.contactNumber = contactNumber;
   if (hospitalId !== undefined) {
     doctor.hospitalId = hospitalId;
   }
@@ -202,12 +195,11 @@ class AuthService {
   async labAssistantRegister({
   firstName,
   lastName,
-  email,
+  username,
   password,
   qualification,
   department,
   yearsOfExperience,
-  contactNumber,
   labId,
   labName,
   hospitalId,
@@ -215,7 +207,7 @@ class AuthService {
   gender,
   dateOfBirth,
 }: RegisterLabAssistantDto) {
-  const existing = await this.credentialRepository.findOneBy({ email });
+  const existing = await this.credentialRepository.findOneBy({ username });
 
   if (existing) {
     throw createError('email already in use', 400);
@@ -226,13 +218,13 @@ class AuthService {
   const user = new User();
   user.firstName = firstName;
   user.lastName = lastName;
-  user.email = email;
+  user.username = username;
   user.role = 'LAB_ASSISTANT';
 
   await this.userRepository.save(user);
 
   const credential = new Credential();
-  credential.email = email;
+  credential.username = username;
   credential.passwordHash = passwordHash;
   credential.user = user;
 
@@ -243,7 +235,6 @@ class AuthService {
   labAssistant.qualification = qualification;
   labAssistant.department = department;
   labAssistant.yearsOfExperience = yearsOfExperience;
-  labAssistant.contactNumber = contactNumber;
   if (labId !== undefined) {
     labAssistant.labId = labId;
   }
@@ -266,19 +257,18 @@ class AuthService {
   async medicalStaffRegister({
   firstName,
   lastName,
-  email,
+  username,
   password,
   position,
   qualification,
   department,
   yearsOfExperience,
-  contactNumber,
   hospitalId,
   hospitalName,
   gender,
   dateOfBirth,
 }: RegisterMedicalStaffDto) {
-  const existing = await this.credentialRepository.findOneBy({ email });
+  const existing = await this.credentialRepository.findOneBy({ username });
 
   if (existing) {
     throw createError('email already in use', 400);
@@ -289,13 +279,13 @@ class AuthService {
   const user = new User();
   user.firstName = firstName;
   user.lastName = lastName;
-  user.email = email;
+  user.username = username;
   user.role = 'MEDICAL_STAFF';
 
   await this.userRepository.save(user);
 
   const credential = new Credential();
-  credential.email = email;
+  credential.username = username;
   credential.passwordHash = passwordHash;
   credential.user = user;
 
@@ -307,7 +297,6 @@ class AuthService {
   medicalStaff.qualification = qualification ?? '';
   medicalStaff.department = department ?? '';
   medicalStaff.yearsOfExperience = yearsOfExperience;
-  medicalStaff.contactNumber = contactNumber;
   medicalStaff.hospitalId = hospitalId ?? 0;
   medicalStaff.hospitalName = hospitalName ?? '';
   medicalStaff.gender = gender ?? '';
@@ -326,9 +315,9 @@ class AuthService {
 
 
 
-  async patientLogin(email: string, password: string) {
+  async patientLogin(username: string, password: string) {
     const credential = await this.credentialRepository.findOne({
-      where: { email },
+      where: { username },
       relations: ['user'],
     });
 
@@ -352,7 +341,7 @@ class AuthService {
     const token = jwt.sign(
       {
         id: credential.user.id,
-        email: credential.email,
+        username: credential.username,
         firstName: credential.user.firstName,
         lastName: credential.user.lastName,
         role: credential.user.role,
@@ -371,13 +360,13 @@ class AuthService {
       token,
       firstName: credential.user.firstName,
       lastName: credential.user.lastName,
-      email: credential.email,
+      username: credential.username,
       role: credential.user.role,
     };
   }
-  async medvaultproLogin(email: string, password: string, role: string) {
+  async medvaultproLogin(username: string, password: string, role: string) {
   const credential = await this.credentialRepository.findOne({
-    where: { email },
+    where: { username },
     relations: ['user'],
   });
 
@@ -398,7 +387,6 @@ class AuthService {
     throw createError(`not authorized as ${role.toLowerCase()}`, 403);
   }
 
-  // Get hospitalId dynamically
   let hospitalId: number | null = null;
 
   if (role === 'DOCTOR') {
@@ -426,11 +414,11 @@ class AuthService {
   const token = jwt.sign(
     {
       id: credential.user.id,
-      email: credential.email,
+      username: credential.username,
       firstName: credential.user.firstName,
       lastName: credential.user.lastName,
       role: credential.user.role,
-      hospitalId: hospitalId,  // added to JWT
+      hospitalId: hospitalId,  
     },
     config.JWT_SECRET,
     { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
@@ -446,7 +434,7 @@ class AuthService {
     token,
     firstName: credential.user.firstName,
     lastName: credential.user.lastName,
-    email: credential.email,
+    username: credential.username,
     role: credential.user.role,
     hospitalId,
   };

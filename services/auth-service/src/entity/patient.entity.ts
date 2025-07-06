@@ -24,9 +24,6 @@ export class Patient {
   @Column()
   gender: string;
 
-  @Column({ name: 'contact_number' })
-  contactNumber: string;
-
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

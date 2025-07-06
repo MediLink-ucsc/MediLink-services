@@ -27,8 +27,6 @@ export class Doctor {
   @Column({ name: 'years_of_experience' })
   yearsOfExperience: number;
 
-  @Column({ name: 'contact_number' })
-  contactNumber: string;
 
   @Column({ name: 'hospital_id', nullable: true })
   hospitalId: number;

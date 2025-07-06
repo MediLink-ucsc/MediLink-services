@@ -30,9 +30,6 @@ export class MedicalStaff {
   @Column({ name: 'years_of_experience', type: 'int', default: 0 })
   yearsOfExperience: number;
 
-  @Column({ name: 'contact_number' })
-  contactNumber: string;
-
   @Column({ name: 'hospital_id', nullable: true })
   hospitalId: number;
 

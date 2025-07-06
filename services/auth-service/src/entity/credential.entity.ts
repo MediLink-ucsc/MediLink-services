@@ -16,7 +16,7 @@ export class Credential {
   id: number;
 
   @Column({ unique: true })
-  email: string;
+  username: string;
 
   @Column({ name: 'password_hash' })
   passwordHash: string;

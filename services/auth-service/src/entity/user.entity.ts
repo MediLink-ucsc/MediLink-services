@@ -20,7 +20,7 @@ export class User {
   lastName: string;
 
   @Column({ unique: true })
-  email: string;
+  username: string;
 
   @Column({ default: 'PATIENT' })
   role: string;
