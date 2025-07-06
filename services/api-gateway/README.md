@@ -18,7 +18,7 @@ This is the API Gateway service for the medilink microservices architecture. It 
 
 - Node.js (v22 or higher)
 - Redis server
-- Access to other microservices (Auth, Accounts, Transaction services)
+- Access to other microservices (Auth, Institution, Transaction services)
 
 ## Installation
 
@@ -49,7 +49,7 @@ cp .env.example .env
 | LOG_LEVEL               | Logging level                            | debug                  |
 | REDIS_URL               | Redis connection URL                     | redis://localhost:6379 |
 | AUTH_SERVICE_URL        | Auth service URL                         | http://localhost:3001  |
-| ACCOUNTS_SERVICE_URL    | Accounts service URL                     | http://localhost:3002  |
+| INSTITUTION_SERVICE_URL | institution service URL                  | http://localhost:3002  |
 | TRANSACTION_SERVICE_URL | Transaction service URL                  | http://localhost:3003  |
 
 ## Available Scripts

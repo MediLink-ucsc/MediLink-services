@@ -14,10 +14,10 @@ class ServiceProxy {
       timeout: 5000,
     },
     {
-      path: '/api/v1/accounts/',
-      url: config.ACCOUNTS_SERVICE_URL,
-      pathRewrite: { '^/': '/api/v1/accounts/' },
-      name: 'account-service',
+      path: '/api/v1/institutions/',
+      url: config.INSTITUTION_SERVICE_URL,
+      pathRewrite: { '^/': '/api/v1/institutions/' },
+      name: 'institution-service',
     },
     {
       path: '/api/v1/transactions/',
