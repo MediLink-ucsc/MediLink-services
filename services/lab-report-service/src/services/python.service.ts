@@ -37,12 +37,12 @@ class PythonService {
 
       pythonProcess.stderr?.on("data", (data: Buffer) => {
         errorString += data.toString();
-        console.error(`❌ Python stderr: ${data}`);
+        console.error(` Python stderr: ${data}`);
       });
 
       pythonProcess.on("close", (code: number | null) => {
-        console.log(`✅ Python process exited with code ${code}`);
-        console.log(`📄 Python stdout: ${dataString}`);
+        console.log(` Python process exited with code ${code}`);
+        console.log(` Python stdout: ${dataString}`);
 
         if (code !== 0) {
           reject(
@@ -54,14 +54,14 @@ class PythonService {
         try {
           const result: ExtractedData = JSON.parse(dataString);
           if (result.error) {
-            console.error(`❌ Python script error: ${result.error}`);
+            console.error(` Python script error: ${result.error}`);
             reject(new Error(result.error));
           } else {
             console.log("🎯 EXTRACTED DATA:", JSON.stringify(result, null, 2));
             resolve(result);
           }
         } catch (parseError: any) {
-          console.error("❌ Failed to parse Python output:", dataString);
+          console.error(" Failed to parse Python output:", dataString);
           reject(
             new Error(`Failed to parse Python output: ${parseError.message}`)
           );
@@ -69,7 +69,7 @@ class PythonService {
       });
 
       pythonProcess.on("error", (error: Error) => {
-        console.error("❌ Failed to start Python process:", error);
+        console.error(" Failed to start Python process:", error);
         reject(new Error(`Failed to execute Python script: ${error.message}`));
       });
     });

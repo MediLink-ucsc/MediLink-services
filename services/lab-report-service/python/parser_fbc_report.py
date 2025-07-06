@@ -23,7 +23,7 @@ class FBCReportParser:
             match = re.search(pattern, self.text, re.IGNORECASE)
             if match:
                 report_data['Patient'] = match.group(1).strip()
-                print(f"✅ Found Patient: {match.group(1).strip()}", file=__import__('sys').stderr)
+                print(f" Found Patient: {match.group(1).strip()}", file=__import__('sys').stderr)
                 break
         
         # Date patterns - handle different formats
@@ -38,7 +38,7 @@ class FBCReportParser:
             match = re.search(pattern, self.text, re.IGNORECASE)
             if match and 'Birth' not in pattern:  # Skip DOB
                 report_data['Date'] = match.group(1).strip()
-                print(f"✅ Found Date: {match.group(1).strip()}", file=__import__('sys').stderr)
+                print(f" Found Date: {match.group(1).strip()}", file=__import__('sys').stderr)
                 break
         
         # Doctor patterns
@@ -52,7 +52,7 @@ class FBCReportParser:
             match = re.search(pattern, self.text, re.IGNORECASE)
             if match:
                 report_data['Doctor'] = match.group(1).strip()
-                print(f"✅ Found Doctor: {match.group(1).strip()}", file=__import__('sys').stderr)
+                print(f" Found Doctor: {match.group(1).strip()}", file=__import__('sys').stderr)
                 break
         
         # Laboratory patterns
@@ -69,7 +69,7 @@ class FBCReportParser:
                     report_data['Laboratory'] = 'Central Medical Laboratory'
                 else:
                     report_data['Laboratory'] = match.group(1).strip()
-                print(f"✅ Found Laboratory: {report_data['Laboratory']}", file=__import__('sys').stderr)
+                print(f" Found Laboratory: {report_data['Laboratory']}", file=__import__('sys').stderr)
                 break
         
         # Blood parameters - Enhanced patterns for tabular data
@@ -173,10 +173,10 @@ class FBCReportParser:
                         value += ' mm/hr'
                     
                     report_data[param] = value
-                    print(f"✅ Found {param}: {value}", file=__import__('sys').stderr)
+                    print(f" Found {param}: {value}", file=__import__('sys').stderr)
                     break
                 else:
-                    print(f"❌ Not found {param} with pattern: {pattern}", file=__import__('sys').stderr)
+                    print(f" Not found {param} with pattern: {pattern}", file=__import__('sys').stderr)
         
         # Try to extract from tabular format (looking for Result column)
         if len(report_data) < 5:  # If we didn't find much, try tabular extraction

@@ -54,7 +54,7 @@ def extract(file_path, file_format):
             extracted_data = PatientDetailsParser(document_text).parse()
         elif file_format == "lab_report":  
             extracted_data = LabReportParser(document_text).parse()
-        elif file_format == "fbc_report":
+        elif file_format == "fbc":
             extracted_data = FBCReportParser(document_text).parse()
         else:
             raise Exception(f"Invalid file format: {file_format}")

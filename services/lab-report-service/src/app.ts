@@ -6,7 +6,12 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import logger from "./config/logger";
 import { config } from "./config";
-import { extractionRouter, indexRouter, reportRouter } from "./routes";
+import {
+  extractionRouter,
+  indexRouter,
+  reportRouter,
+  labWorkflowRouter,
+} from "./routes";
 import { AppDataSource } from "./data-source";
 
 const app = express();
@@ -21,6 +26,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/api/v1/labReport/", indexRouter);
 app.use("/api/v1/labReport/extract", extractionRouter);
 app.use("/api/v1/labReport/report", reportRouter);
+app.use("/api/v1/labReport/workflow", labWorkflowRouter);
 
 // Start server
 AppDataSource.initialize()
