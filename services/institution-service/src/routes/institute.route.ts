@@ -6,6 +6,7 @@ const institutionRouter = Router();
 const institutionController = new InstitutionController();
 
 institutionRouter.post('/lab/register', institutionController.labRegister.bind(institutionController));
+institutionRouter.post('/clinic/register', institutionController.clinicRegister.bind(institutionController));
 
 
 export { institutionRouter };

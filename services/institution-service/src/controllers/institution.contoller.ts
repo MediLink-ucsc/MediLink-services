@@ -13,6 +13,17 @@ const registerLabSchema = z.object({
   availableTests: z.string().optional(), 
 });
 
+const registerClinicSchema = z.object({
+  institutionName: z.string().min(3).max(100),
+  contactNumber: z.string().min(7).max(15).optional(),
+  email: z.string().email().optional(),
+  address: z.string().max(255).optional(),
+  registrationNumber: z.string().min(3).max(50),
+  registrationExpiryDate: z.string().optional(),
+  headPhysicianName: z.string().min(3).max(100).optional(),
+  specializations: z.string().optional(),
+});
+
 export class InstitutionController {
   private institutionService: InstitutionService;
 
@@ -44,5 +55,31 @@ export class InstitutionController {
     });
 
     return res.status(201).json(lab);
+  }
+
+  async clinicRegister(req: Request, res: Response): Promise<any> {
+    const {
+      institutionName,
+      contactNumber,
+      email,
+      address,
+      registrationNumber,
+      registrationExpiryDate,
+      headPhysicianName,
+      specializations,
+    } = registerClinicSchema.parse(req.body);
+
+    const clinic = await this.institutionService.clinicRegister({
+      institutionName,
+      contactNumber,
+      email,
+      address,
+      registrationNumber,
+      registrationExpiryDate,
+      headPhysicianName,
+      specializations,
+    });
+
+    return res.status(201).json(clinic);
   }
 }
