@@ -8,7 +8,8 @@ const publicRoutes = ['/api/v1/auth/patient/login',
     '/api/v1/auth/medvaultpro/login',
     '/api/v1/auth/medvaultpro/doctor/register',
     '/api/v1/auth/medvaultpro/labassistant/register',
-    '/api/v1/auth/medvaultpro/medicalstaff/register',];
+    '/api/v1/auth/medvaultpro/medicalstaff/register',
+    '/api/v1/auth/medvaultpro/admin/register',];
 
 export const verifyToken = (
   req: Request,

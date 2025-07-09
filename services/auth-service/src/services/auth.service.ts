@@ -15,6 +15,13 @@ import { MedicalStaff } from '../entity/medicalStaff.entity';
 import { createError } from '../utils';
 import { publishUserRegistered } from '../events/producers/userRegistered.producer';
 
+interface RegisterAdminDto {
+  firstName: string;
+  lastName: string;
+  username: string;
+  password: string;
+}
+
 interface RegisterPatientDto {
   firstName: string;
   lastName: string;
@@ -93,6 +100,44 @@ class AuthService {
     this.labAssistantRepository = AppDataSource.getRepository(LabAssistant);
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
   }
+
+  async adminRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+  }: RegisterAdminDto) {
+    const existing = await this.credentialRepository.findOneBy({ username });
+
+    if (existing) {
+      throw createError('email already in use', 400);
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User();
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.username = username;
+    user.role = 'ADMIN';
+
+    await this.userRepository.save(user);
+
+    const credential = new Credential();
+    credential.username = username;
+    credential.passwordHash = passwordHash;
+    credential.user = user;
+
+    await this.credentialRepository.save(credential);
+
+    await publishUserRegistered({
+      key: user.id?.toString(),
+      value: user,
+    });
+
+    return user;
+  }
+
 
   async patientRegister({ firstName, lastName, username, password, age, gender }: RegisterPatientDto) {
     const existing = await this.credentialRepository.findOneBy({ username });
@@ -364,7 +409,87 @@ class AuthService {
       role: credential.user.role,
     };
   }
-  async medvaultproLogin(username: string, password: string, role: string) {
+//   async medvaultproLogin(username: string, password: string, role: string) {
+//   const credential = await this.credentialRepository.findOne({
+//     where: { username },
+//     relations: ['user'],
+//   });
+
+//   if (!credential) {
+//     throw createError('invalid credentials', 401);
+//   }
+
+//   const isValidPassword = await bcrypt.compare(
+//     password,
+//     credential.passwordHash,
+//   );
+
+//   if (!isValidPassword) {
+//     throw createError('invalid credentials', 401);
+//   }
+
+//   if (credential.user.role !== role) {
+//     throw createError(`not authorized as ${role.toLowerCase()}`, 403);
+//   }
+
+//   let hospitalId: number | null = null;
+
+//   if (role === 'DOCTOR') {
+//     const doctor = await this.doctorRepository.findOne({
+//       where: { user: { id: credential.user.id } },
+//     });
+//     hospitalId = doctor?.hospitalId ?? null;
+//   }
+
+//   if (role === 'LAB_ASSISTANT') {
+//     const labAssistant = await this.labAssistantRepository.findOne({
+//       where: { user: { id: credential.user.id } },
+//     });
+//     hospitalId = labAssistant?.hospitalId ?? null;
+//   }
+
+//   if (role === 'MEDICAL_STAFF') {
+//     const medicalStaff = await this.medicalStaffRepository.findOne({
+//       where: { user: { id: credential.user.id } },
+//     });
+//     hospitalId = medicalStaff?.hospitalId ?? null;
+//   }
+
+//   if (role === 'ADMIN') {
+//     hospitalId = null; 
+//   }
+
+
+//   const token = jwt.sign(
+//     {
+//       id: credential.user.id,
+//       username: credential.username,
+//       firstName: credential.user.firstName,
+//       lastName: credential.user.lastName,
+//       role: credential.user.role,
+//       hospitalId: hospitalId,  
+//     },
+//     config.JWT_SECRET,
+//     { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
+//   );
+
+//   await redis.setex(
+//     `auth:${credential.user.id}:${token}`,
+//     24 * 60 * 60,
+//     'true',
+//   );
+
+//   return {
+//     token,
+//     firstName: credential.user.firstName,
+//     lastName: credential.user.lastName,
+//     username: credential.username,
+//     role: credential.user.role,
+//     hospitalId,
+//   };
+// }
+
+  async medvaultproLogin(username: string, password: string) {
   const credential = await this.credentialRepository.findOne({
     where: { username },
     relations: ['user'],
@@ -383,9 +508,7 @@ class AuthService {
     throw createError('invalid credentials', 401);
   }
 
-  if (credential.user.role !== role) {
-    throw createError(`not authorized as ${role.toLowerCase()}`, 403);
-  }
+  const role = credential.user.role; // get role directly from DB
 
   let hospitalId: number | null = null;
 
@@ -410,6 +533,7 @@ class AuthService {
     hospitalId = medicalStaff?.hospitalId ?? null;
   }
 
+  // ADMIN will keep hospitalId as null
 
   const token = jwt.sign(
     {
@@ -417,28 +541,21 @@ class AuthService {
       username: credential.username,
       firstName: credential.user.firstName,
       lastName: credential.user.lastName,
-      role: credential.user.role,
-      hospitalId: hospitalId,  
+      role,
+      hospitalId,
     },
     config.JWT_SECRET,
     { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
   );
 
-  await redis.setex(
-    `auth:${credential.user.id}:${token}`,
-    24 * 60 * 60,
-    'true',
-  );
-
-  return {
-    token,
-    firstName: credential.user.firstName,
-    lastName: credential.user.lastName,
-    username: credential.username,
-    role: credential.user.role,
-    hospitalId,
-  };
+  return {  token,
+            username: credential.username,
+      firstName: credential.user.firstName,
+      lastName: credential.user.lastName,
+      role,
+      hospitalId};
 }
+
 
 
   async logout(userId: number, token: string) {

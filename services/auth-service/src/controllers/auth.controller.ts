@@ -9,6 +9,14 @@ import AuthService from '../services/auth.service';
 //   password: z.string().min(6).max(100),
 // });
 
+const registerAdminSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  username: z.string().email(),  
+  password: z.string().min(6),
+});
+
+
 const registerPatientSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
@@ -74,7 +82,7 @@ const loginSchema = z.object({
 const loginWithRoleSchema = z.object({
   username: z.string().email(),
   password: z.string(),
-  role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF']), 
+  role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF', 'ADMIN']), 
 });
 
 export class AuthController {
@@ -83,6 +91,20 @@ export class AuthController {
   constructor() {
     this.authService = new AuthService();
   }
+
+  async adminRegister(req: Request, res: Response): Promise<any> {
+  const { firstName, lastName, username, password } = registerAdminSchema.parse(req.body);
+
+  const user = await this.authService.adminRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+  });
+
+  return res.status(201).json(user);
+}
+
 
   async patientRegister(req: Request, res: Response): Promise<any> {
     const { firstName, lastName, username, password, age, gender } = registerPatientSchema.parse(
@@ -214,7 +236,7 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
   const { username, password, role } = loginWithRoleSchema.parse(req.body);
-  const result = await this.authService.medvaultproLogin(username, password, role);
+  const result = await this.authService.medvaultproLogin(username, password);
 
   return res.status(200).json(result);
 }

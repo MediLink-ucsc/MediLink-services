@@ -18,9 +18,13 @@ authRouter.post('/medvaultpro/doctor/register', authController.doctorRegister.bi
 authRouter.post('/medvaultpro/login', authController.medvaultproLogin.bind(authController));
 authRouter.post('/medvaultpro/logout', authController.logout.bind(authController));
 
+authRouter.post('/medvaultpro/admin/register', authController.adminRegister.bind(authController));
+
 authRouter.post('/medvaultpro/labassistant/register', authController.labAssistantRegister.bind(authController));
 
 authRouter.post('/medvaultpro/medicalstaff/register', authController.medicalStaffRegister.bind(authController));
+
+
 
 export { authRouter };
 
