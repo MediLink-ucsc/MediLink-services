@@ -44,7 +44,7 @@ interface RegisterDoctorDto {
   hospitalId?: number;
   hospitalName?: string;
   gender?: string;
-  dateOfBirth?: string; 
+  dateOfBirth?: string;
 }
 
 interface RegisterLabAssistantDto {
@@ -71,7 +71,7 @@ interface RegisterMedicalStaffDto {
   username: string;
   password: string;
 
-  position: string;            
+  position: string;
   qualification?: string;
   department?: string;
   yearsOfExperience: number;
@@ -81,8 +81,6 @@ interface RegisterMedicalStaffDto {
   gender?: string;
   dateOfBirth?: string;
 }
-
-
 
 class AuthService {
   credentialRepository: Repository<Credential>;
@@ -138,8 +136,14 @@ class AuthService {
     return user;
   }
 
-
-  async patientRegister({ firstName, lastName, username, password, age, gender }: RegisterPatientDto) {
+  async patientRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+    age,
+    gender,
+  }: RegisterPatientDto) {
     const existing = await this.credentialRepository.findOneBy({ username });
 
     if (existing) {
@@ -179,186 +183,187 @@ class AuthService {
   }
 
   async doctorRegister({
-  firstName,
-  lastName,
-  username,
-  password,
-  licenseNumber,
-  specialty,
-  yearsOfExperience,
-  hospitalId,
-  hospitalName,
-  gender,
-  dateOfBirth,
-}: RegisterDoctorDto) {
-  const existing = await this.credentialRepository.findOneBy({ username });
-  if (existing) {
-    throw createError('email already in use', 400);
+    firstName,
+    lastName,
+    username,
+    password,
+    licenseNumber,
+    specialty,
+    yearsOfExperience,
+    hospitalId,
+    hospitalName,
+    gender,
+    dateOfBirth,
+  }: RegisterDoctorDto) {
+    const existing = await this.credentialRepository.findOneBy({ username });
+    if (existing) {
+      throw createError('email already in use', 400);
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User();
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.username = username;
+    user.role = 'DOCTOR';
+
+    await this.userRepository.save(user);
+
+    const credential = new Credential();
+    credential.username = username;
+    credential.passwordHash = passwordHash;
+    credential.user = user;
+
+    await this.credentialRepository.save(credential);
+
+    const doctor = new Doctor();
+    doctor.user = user;
+    doctor.licenseNumber = licenseNumber;
+    doctor.specialty = specialty;
+    doctor.yearsOfExperience = yearsOfExperience;
+    if (hospitalId !== undefined) {
+      doctor.hospitalId = hospitalId;
+    }
+    doctor.hospitalName = hospitalName ?? '';
+    doctor.gender = gender ?? '';
+    if (dateOfBirth) {
+      doctor.dateOfBirth = new Date(dateOfBirth);
+    }
+
+    await this.doctorRepository.save(doctor);
+
+    await publishUserRegistered({
+      key: user.id?.toString(),
+      value: { ...user, doctor },
+    });
+
+    return user;
   }
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const user = new User();
-  user.firstName = firstName;
-  user.lastName = lastName;
-  user.username = username;
-  user.role = 'DOCTOR';
-
-  await this.userRepository.save(user);
-
-  const credential = new Credential();
-  credential.username = username;
-  credential.passwordHash = passwordHash;
-  credential.user = user;
-
-  await this.credentialRepository.save(credential);
-
-  const doctor = new Doctor();
-  doctor.user = user;
-  doctor.licenseNumber = licenseNumber;
-  doctor.specialty = specialty;
-  doctor.yearsOfExperience = yearsOfExperience;
-  if (hospitalId !== undefined) {
-    doctor.hospitalId = hospitalId;
-  }
-  doctor.hospitalName = hospitalName ?? '';
-  doctor.gender = gender ?? '';
-  if (dateOfBirth) {
-    doctor.dateOfBirth = new Date(dateOfBirth);
-  }
-
-  await this.doctorRepository.save(doctor);
-
-  await publishUserRegistered({
-    key: user.id?.toString(),
-    value: { ...user, doctor },
-  });
-
-  return user;
-}
 
   async labAssistantRegister({
-  firstName,
-  lastName,
-  username,
-  password,
-  qualification,
-  department,
-  yearsOfExperience,
-  labId,
-  labName,
-  hospitalId,
-  hospitalName,
-  gender,
-  dateOfBirth,
-}: RegisterLabAssistantDto) {
-  const existing = await this.credentialRepository.findOneBy({ username });
+    firstName,
+    lastName,
+    username,
+    password,
+    qualification,
+    department,
+    yearsOfExperience,
+    labId,
+    labName,
+    hospitalId,
+    hospitalName,
+    gender,
+    dateOfBirth,
+  }: RegisterLabAssistantDto) {
+    const existing = await this.credentialRepository.findOneBy({ username });
 
-  if (existing) {
-    throw createError('email already in use', 400);
+    if (existing) {
+      throw createError('email already in use', 400);
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User();
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.username = username;
+    user.role = 'LAB_ASSISTANT';
+
+    await this.userRepository.save(user);
+
+    const credential = new Credential();
+    credential.username = username;
+    credential.passwordHash = passwordHash;
+    credential.user = user;
+
+    await this.credentialRepository.save(credential);
+
+    const labAssistant = new LabAssistant();
+    labAssistant.user = user;
+    labAssistant.qualification = qualification;
+    labAssistant.department = department;
+    labAssistant.yearsOfExperience = yearsOfExperience;
+    if (labId !== undefined) {
+      labAssistant.labId = labId;
+    }
+    labAssistant.labName = labName ?? '';
+    labAssistant.hospitalId = hospitalId ?? 0;
+    labAssistant.hospitalName = hospitalName ?? '';
+    labAssistant.gender = gender ?? '';
+    labAssistant.dateOfBirth = dateOfBirth
+      ? new Date(dateOfBirth)
+      : new Date(0);
+
+    await this.labAssistantRepository.save(labAssistant);
+
+    await publishUserRegistered({
+      key: user.id?.toString(),
+      value: { ...user, labAssistant },
+    });
+
+    return user;
   }
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const user = new User();
-  user.firstName = firstName;
-  user.lastName = lastName;
-  user.username = username;
-  user.role = 'LAB_ASSISTANT';
-
-  await this.userRepository.save(user);
-
-  const credential = new Credential();
-  credential.username = username;
-  credential.passwordHash = passwordHash;
-  credential.user = user;
-
-  await this.credentialRepository.save(credential);
-
-  const labAssistant = new LabAssistant();
-  labAssistant.user = user;
-  labAssistant.qualification = qualification;
-  labAssistant.department = department;
-  labAssistant.yearsOfExperience = yearsOfExperience;
-  if (labId !== undefined) {
-    labAssistant.labId = labId;
-  }
-  labAssistant.labName = labName ?? '';
-  labAssistant.hospitalId = hospitalId ?? 0;
-  labAssistant.hospitalName = hospitalName ?? '';
-  labAssistant.gender = gender ?? '';
-  labAssistant.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : new Date(0);
-
-  await this.labAssistantRepository.save(labAssistant);
-
-  await publishUserRegistered({
-    key: user.id?.toString(),
-    value: { ...user, labAssistant },
-  });
-
-  return user;
-}
 
   async medicalStaffRegister({
-  firstName,
-  lastName,
-  username,
-  password,
-  position,
-  qualification,
-  department,
-  yearsOfExperience,
-  hospitalId,
-  hospitalName,
-  gender,
-  dateOfBirth,
-}: RegisterMedicalStaffDto) {
-  const existing = await this.credentialRepository.findOneBy({ username });
+    firstName,
+    lastName,
+    username,
+    password,
+    position,
+    qualification,
+    department,
+    yearsOfExperience,
+    hospitalId,
+    hospitalName,
+    gender,
+    dateOfBirth,
+  }: RegisterMedicalStaffDto) {
+    const existing = await this.credentialRepository.findOneBy({ username });
 
-  if (existing) {
-    throw createError('email already in use', 400);
+    if (existing) {
+      throw createError('email already in use', 400);
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User();
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.username = username;
+    user.role = 'MEDICAL_STAFF';
+
+    await this.userRepository.save(user);
+
+    const credential = new Credential();
+    credential.username = username;
+    credential.passwordHash = passwordHash;
+    credential.user = user;
+
+    await this.credentialRepository.save(credential);
+
+    const medicalStaff = new MedicalStaff();
+    medicalStaff.user = user;
+    medicalStaff.position = position;
+    medicalStaff.qualification = qualification ?? '';
+    medicalStaff.department = department ?? '';
+    medicalStaff.yearsOfExperience = yearsOfExperience;
+    medicalStaff.hospitalId = hospitalId ?? 0;
+    medicalStaff.hospitalName = hospitalName ?? '';
+    medicalStaff.gender = gender ?? '';
+    medicalStaff.dateOfBirth = dateOfBirth
+      ? new Date(dateOfBirth)
+      : new Date(0);
+
+    await this.medicalStaffRepository.save(medicalStaff);
+
+    await publishUserRegistered({
+      key: user.id?.toString(),
+      value: { ...user, medicalStaff },
+    });
+
+    return user;
   }
-
-  const passwordHash = await bcrypt.hash(password, 10);
-
-  const user = new User();
-  user.firstName = firstName;
-  user.lastName = lastName;
-  user.username = username;
-  user.role = 'MEDICAL_STAFF';
-
-  await this.userRepository.save(user);
-
-  const credential = new Credential();
-  credential.username = username;
-  credential.passwordHash = passwordHash;
-  credential.user = user;
-
-  await this.credentialRepository.save(credential);
-
-  const medicalStaff = new MedicalStaff();
-  medicalStaff.user = user;
-  medicalStaff.position = position;
-  medicalStaff.qualification = qualification ?? '';
-  medicalStaff.department = department ?? '';
-  medicalStaff.yearsOfExperience = yearsOfExperience;
-  medicalStaff.hospitalId = hospitalId ?? 0;
-  medicalStaff.hospitalName = hospitalName ?? '';
-  medicalStaff.gender = gender ?? '';
-  medicalStaff.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : new Date(0);
-
-  await this.medicalStaffRepository.save(medicalStaff);
-
-  await publishUserRegistered({
-    key: user.id?.toString(),
-    value: { ...user, medicalStaff },
-  });
-
-  return user;
-}
-
-
-
 
   async patientLogin(username: string, password: string) {
     const credential = await this.credentialRepository.findOne({
@@ -380,7 +385,7 @@ class AuthService {
     }
 
     if (credential.user.role !== 'PATIENT') {
-    throw createError('not authorized as patient', 403);
+      throw createError('not authorized as patient', 403);
     }
 
     const token = jwt.sign(
@@ -409,160 +414,164 @@ class AuthService {
       role: credential.user.role,
     };
   }
-//   async medvaultproLogin(username: string, password: string, role: string) {
-//   const credential = await this.credentialRepository.findOne({
-//     where: { username },
-//     relations: ['user'],
-//   });
+  //   async medvaultproLogin(username: string, password: string, role: string) {
+  //   const credential = await this.credentialRepository.findOne({
+  //     where: { username },
+  //     relations: ['user'],
+  //   });
 
-//   if (!credential) {
-//     throw createError('invalid credentials', 401);
-//   }
+  //   if (!credential) {
+  //     throw createError('invalid credentials', 401);
+  //   }
 
-//   const isValidPassword = await bcrypt.compare(
-//     password,
-//     credential.passwordHash,
-//   );
+  //   const isValidPassword = await bcrypt.compare(
+  //     password,
+  //     credential.passwordHash,
+  //   );
 
-//   if (!isValidPassword) {
-//     throw createError('invalid credentials', 401);
-//   }
+  //   if (!isValidPassword) {
+  //     throw createError('invalid credentials', 401);
+  //   }
 
-//   if (credential.user.role !== role) {
-//     throw createError(`not authorized as ${role.toLowerCase()}`, 403);
-//   }
+  //   if (credential.user.role !== role) {
+  //     throw createError(`not authorized as ${role.toLowerCase()}`, 403);
+  //   }
 
-//   let hospitalId: number | null = null;
+  //   let hospitalId: number | null = null;
 
-//   if (role === 'DOCTOR') {
-//     const doctor = await this.doctorRepository.findOne({
-//       where: { user: { id: credential.user.id } },
-//     });
-//     hospitalId = doctor?.hospitalId ?? null;
-//   }
+  //   if (role === 'DOCTOR') {
+  //     const doctor = await this.doctorRepository.findOne({
+  //       where: { user: { id: credential.user.id } },
+  //     });
+  //     hospitalId = doctor?.hospitalId ?? null;
+  //   }
 
-//   if (role === 'LAB_ASSISTANT') {
-//     const labAssistant = await this.labAssistantRepository.findOne({
-//       where: { user: { id: credential.user.id } },
-//     });
-//     hospitalId = labAssistant?.hospitalId ?? null;
-//   }
+  //   if (role === 'LAB_ASSISTANT') {
+  //     const labAssistant = await this.labAssistantRepository.findOne({
+  //       where: { user: { id: credential.user.id } },
+  //     });
+  //     hospitalId = labAssistant?.hospitalId ?? null;
+  //   }
 
-//   if (role === 'MEDICAL_STAFF') {
-//     const medicalStaff = await this.medicalStaffRepository.findOne({
-//       where: { user: { id: credential.user.id } },
-//     });
-//     hospitalId = medicalStaff?.hospitalId ?? null;
-//   }
+  //   if (role === 'MEDICAL_STAFF') {
+  //     const medicalStaff = await this.medicalStaffRepository.findOne({
+  //       where: { user: { id: credential.user.id } },
+  //     });
+  //     hospitalId = medicalStaff?.hospitalId ?? null;
+  //   }
 
-//   if (role === 'ADMIN') {
-//     hospitalId = null; 
-//   }
+  //   if (role === 'ADMIN') {
+  //     hospitalId = null;
+  //   }
 
+  //   const token = jwt.sign(
+  //     {
+  //       id: credential.user.id,
+  //       username: credential.username,
+  //       firstName: credential.user.firstName,
+  //       lastName: credential.user.lastName,
+  //       role: credential.user.role,
+  //       hospitalId: hospitalId,
+  //     },
+  //     config.JWT_SECRET,
+  //     { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
+  //   );
 
-//   const token = jwt.sign(
-//     {
-//       id: credential.user.id,
-//       username: credential.username,
-//       firstName: credential.user.firstName,
-//       lastName: credential.user.lastName,
-//       role: credential.user.role,
-//       hospitalId: hospitalId,  
-//     },
-//     config.JWT_SECRET,
-//     { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
-//   );
+  //   await redis.setex(
+  //     `auth:${credential.user.id}:${token}`,
+  //     24 * 60 * 60,
+  //     'true',
+  //   );
 
-//   await redis.setex(
-//     `auth:${credential.user.id}:${token}`,
-//     24 * 60 * 60,
-//     'true',
-//   );
-
-//   return {
-//     token,
-//     firstName: credential.user.firstName,
-//     lastName: credential.user.lastName,
-//     username: credential.username,
-//     role: credential.user.role,
-//     hospitalId,
-//   };
-// }
+  //   return {
+  //     token,
+  //     firstName: credential.user.firstName,
+  //     lastName: credential.user.lastName,
+  //     username: credential.username,
+  //     role: credential.user.role,
+  //     hospitalId,
+  //   };
+  // }
 
   async medvaultproLogin(username: string, password: string) {
-  const credential = await this.credentialRepository.findOne({
-    where: { username },
-    relations: ['user'],
-  });
-
-  if (!credential) {
-    throw createError('invalid credentials', 401);
-  }
-
-  const isValidPassword = await bcrypt.compare(
-    password,
-    credential.passwordHash,
-  );
-
-  if (!isValidPassword) {
-    throw createError('invalid credentials', 401);
-  }
-
-  const role = credential.user.role; // get role directly from DB
-
-  let hospitalId: number | null = null;
-
-  if (role === 'DOCTOR') {
-    const doctor = await this.doctorRepository.findOne({
-      where: { user: { id: credential.user.id } },
+    console.log('medvaultproLogin called with:', { username, password });
+    const credential = await this.credentialRepository.findOne({
+      where: { username },
+      relations: ['user'],
     });
-    hospitalId = doctor?.hospitalId ?? null;
-  }
 
-  if (role === 'LAB_ASSISTANT') {
-    const labAssistant = await this.labAssistantRepository.findOne({
-      where: { user: { id: credential.user.id } },
-    });
-    hospitalId = labAssistant?.hospitalId ?? null;
-  }
+    if (!credential) {
+      throw createError('invalid credentials', 401);
+    }
 
-  if (role === 'MEDICAL_STAFF') {
-    const medicalStaff = await this.medicalStaffRepository.findOne({
-      where: { user: { id: credential.user.id } },
-    });
-    hospitalId = medicalStaff?.hospitalId ?? null;
-  }
+    const isValidPassword = await bcrypt.compare(
+      password,
+      credential.passwordHash,
+    );
 
-  // ADMIN will keep hospitalId as null
+    if (!isValidPassword) {
+      throw createError('invalid credentials', 401);
+    }
 
-  const token = jwt.sign(
-    {
-      id: credential.user.id,
+    const role = credential.user.role; // get role directly from DB
+
+    let hospitalId: number | null = null;
+
+    if (role === 'DOCTOR') {
+      const doctor = await this.doctorRepository.findOne({
+        where: { user: { id: credential.user.id } },
+      });
+      hospitalId = doctor?.hospitalId ?? null;
+    }
+
+    if (role === 'LAB_ASSISTANT') {
+      const labAssistant = await this.labAssistantRepository.findOne({
+        where: { user: { id: credential.user.id } },
+      });
+      hospitalId = labAssistant?.hospitalId ?? null;
+    }
+
+    if (role === 'MEDICAL_STAFF') {
+      const medicalStaff = await this.medicalStaffRepository.findOne({
+        where: { user: { id: credential.user.id } },
+      });
+      hospitalId = medicalStaff?.hospitalId ?? null;
+    }
+
+    // ADMIN will keep hospitalId as null
+
+    const token = jwt.sign(
+      {
+        id: credential.user.id,
+        username: credential.username,
+        firstName: credential.user.firstName,
+        lastName: credential.user.lastName,
+        role,
+        hospitalId,
+      },
+      config.JWT_SECRET,
+      { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
+    );
+
+    await redis.setex(
+      `auth:${credential.user.id}:${token}`,
+      24 * 60 * 60,
+      'true',
+    );
+
+    return {
+      token,
       username: credential.username,
       firstName: credential.user.firstName,
       lastName: credential.user.lastName,
       role,
       hospitalId,
-    },
-    config.JWT_SECRET,
-    { expiresIn: config.JWT_EXPIRES_IN as ms.StringValue },
-  );
-
-  return {  token,
-            username: credential.username,
-      firstName: credential.user.firstName,
-      lastName: credential.user.lastName,
-      role,
-      hospitalId};
-}
-
-
+    };
+  }
 
   async logout(userId: number, token: string) {
     await redis.del(`auth:${userId}:${token}`);
   }
-
-  
 }
 
 export default AuthService;
