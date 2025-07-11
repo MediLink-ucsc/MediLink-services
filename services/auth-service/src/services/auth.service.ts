@@ -30,6 +30,24 @@ interface RegisterLabAdminDto {
   availableTests?: string;
 }
 
+export interface RegisterClinicAdminDto {
+  firstName: string;
+  lastName: string;
+  username: string;
+  password: string;
+
+  institutionName: string;
+  contactNumber?: string;
+  email?: string;
+  address?: string;
+
+  registrationNumber: string;
+  registrationExpiryDate?: string; 
+  headPhysicianName?: string;
+  specializations?: string;
+}
+
+
 interface RegisterPatientDto {
   firstName: string;
   lastName: string;
@@ -171,6 +189,73 @@ class AuthService {
     userId: user.id,
   };
 }
+
+async clinicAdminRegister({
+  firstName,
+  lastName,
+  username,
+  password,
+  institutionName,
+  contactNumber,
+  email,
+  address,
+  registrationNumber,
+  registrationExpiryDate,
+  headPhysicianName,
+  specializations,
+}: RegisterClinicAdminDto) {
+  // 1. Check if username exists
+  const existing = await this.credentialRepository.findOneBy({ username });
+  if (existing) {
+    throw createError('username already in use', 400);
+  }
+
+  // 2. Hash password
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  // 3. Create user with role 'CLINIC_ADMIN'
+  const user = new User();
+  user.firstName = firstName;
+  user.lastName = lastName;
+  user.username = username;
+  user.role = 'CLINIC_ADMIN';
+
+  await this.userRepository.save(user);
+
+  // 4. Create credentials linked to user
+  const credential = new Credential();
+  credential.username = username;
+  credential.passwordHash = passwordHash;
+  credential.user = user;
+
+  await this.credentialRepository.save(credential);
+
+  // 5. Call institution service to register clinic
+  await axios.post('http://localhost:3000/api/v1/institutions/clinic/register', {
+    institutionName,
+    contactNumber,
+    email,
+    address,
+    registrationNumber,
+    registrationExpiryDate,
+    headPhysicianName,
+    specializations,
+    adminUserId: user.id, // link user and clinic if needed
+  });
+
+  // 6. Publish event for new user registered (optional)
+  await publishUserRegistered({
+    key: user.id?.toString(),
+    value: user,
+  });
+
+  // 7. Return success message with user id
+  return {
+    message: 'Clinic admin and clinic institution registered successfully',
+    userId: user.id,
+  };
+}
+
 
 
   async patientRegister({

@@ -20,6 +20,24 @@ export const registerLabAdminSchema = z.object({
   availableTests: z.string().optional(),
 });
 
+export const registerClinicAdminSchema = z.object({
+  // User fields
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  username: z.string().email("Must be a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+
+  // Clinic fields
+  institutionName: z.string().min(1, "Institution name is required"),
+  contactNumber: z.string().optional(),
+  email: z.string().email("Invalid clinic email").optional(),
+  address: z.string().optional(),
+  registrationNumber: z.string().min(1, "Registration number is required"),
+  registrationExpiryDate: z.string().optional(),
+  headPhysicianName: z.string().optional(),
+  specializations: z.string().optional(),
+});
+
 
 const registerPatientSchema = z.object({
   firstName: z.string().min(3).max(50),
@@ -129,6 +147,41 @@ export class AuthController {
 
   return res.status(201).json(user);
 }
+
+async clinicAdminRegister(req: Request, res: Response): Promise<any> {
+  const {
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    contactNumber,
+    email,
+    address,
+    registrationNumber,
+    registrationExpiryDate,
+    headPhysicianName,
+    specializations,
+  } = registerClinicAdminSchema.parse(req.body); // your Zod or Joi schema for clinic admin
+
+  const user = await this.authService.clinicAdminRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    contactNumber,
+    email,
+    address,
+    registrationNumber,
+    registrationExpiryDate,
+    headPhysicianName,
+    specializations,
+  });
+
+  return res.status(201).json(user);
+}
+
 
 
   async patientRegister(req: Request, res: Response): Promise<any> {

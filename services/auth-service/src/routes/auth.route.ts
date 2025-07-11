@@ -19,6 +19,7 @@ authRouter.post('/medvaultpro/login', authController.medvaultproLogin.bind(authC
 authRouter.post('/medvaultpro/logout', authController.logout.bind(authController));
 
 authRouter.post('/medvaultpro/labadmin/register', authController.labAdminRegister.bind(authController));
+authRouter.post('/medvaultpro/clinicadmin/register', authController.clinicAdminRegister.bind(authController));
 
 authRouter.post('/medvaultpro/labassistant/register', authController.labAssistantRegister.bind(authController));
 
