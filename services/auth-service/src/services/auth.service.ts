@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import bcrypt from 'bcrypt';
-
+import axios from 'axios';
 import { AppDataSource } from '../data-source';
 import { config } from '../config';
 import redis from '../config/redis';
@@ -15,11 +15,19 @@ import { MedicalStaff } from '../entity/medicalStaff.entity';
 import { createError } from '../utils';
 import { publishUserRegistered } from '../events/producers/userRegistered.producer';
 
-interface RegisterAdminDto {
+interface RegisterLabAdminDto {
   firstName: string;
   lastName: string;
   username: string;
   password: string;
+  institutionName: string;
+  contactNumber?: string;
+  email?: string;
+  address?: string;
+  accreditationNumber: string;
+  licenseExpiryDate?: string;
+  headTechnologistName?: string;
+  availableTests?: string;
 }
 
 interface RegisterPatientDto {
@@ -99,42 +107,71 @@ class AuthService {
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
   }
 
-  async adminRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-  }: RegisterAdminDto) {
-    const existing = await this.credentialRepository.findOneBy({ username });
-
-    if (existing) {
-      throw createError('email already in use', 400);
-    }
-
-    const passwordHash = await bcrypt.hash(password, 10);
-
-    const user = new User();
-    user.firstName = firstName;
-    user.lastName = lastName;
-    user.username = username;
-    user.role = 'ADMIN';
-
-    await this.userRepository.save(user);
-
-    const credential = new Credential();
-    credential.username = username;
-    credential.passwordHash = passwordHash;
-    credential.user = user;
-
-    await this.credentialRepository.save(credential);
-
-    await publishUserRegistered({
-      key: user.id?.toString(),
-      value: user,
-    });
-
-    return user;
+  async labAdminRegister({
+  firstName,
+  lastName,
+  username,
+  password,
+  institutionName,
+  contactNumber,
+  email,
+  address,
+  accreditationNumber,
+  licenseExpiryDate,
+  headTechnologistName,
+  availableTests,
+}: RegisterLabAdminDto) {
+  // check existing user
+  const existing = await this.credentialRepository.findOneBy({ username });
+  if (existing) {
+    throw createError('username already in use', 400);
   }
+
+  // hash password
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  // create user in auth-service
+  const user = new User();
+  user.firstName = firstName;
+  user.lastName = lastName;
+  user.username = username;
+  user.role = 'LAB_ADMIN';
+
+  await this.userRepository.save(user);
+
+  // create credentials
+  const credential = new Credential();
+  credential.username = username;
+  credential.passwordHash = passwordHash;
+  credential.user = user;
+
+  await this.credentialRepository.save(credential);
+
+  // 🚀 Now call the institution-service to register the lab
+  await axios.post('http://localhost:3000/api/v1/institutions/lab/register', {
+    institutionName,
+    contactNumber,
+    email,
+    address,
+    accreditationNumber,
+    licenseExpiryDate,
+    headTechnologistName,
+    availableTests,
+    adminUserId: user.id, // optional if your institution wants to link back
+  });
+
+  // publish user registered if needed
+  await publishUserRegistered({
+    key: user.id?.toString(),
+    value: user,
+  });
+
+  return {
+    message: 'Lab admin and lab institution registered successfully',
+    userId: user.id,
+  };
+}
+
 
   async patientRegister({
     firstName,

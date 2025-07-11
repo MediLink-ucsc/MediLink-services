@@ -2,18 +2,22 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import AuthService from '../services/auth.service';
 
-// const registerSchema = z.object({
-//   firstName: z.string().min(3).max(50),
-//   lastName: z.string().min(3).max(50),
-//   username: z.string().email(),
-//   password: z.string().min(6).max(100),
-// });
+export const registerLabAdminSchema = z.object({
+  // User fields
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  username: z.string().email("Must be a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 
-const registerAdminSchema = z.object({
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  username: z.string().email(),  
-  password: z.string().min(6),
+  // Lab fields
+  institutionName: z.string().min(1, "Institution name is required"),
+  contactNumber: z.string().optional(),
+  email: z.string().email("Invalid lab email").optional(),
+  address: z.string().optional(),
+  accreditationNumber: z.string().min(1, "Accreditation number is required"),
+  licenseExpiryDate: z.string().optional(),
+  headTechnologistName: z.string().optional(),
+  availableTests: z.string().optional(),
 });
 
 
@@ -92,14 +96,35 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
-  async adminRegister(req: Request, res: Response): Promise<any> {
-  const { firstName, lastName, username, password } = registerAdminSchema.parse(req.body);
-
-  const user = await this.authService.adminRegister({
+  async labAdminRegister(req: Request, res: Response): Promise<any> {
+  const {
     firstName,
     lastName,
     username,
     password,
+    institutionName,
+    contactNumber,
+    email,
+    address,
+    accreditationNumber,
+    licenseExpiryDate,
+    headTechnologistName,
+    availableTests,
+  } = registerLabAdminSchema.parse(req.body); // your Zod or Joi schema should include these
+
+  const user = await this.authService.labAdminRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    contactNumber,
+    email,
+    address,
+    accreditationNumber,
+    licenseExpiryDate,
+    headTechnologistName,
+    availableTests,
   });
 
   return res.status(201).json(user);
