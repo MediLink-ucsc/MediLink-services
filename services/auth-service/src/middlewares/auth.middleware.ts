@@ -12,6 +12,7 @@ const publicRoutes = [
   '/api/v1/auth/medvaultpro/medicalstaff/register',
   '/api/v1/auth/medvaultpro/labadmin/register',
   '/api/v1/auth/medvaultpro/clinicadmin/register',
+  '/api/v1/auth/medvaultpro/doctor/profile/:doctorId',
 ];
 
 export const verifyToken = (

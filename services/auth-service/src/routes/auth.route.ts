@@ -25,6 +25,8 @@ authRouter.post('/medvaultpro/labassistant/register', authController.labAssistan
 
 authRouter.post('/medvaultpro/medicalstaff/register', authController.medicalStaffRegister.bind(authController));
 
+authRouter.get('/medvaultpro/doctor/profile/:doctorId', authController.getDoctorById.bind(authController));
+
 
 
 export { authRouter };

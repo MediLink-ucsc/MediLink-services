@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import AuthService from '../services/auth.service';
+import { AppDataSource } from '../data-source';
+import { Doctor } from '../entity/doctor.entity';
 
 export const registerLabAdminSchema = z.object({
   // User fields
@@ -104,14 +106,42 @@ const loginSchema = z.object({
 const loginWithRoleSchema = z.object({
   username: z.string().email(),
   password: z.string(),
-  role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF', 'ADMIN']), 
+  // role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF', 'ADMIN']), 
 });
 
 export class AuthController {
   private authService: AuthService;
+  private doctorRepository = AppDataSource.getRepository(Doctor);
 
   constructor() {
     this.authService = new AuthService();
+  }
+
+  async getDoctorById(req: Request, res: Response): Promise<any> {
+    const doctorId = req.params.doctorId;
+
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: Number(doctorId) },
+      relations: ['user'], // pulls linked user fields
+    });
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    return res.status(200).json({
+      id: doctor.id,
+      firstName: doctor.user.firstName,
+      lastName: doctor.user.lastName,
+      email: doctor.user.username,
+      licenseNumber: doctor.licenseNumber,
+      specialty: doctor.specialty,
+      yearsOfExperience: doctor.yearsOfExperience,
+      hospitalId: doctor.hospitalId,
+      hospitalName: doctor.hospitalName,
+      gender: doctor.gender,
+      dateOfBirth: doctor.dateOfBirth,
+    });
   }
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
@@ -313,7 +343,7 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
   }
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
-  const { username, password, role } = loginWithRoleSchema.parse(req.body);
+  const { username, password} = loginWithRoleSchema.parse(req.body);
   const result = await this.authService.medvaultproLogin(username, password);
 
   return res.status(200).json(result);
