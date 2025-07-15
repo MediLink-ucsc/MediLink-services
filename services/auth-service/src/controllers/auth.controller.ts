@@ -6,17 +6,17 @@ import { Doctor } from '../entity/doctor.entity';
 
 export const registerLabAdminSchema = z.object({
   // User fields
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  username: z.string().email("Must be a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  username: z.string().email('Must be a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 
   // Lab fields
-  institutionName: z.string().min(1, "Institution name is required"),
+  institutionName: z.string().min(1, 'Institution name is required'),
   contactNumber: z.string().optional(),
-  email: z.string().email("Invalid lab email").optional(),
+  email: z.string().email('Invalid lab email').optional(),
   address: z.string().optional(),
-  accreditationNumber: z.string().min(1, "Accreditation number is required"),
+  accreditationNumber: z.string().min(1, 'Accreditation number is required'),
   licenseExpiryDate: z.string().optional(),
   headTechnologistName: z.string().optional(),
   availableTests: z.string().optional(),
@@ -24,22 +24,21 @@ export const registerLabAdminSchema = z.object({
 
 export const registerClinicAdminSchema = z.object({
   // User fields
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  username: z.string().email("Must be a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  username: z.string().email('Must be a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 
   // Clinic fields
-  institutionName: z.string().min(1, "Institution name is required"),
+  institutionName: z.string().min(1, 'Institution name is required'),
   contactNumber: z.string().optional(),
-  email: z.string().email("Invalid clinic email").optional(),
+  email: z.string().email('Invalid clinic email').optional(),
   address: z.string().optional(),
-  registrationNumber: z.string().min(1, "Registration number is required"),
+  registrationNumber: z.string().min(1, 'Registration number is required'),
   registrationExpiryDate: z.string().optional(),
   headPhysicianName: z.string().optional(),
   specializations: z.string().optional(),
 });
-
 
 const registerPatientSchema = z.object({
   firstName: z.string().min(3).max(50),
@@ -87,7 +86,7 @@ const registerMedicalStaffSchema = z.object({
   lastName: z.string().min(3).max(50),
   username: z.string().email(),
   password: z.string().min(6).max(100),
-  position: z.string().min(2).max(100), 
+  position: z.string().min(2).max(100),
   qualification: z.string().min(2).max(100).optional(),
   department: z.string().min(2).max(100).optional(),
   yearsOfExperience: z.number().int().min(0),
@@ -106,7 +105,7 @@ const loginSchema = z.object({
 const loginWithRoleSchema = z.object({
   username: z.string().email(),
   password: z.string(),
-  // role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF', 'ADMIN']), 
+  // role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF', 'ADMIN']),
 });
 
 export class AuthController {
@@ -145,79 +144,76 @@ export class AuthController {
   }
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    contactNumber,
-    email,
-    address,
-    accreditationNumber,
-    licenseExpiryDate,
-    headTechnologistName,
-    availableTests,
-  } = registerLabAdminSchema.parse(req.body); // your Zod or Joi schema should include these
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      contactNumber,
+      email,
+      address,
+      accreditationNumber,
+      licenseExpiryDate,
+      headTechnologistName,
+      availableTests,
+    } = registerLabAdminSchema.parse(req.body); // your Zod or Joi schema should include these
 
-  const user = await this.authService.labAdminRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    contactNumber,
-    email,
-    address,
-    accreditationNumber,
-    licenseExpiryDate,
-    headTechnologistName,
-    availableTests,
-  });
+    const user = await this.authService.labAdminRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      contactNumber,
+      email,
+      address,
+      accreditationNumber,
+      licenseExpiryDate,
+      headTechnologistName,
+      availableTests,
+    });
 
-  return res.status(201).json(user);
-}
+    return res.status(201).json(user);
+  }
 
-async clinicAdminRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    contactNumber,
-    email,
-    address,
-    registrationNumber,
-    registrationExpiryDate,
-    headPhysicianName,
-    specializations,
-  } = registerClinicAdminSchema.parse(req.body); // your Zod or Joi schema for clinic admin
+  async clinicAdminRegister(req: Request, res: Response): Promise<any> {
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      contactNumber,
+      email,
+      address,
+      registrationNumber,
+      registrationExpiryDate,
+      headPhysicianName,
+      specializations,
+    } = registerClinicAdminSchema.parse(req.body); // your Zod or Joi schema for clinic admin
 
-  const user = await this.authService.clinicAdminRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    contactNumber,
-    email,
-    address,
-    registrationNumber,
-    registrationExpiryDate,
-    headPhysicianName,
-    specializations,
-  });
+    const user = await this.authService.clinicAdminRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      contactNumber,
+      email,
+      address,
+      registrationNumber,
+      registrationExpiryDate,
+      headPhysicianName,
+      specializations,
+    });
 
-  return res.status(201).json(user);
-}
-
-
+    return res.status(201).json(user);
+  }
 
   async patientRegister(req: Request, res: Response): Promise<any> {
-    const { firstName, lastName, username, password, age, gender } = registerPatientSchema.parse(
-      req.body,
-    );
+    const { firstName, lastName, username, password, age, gender } =
+      registerPatientSchema.parse(req.body);
 
     const user = await this.authService.patientRegister({
       firstName,
@@ -232,108 +228,106 @@ async clinicAdminRegister(req: Request, res: Response): Promise<any> {
   }
 
   async doctorRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    licenseNumber,
-    specialty,
-    yearsOfExperience,
-    hospitalId,
-    hospitalName,
-    gender,
-    dateOfBirth,
-  } = registerDoctorSchema.parse(req.body);
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      licenseNumber,
+      specialty,
+      yearsOfExperience,
+      hospitalId,
+      hospitalName,
+      gender,
+      dateOfBirth,
+    } = registerDoctorSchema.parse(req.body);
 
-  const doctor = await this.authService.doctorRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    licenseNumber,
-    specialty,
-    yearsOfExperience,
-    hospitalId,
-    hospitalName,
-    gender,
-    dateOfBirth,
-  });
+    const doctor = await this.authService.doctorRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      licenseNumber,
+      specialty,
+      yearsOfExperience,
+      hospitalId,
+      hospitalName,
+      gender,
+      dateOfBirth,
+    });
 
-  return res.status(201).json(doctor);
-}
+    return res.status(201).json(doctor);
+  }
 
-async labAssistantRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    qualification,
-    department,
-    yearsOfExperience,
-    labId,
-    labName,
-    hospitalId,
-    hospitalName,
-    gender,
-    dateOfBirth,
-  } = registerLabAssistantSchema.parse(req.body);
+  async labAssistantRegister(req: Request, res: Response): Promise<any> {
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      qualification,
+      department,
+      yearsOfExperience,
+      labId,
+      labName,
+      hospitalId,
+      hospitalName,
+      gender,
+      dateOfBirth,
+    } = registerLabAssistantSchema.parse(req.body);
 
-  const user = await this.authService.labAssistantRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    qualification,
-    department,
-    yearsOfExperience,
-    labId,
-    labName,
-    hospitalId,
-    hospitalName,
-    gender,
-    dateOfBirth,
-  });
+    const user = await this.authService.labAssistantRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      qualification,
+      department,
+      yearsOfExperience,
+      labId,
+      labName,
+      hospitalId,
+      hospitalName,
+      gender,
+      dateOfBirth,
+    });
 
-  return res.status(201).json(user);
-}
+    return res.status(201).json(user);
+  }
 
   async medicalStaffRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    position,
-    qualification,
-    department,
-    yearsOfExperience,
-    hospitalId,
-    hospitalName,
-    gender,
-    dateOfBirth,
-  } = registerMedicalStaffSchema.parse(req.body);
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      position,
+      qualification,
+      department,
+      yearsOfExperience,
+      hospitalId,
+      hospitalName,
+      gender,
+      dateOfBirth,
+    } = registerMedicalStaffSchema.parse(req.body);
 
-  const medicalStaff = await this.authService.medicalStaffRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    position,
-    qualification,
-    department,
-    yearsOfExperience,
-    hospitalId,
-    hospitalName,
-    gender,
-    dateOfBirth,
-  });
+    const medicalStaff = await this.authService.medicalStaffRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      position,
+      qualification,
+      department,
+      yearsOfExperience,
+      hospitalId,
+      hospitalName,
+      gender,
+      dateOfBirth,
+    });
 
-  return res.status(201).json(medicalStaff);
-}
-
-
+    return res.status(201).json(medicalStaff);
+  }
 
   async patientLogin(req: Request, res: Response): Promise<any> {
     const { username, password } = loginSchema.parse(req.body);
@@ -343,11 +337,11 @@ async labAssistantRegister(req: Request, res: Response): Promise<any> {
   }
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
-  const { username, password} = loginWithRoleSchema.parse(req.body);
-  const result = await this.authService.medvaultproLogin(username, password);
+    const { username, password } = loginWithRoleSchema.parse(req.body);
+    const result = await this.authService.medvaultproLogin(username, password);
 
-  return res.status(200).json(result);
-}
+    return res.status(200).json(result);
+  }
 
   async logout(req: Request, res: Response): Promise<any> {
     console.log('Req body:', req.body);
