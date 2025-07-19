@@ -14,16 +14,22 @@ class ServiceProxy {
       timeout: 5000,
     },
     {
-      path: '/api/v1/institutions/',
+      path: '/api/v1/institue/',
       url: config.INSTITUTION_SERVICE_URL,
-      pathRewrite: { '^/': '/api/v1/institutions/' },
-      name: 'institution-service',
+      pathRewrite: { '^/': '/api/v1/institute/' },
+      name: 'institute-service',
     },
     {
       path: '/api/v1/transactions/',
-      url: config.TRANSACTION_SERVICE_URL,
-      pathRewrite: { '^/': '/api/v1/transactions/' },
-      name: 'transaction-service',
+      url: config.PATIENT_RECORD_SERVICE_URL,
+      pathRewrite: { '^/': '/api/v1/patientRecords/' },
+      name: 'patient-records-service',
+    },
+    {
+      path: '/api/v1/labReport/',
+      url: config.LAB_REPORT_SERVICE_URL,
+      pathRewrite: { '^/': '/api/v1/labReport/' },
+      name: 'lab-report-service',
     },
   ];
 

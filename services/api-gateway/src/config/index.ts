@@ -9,7 +9,8 @@ interface Config {
   REDIS_URL: string;
   AUTH_SERVICE_URL: string;
   INSTITUTION_SERVICE_URL: string;
-  TRANSACTION_SERVICE_URL: string;
+  PATIENT_RECORD_SERVICE_URL: string;
+  LAB_REPORT_SERVICE_URL: string;
   NODE_ENV: string;
 }
 
@@ -26,7 +27,9 @@ export const config: Config = {
   AUTH_SERVICE_URL: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
   INSTITUTION_SERVICE_URL:
     process.env.INSTITUTION_SERVICE_URL || 'http://localhost:3002',
-  TRANSACTION_SERVICE_URL:
-    process.env.TRANSACTION_SERVICE_URL || 'http://localhost:3003',
+  PATIENT_RECORD_SERVICE_URL:
+    process.env.PATIENT_RECORD_SERVICE_URL || 'http://localhost:3003',
+  LAB_REPORT_SERVICE_URL:
+    process.env.LAB_REPORT_SERVICE_URL || 'http://localhost:3004',
   NODE_ENV: process.env.NODE_ENV || 'development',
 };
