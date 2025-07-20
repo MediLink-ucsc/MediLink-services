@@ -15,4 +15,9 @@ reportRouter.get(
   reportController.getTestTypes.bind(reportController)
 );
 
+reportRouter.get(
+  "/testType/:id",
+  reportController.getTestTypeById.bind(reportController)
+);
+
 export { reportRouter };

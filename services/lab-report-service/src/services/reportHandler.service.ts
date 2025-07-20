@@ -27,6 +27,15 @@ export class ReportHandlerService {
     }
   }
 
+  async getTestTypeById(id: number): Promise<TestTypes | null> {
+    try {
+      return await this.testTypesRepository.findOne({ where: { id } });
+    } catch (error) {
+      console.error("Error fetching test type:", error);
+      throw new Error("Failed to fetch test type");
+    }
+  }
+
   async addTestType(testType: TestTypes): Promise<TestTypes> {
     try {
       return await this.testTypesRepository.save(testType);

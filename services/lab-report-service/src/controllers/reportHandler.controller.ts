@@ -35,4 +35,29 @@ export class ReportHandlerController {
       });
     }
   }
+
+  async getTestTypeById(req: Request, res: Response): Promise<void> {
+    try {
+      const testType = await this.reportHandlerService.getTestTypeById(
+        parseInt(req.params.id)
+      );
+      if (!testType) {
+        res.status(404).json({
+          success: false,
+          message: "Test type not found",
+        });
+        return;
+      }
+      res.status(200).json({
+        success: true,
+        data: testType,
+        message: "Test type retrieved successfully",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
 }
