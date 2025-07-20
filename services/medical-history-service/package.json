@@ -1,0 +1,13 @@
+{
+  "name": "medical-history-service",
+  "version": "1.0.0",
+  "description": "Service for managing medical history for EHR",
+  "main": "src/app.ts",
+  "scripts": {
+    "start": "ts-node src/app.ts",
+    "dev": "ts-node-dev src/app.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "MediLink",
+  "license": "MIT"
+}
