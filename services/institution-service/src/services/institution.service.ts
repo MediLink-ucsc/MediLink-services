@@ -19,14 +19,18 @@ interface RegisterLabDto {
 
 interface RegisterClinicDto {
   institutionName: string;
-  contactNumber?: string;
-  email?: string;
-  address?: string;
-  registrationNumber: string;
-  registrationExpiryDate?: string;
-  headPhysicianName?: string;
-  specializations?: string;
+  address: string;
+  city: string;
+  provinceState: string;
+  postalCode: string;
+  phoneNumber: string;
+  emailAddress: string;
+  website?: string;
+  licenseNumber: string;
+  institutionLogo?: string;
+  adminUserId: number;
 }
+
 
 class InstitutionService {
   institutionRepository: Repository<Institution>;
@@ -91,57 +95,55 @@ class InstitutionService {
     };
   }
 
-  async clinicRegister({
+ async clinicRegister({
+  institutionName,
+  address,
+  city,
+  provinceState,
+  postalCode,
+  phoneNumber,
+  emailAddress,
+  website,
+  licenseNumber,
+  institutionLogo,
+  adminUserId,
+}: RegisterClinicDto) {
+  // Check if a clinic with the same institutionName exists
+  const existing = await this.clinicRepository.findOneBy({
     institutionName,
-    contactNumber,
-    email,
-    address,
-    registrationNumber,
-    registrationExpiryDate,
-    headPhysicianName,
-    specializations,
-  }: RegisterClinicDto) {
-    const existing = await this.institutionRepository.findOneBy({
-      institutionName,
-      institutionType: InstitutionType.CLINIC,
-    });
+  });
 
-    if (existing) {
-      throw createError('Clinic with this name already exists', 400);
-    }
-
-    const institution = new Institution();
-    institution.institutionName = institutionName;
-    institution.institutionType = InstitutionType.CLINIC;
-    institution.contactNumber = contactNumber ?? '';
-    institution.email = email ?? '';
-    institution.address = address ?? '';
-    institution.status = InstitutionStatus.PENDING;
-
-    await this.institutionRepository.save(institution);
-
-    const clinic = new Clinic();
-    clinic.institution = institution;
-    clinic.registrationNumber = registrationNumber;
-    if (registrationExpiryDate) {
-      clinic.registrationExpiryDate = new Date(registrationExpiryDate);
-    }
-    clinic.headPhysicianName = headPhysicianName ?? '';
-    clinic.specializations = specializations ?? '';
-
-    await this.clinicRepository.save(clinic);
-
-    await publishUserRegistered({
-      key: institution.id?.toString(),
-      value: { ...institution, clinic },
-    });
-
-    return {
-      institutionId: institution.id,
-      clinicId: clinic.id,
-      message: 'Clinic registered successfully',
-    };
+  if (existing) {
+    throw createError('Clinic with this name already exists', 400);
   }
+
+  // Create new clinic entity with all properties
+  const clinic = new Clinic();
+  clinic.institutionName = institutionName;
+  clinic.address = address ?? '';
+  clinic.city = city;
+  clinic.provinceState = provinceState;
+  clinic.postalCode = postalCode;
+  clinic.phoneNumber = phoneNumber;
+  clinic.emailAddress = emailAddress;
+  clinic.website = website ?? '';
+  clinic.licenseNumber = licenseNumber;
+  clinic.institutionLogo = institutionLogo ?? '';
+  clinic.adminUserId = adminUserId;
+
+  await this.clinicRepository.save(clinic);
+
+  await publishUserRegistered({
+    key: clinic.id?.toString(),
+    value: clinic,
+  });
+
+  return {
+    clinicId: clinic.id,
+    message: 'Clinic registered successfully',
+  };
+}
+
 }
 
 export default InstitutionService;

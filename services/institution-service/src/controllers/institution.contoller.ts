@@ -13,16 +13,24 @@ const registerLabSchema = z.object({
   availableTests: z.string().optional(), 
 });
 
-const registerClinicSchema = z.object({
-  institutionName: z.string().min(3).max(100),
-  contactNumber: z.string().min(7).max(15).optional(),
-  email: z.string().email().optional(),
-  address: z.string().max(255).optional(),
-  registrationNumber: z.string().min(3).max(50),
-  registrationExpiryDate: z.string().optional(),
-  headPhysicianName: z.string().min(3).max(100).optional(),
-  specializations: z.string().optional(),
+
+export const registerClinicSchema = z.object({
+  institutionName: z.string().min(1, 'Institution name is required'),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  provinceState: z.string().min(1, 'Province/State is required'),
+  postalCode: z.string().optional(),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  emailAddress: z.string().email('Invalid email address'),
+  website: z.string().optional(),
+  licenseNumber: z.string().min(1, 'License number is required'),
+  institutionLogo: z.string().optional(),
+  adminUserId: z.number({
+    required_error: 'Admin user ID is required',
+    invalid_type_error: 'Admin user ID must be a number',
+  }),
 });
+
 
 export class InstitutionController {
   private institutionService: InstitutionService;
@@ -58,28 +66,35 @@ export class InstitutionController {
   }
 
   async clinicRegister(req: Request, res: Response): Promise<any> {
-    const {
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      registrationNumber,
-      registrationExpiryDate,
-      headPhysicianName,
-      specializations,
-    } = registerClinicSchema.parse(req.body);
+  const {
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+    adminUserId,
+  } = registerClinicSchema.parse(req.body);
 
-    const clinic = await this.institutionService.clinicRegister({
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      registrationNumber,
-      registrationExpiryDate,
-      headPhysicianName,
-      specializations,
-    });
+  const clinic = await this.institutionService.clinicRegister({
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode: postalCode ?? "",
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+    adminUserId,
+  });
 
-    return res.status(201).json(clinic);
-  }
+  return res.status(201).json(clinic);
+}
+
 }

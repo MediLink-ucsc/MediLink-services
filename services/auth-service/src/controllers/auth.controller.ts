@@ -22,6 +22,7 @@ export const registerLabAdminSchema = z.object({
   availableTests: z.string().optional(),
 });
 
+
 export const registerClinicAdminSchema = z.object({
   // User fields
   firstName: z.string().min(1, 'First name is required'),
@@ -31,14 +32,17 @@ export const registerClinicAdminSchema = z.object({
 
   // Clinic fields
   institutionName: z.string().min(1, 'Institution name is required'),
-  contactNumber: z.string().optional(),
-  email: z.string().email('Invalid clinic email').optional(),
-  address: z.string().optional(),
-  registrationNumber: z.string().min(1, 'Registration number is required'),
-  registrationExpiryDate: z.string().optional(),
-  headPhysicianName: z.string().optional(),
-  specializations: z.string().optional(),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  provinceState: z.string().min(1, 'Province/State is required'),
+  postalCode: z.string().min(1, 'Postal code is required'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  emailAddress: z.string().email('Invalid clinic email'),
+  website: z.string().optional(),
+  licenseNumber: z.string().min(1, 'License number is required'),
+  institutionLogo: z.string().optional(), // for file name or base64/url
 });
+
 
 const registerPatientSchema = z.object({
   firstName: z.string().min(3).max(50),
@@ -177,39 +181,44 @@ export class AuthController {
     return res.status(201).json(user);
   }
 
-  async clinicAdminRegister(req: Request, res: Response): Promise<any> {
-    const {
-      firstName,
-      lastName,
-      username,
-      password,
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      registrationNumber,
-      registrationExpiryDate,
-      headPhysicianName,
-      specializations,
-    } = registerClinicAdminSchema.parse(req.body); // your Zod or Joi schema for clinic admin
+ async clinicAdminRegister(req: Request, res: Response): Promise<any> {
+  const {
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+  } = registerClinicAdminSchema.parse(req.body); // Validated via Zod/Joi
 
-    const user = await this.authService.clinicAdminRegister({
-      firstName,
-      lastName,
-      username,
-      password,
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      registrationNumber,
-      registrationExpiryDate,
-      headPhysicianName,
-      specializations,
-    });
+  const user = await this.authService.clinicAdminRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+  });
 
-    return res.status(201).json(user);
-  }
+  return res.status(201).json(user);
+}
+
 
   async patientRegister(req: Request, res: Response): Promise<any> {
     const { firstName, lastName, username, password, age, gender } =
