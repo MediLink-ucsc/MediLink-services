@@ -11,16 +11,19 @@ export const registerLabAdminSchema = z.object({
   username: z.string().email('Must be a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
 
-  // Lab fields
+  // Lab fields (now aligned with clinic-style fields)
   institutionName: z.string().min(1, 'Institution name is required'),
-  contactNumber: z.string().optional(),
-  email: z.string().email('Invalid lab email').optional(),
-  address: z.string().optional(),
-  accreditationNumber: z.string().min(1, 'Accreditation number is required'),
-  licenseExpiryDate: z.string().optional(),
-  headTechnologistName: z.string().optional(),
-  availableTests: z.string().optional(),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  provinceState: z.string().min(1, 'Province/State is required'),
+  postalCode: z.string().min(1, 'Postal code is required'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  emailAddress: z.string().email('Invalid email address'),
+  website: z.string().url('Invalid website URL').optional(),
+  licenseNumber: z.string().min(1, 'License number is required'),
+  institutionLogo: z.string().optional(), // Base64 or image path
 });
+
 
 
 export const registerClinicAdminSchema = z.object({
@@ -148,38 +151,43 @@ export class AuthController {
   }
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
-    const {
-      firstName,
-      lastName,
-      username,
-      password,
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      accreditationNumber,
-      licenseExpiryDate,
-      headTechnologistName,
-      availableTests,
-    } = registerLabAdminSchema.parse(req.body); // your Zod or Joi schema should include these
+  const {
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+  } = registerLabAdminSchema.parse(req.body); // Validated via Zod or Joi
 
-    const user = await this.authService.labAdminRegister({
-      firstName,
-      lastName,
-      username,
-      password,
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      accreditationNumber,
-      licenseExpiryDate,
-      headTechnologistName,
-      availableTests,
-    });
+  const user = await this.authService.labAdminRegister({
+    firstName,
+    lastName,
+    username,
+    password,
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+  });
 
-    return res.status(201).json(user);
-  }
+  return res.status(201).json(user);
+}
+
 
  async clinicAdminRegister(req: Request, res: Response): Promise<any> {
   const {

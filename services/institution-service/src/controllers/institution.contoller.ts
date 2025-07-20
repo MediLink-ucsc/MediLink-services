@@ -3,15 +3,19 @@ import { z } from 'zod';
 import InstitutionService from '../services/institution.service';
 
 const registerLabSchema = z.object({
-  institutionName: z.string().min(3).max(100),
-  contactNumber: z.string().min(7).max(15).optional(),
-  email: z.string().email().optional(),
-  address: z.string().max(255).optional(),
-  accreditationNumber: z.string().min(3).max(50),
-  licenseExpiryDate: z.string().optional(),
-  headTechnologistName: z.string().min(3).max(100).optional(),
-  availableTests: z.string().optional(), 
+  institutionName: z.string().min(3).max(150),
+  address: z.string().max(255),
+  city: z.string().max(100),
+  provinceState: z.string().max(100),
+  postalCode: z.string().max(20),
+  phoneNumber: z.string().min(7).max(20),
+  emailAddress: z.string().email(),
+  website: z.string().max(255).optional(),
+  licenseNumber: z.string().min(3).max(50),
+  institutionLogo: z.string().optional(),
+  adminUserId: z.number(),
 });
+
 
 
 export const registerClinicSchema = z.object({
@@ -40,30 +44,37 @@ export class InstitutionController {
   }
 
   async labRegister(req: Request, res: Response): Promise<any> {
-    const {
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      accreditationNumber,
-      licenseExpiryDate,
-      headTechnologistName,
-      availableTests,
-    } = registerLabSchema.parse(req.body);
+  const {
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+    adminUserId,
+  } = registerLabSchema.parse(req.body);
 
-    const lab = await this.institutionService.labRegister({
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      accreditationNumber,
-      licenseExpiryDate,
-      headTechnologistName,
-      availableTests,
-    });
+  const lab = await this.institutionService.labRegister({
+    institutionName,
+    address,
+    city,
+    provinceState,
+    postalCode,
+    phoneNumber,
+    emailAddress,
+    website,
+    licenseNumber,
+    institutionLogo,
+    adminUserId,
+  });
 
-    return res.status(201).json(lab);
-  }
+  return res.status(201).json(lab);
+}
+
 
   async clinicRegister(req: Request, res: Response): Promise<any> {
   const {
