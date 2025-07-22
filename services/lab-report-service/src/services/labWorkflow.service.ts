@@ -31,12 +31,12 @@ export class LabWorkflowService {
   }
 
   /**
-   * Step 2: Process lab report and extract data
+   * Step 2: Process lab report and extract data (Async)
    */
   async processLabReport(
     labSampleId: number,
     reportFilePath: string
-  ): Promise<LabResult> {
+  ): Promise<{ message: string; labSampleId: number; status: string }> {
     try {
       // Get the lab sample
       const labSample = await reportHandlerService.getLabSampleById(
@@ -51,10 +51,50 @@ export class LabWorkflowService {
         status: "in-progress",
       });
 
+      // Start extraction process in background (don't await)
+      this.processExtractionInBackground(
+        labSampleId,
+        reportFilePath,
+        labSample.testType.value
+      );
+
+      console.log(` Lab report processing started for sample ${labSampleId}`);
+
+      // Return immediate response
+      return {
+        message: "Lab report extraction started successfully",
+        labSampleId: labSampleId,
+        status: "in-progress",
+      };
+    } catch (error) {
+      console.error(" Failed to start lab report processing:", error);
+
+      // Update lab sample status to failed
+      await reportHandlerService.updateLabSample(labSampleId, {
+        status: "failed",
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Background process for data extraction
+   */
+  private async processExtractionInBackground(
+    labSampleId: number,
+    reportFilePath: string,
+    testType: string
+  ): Promise<void> {
+    try {
+      console.log(
+        ` Starting background extraction for lab sample ${labSampleId}`
+      );
+
       // Extract data using Python service
       const extractedData = await pythonService.extractData(
         reportFilePath,
-        labSample.testType.value
+        testType
       );
 
       console.log(` Data extracted successfully for lab sample ${labSampleId}`);
@@ -66,17 +106,81 @@ export class LabWorkflowService {
         extractedData: extractedData,
       });
 
-      console.log(` Lab result created with ID: ${labResult.id}`);
-      return labResult;
+      // Update lab sample status to completed
+      await reportHandlerService.updateLabSample(labSampleId, {
+        status: "completed",
+      });
+
+      console.log(
+        ` Lab result created with ID: ${labResult.id}, sample ${labSampleId} completed`
+      );
+
+      // TODO: Optionally publish event or send notification when processing is complete
+      // await publishLabResultCreated({ key: labResult.id.toString(), value: labResult });
     } catch (error) {
-      console.error(" Failed to process lab report:", error);
+      console.error(
+        ` Background extraction failed for lab sample ${labSampleId}:`,
+        error
+      );
 
       // Update lab sample status to failed
       await reportHandlerService.updateLabSample(labSampleId, {
         status: "failed",
       });
 
+      // TODO: Optionally publish error event or send notification
+    }
+  }
+
+  /**
+   * Check processing status of a lab sample
+   */
+  async getLabSampleProcessingStatus(labSampleId: number) {
+    try {
+      const labSample = await reportHandlerService.getLabSampleById(
+        labSampleId
+      );
+      if (!labSample) {
+        throw new Error("Lab sample not found");
+      }
+
+      const hasResults =
+        labSample.labResults && labSample.labResults.length > 0;
+
+      return {
+        labSampleId: labSampleId,
+        status: labSample.status,
+        isComplete: labSample.status === "completed",
+        isFailed: labSample.status === "failed",
+        isProcessing: labSample.status === "in-progress",
+        isPending: labSample.status === "pending",
+        hasResults: hasResults,
+        resultCount: labSample.labResults?.length || 0,
+        message: this.getStatusMessage(labSample.status, hasResults),
+      };
+    } catch (error) {
+      console.error(" Failed to get lab sample processing status:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Helper method to get user-friendly status message
+   */
+  private getStatusMessage(status: string, hasResults: boolean): string {
+    switch (status) {
+      case "pending":
+        return "Lab sample is waiting to be processed";
+      case "in-progress":
+        return "Lab report extraction is currently in progress";
+      case "completed":
+        return hasResults
+          ? "Lab report processing completed successfully"
+          : "Processing completed but no results found";
+      case "failed":
+        return "Lab report processing failed. Please try again or contact support";
+      default:
+        return "Unknown status";
     }
   }
 
