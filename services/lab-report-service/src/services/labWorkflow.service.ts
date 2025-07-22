@@ -99,7 +99,7 @@ export class LabWorkflowService {
 
       console.log(` Data extracted successfully for lab sample ${labSampleId}`);
 
-      // Create lab result with extracted data
+      // Create lab result with extracted data (will be encrypted automatically)
       const labResult = await reportHandlerService.createLabResult({
         labSampleId: labSampleId,
         reportUrl: reportFilePath,
@@ -112,7 +112,7 @@ export class LabWorkflowService {
       });
 
       console.log(
-        ` Lab result created with ID: ${labResult.id}, sample ${labSampleId} completed`
+        ` Lab result created with ID: ${labResult.id}, sample ${labSampleId} completed (data encrypted)`
       );
 
       // TODO: Optionally publish event or send notification when processing is complete

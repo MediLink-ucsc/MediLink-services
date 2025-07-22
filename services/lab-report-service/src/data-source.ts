@@ -9,4 +9,6 @@ export const AppDataSource = new DataSource({
   synchronize: true,
   logging: false,
   entities: [TestTypes, LabSample, LabResult],
+  migrations: ["src/migrations/*.ts"],
+  migrationsTableName: "migrations",
 });

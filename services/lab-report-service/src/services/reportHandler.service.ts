@@ -128,8 +128,18 @@ export class ReportHandlerService {
         throw new Error("Lab sample not found");
       }
 
-      const labResult = this.labResultRepository.create(labResultData);
+      // Create lab result instance
+      const labResult = this.labResultRepository.create({
+        labSampleId: labResultData.labSampleId,
+        reportUrl: labResultData.reportUrl,
+      });
+
+      // Set extracted data (will be encrypted automatically by entity hooks)
+      labResult.setExtractedData(labResultData.extractedData);
+
       const savedResult = await this.labResultRepository.save(labResult);
+
+      console.log("🔒 Lab result saved with encrypted data");
 
       // Update lab sample status to completed
       await this.labSampleRepository.update(labResultData.labSampleId, {
