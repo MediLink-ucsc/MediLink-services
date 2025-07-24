@@ -4,49 +4,45 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
-import { Institution } from './institution.entity';
 
 @Entity()
 export class Lab {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Institution)
-  @JoinColumn({ name: 'institution_id' })
-  institution: Institution;
+  @Column({ name: 'institution_name', length: 150 })
+  institutionName: string;
 
-  @Column({
-    name: 'license_number',
-    length: 50,
-    nullable: true,
-    comment: 'Lab accreditation or license number',
-  })
+  @Column({ length: 255 })
+  address: string;
+
+  @Column({ length: 100 })
+  city: string;
+
+  @Column({ name: 'province_state', length: 100 })
+  provinceState: string;
+
+  @Column({ name: 'postal_code', length: 20 })
+  postalCode: string;
+
+  @Column({ name: 'phone_number', length: 20 })
+  phoneNumber: string;
+
+  @Column({ name: 'email_address', length: 100 })
+  emailAddress: string;
+
+  @Column({ length: 255, nullable: true })
+  website: string;
+
+  @Column({ name: 'license_number', length: 50 })
   licenseNumber: string;
 
-  @Column({
-    name: 'license_expiry_date',
-    type: 'date',
-    nullable: true,
-  })
-  licenseExpiryDate: Date;
+  @Column({ name: 'institution_logo', nullable: true })
+  institutionLogo: string;
 
-  @Column({
-    name: 'head_technologist_name',
-    length: 100,
-    nullable: true,
-  })
-  headTechnologistName: string;
-
-  @Column({
-    name: 'available_tests',
-    type: 'text',
-    nullable: true,
-    comment: 'Could store JSON string or comma-separated list',
-  })
-  availableTests: string;
+  @Column({ name: 'admin_user_id' })
+  adminUserId: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -54,3 +50,4 @@ export class Lab {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
+

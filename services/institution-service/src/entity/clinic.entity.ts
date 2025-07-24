@@ -4,49 +4,45 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
-import { Institution } from './institution.entity';
 
 @Entity()
 export class Clinic {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => Institution)
-  @JoinColumn({ name: 'institution_id' })
-  institution: Institution;
+  @Column({ name: 'institution_name', length: 150})
+  institutionName: string;
 
-  @Column({
-    name: 'registration_number',
-    length: 50,
-    nullable: true,
-    comment: 'Clinic registration or license number',
-  })
-  registrationNumber: string;
+  @Column({ length: 255 })
+  address: string;
 
-  @Column({
-    name: 'registration_expiry_date',
-    type: 'date',
-    nullable: true,
-  })
-  registrationExpiryDate: Date;
+  @Column({ length: 100 })
+  city: string;
 
-  @Column({
-    name: 'head_physician_name',
-    length: 100,
-    nullable: true,
-  })
-  headPhysicianName: string;
+  @Column({ name: 'province_state', length: 100 })
+  provinceState: string;
 
-  @Column({
-    name: 'specializations',
-    type: 'text',
-    nullable: true,
-    comment: 'JSON string or comma-separated list of specializations',
-  })
-  specializations: string;
+  @Column({ name: 'postal_code', length: 20 })
+  postalCode: string;
+
+  @Column({ name: 'phone_number', length: 20 })
+  phoneNumber: string;
+
+  @Column({ name: 'email_address', length: 100 })
+  emailAddress: string;
+
+  @Column({ length: 255, nullable: true })
+  website: string;
+
+  @Column({ name: 'license_number', length: 50 })
+  licenseNumber: string;
+
+  @Column({ name: 'institution_logo', nullable: true })
+  institutionLogo: string; 
+
+  @Column({ name: 'admin_user_id' })
+  adminUserId: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
@@ -54,3 +50,4 @@ export class Clinic {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
+

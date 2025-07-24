@@ -14,9 +14,9 @@ class ServiceProxy {
       timeout: 5000,
     },
     {
-      path: '/api/v1/institue/',
+      path: '/api/v1/institutions/',
       url: config.INSTITUTION_SERVICE_URL,
-      pathRewrite: { '^/': '/api/v1/institute/' },
+      pathRewrite: { '^/': '/api/v1/institutions/' },
       name: 'institute-service',
     },
     {

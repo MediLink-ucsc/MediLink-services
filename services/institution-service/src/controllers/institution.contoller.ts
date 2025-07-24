@@ -1,28 +1,40 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import InstitutionService from '../services/institution.service';
 
 const registerLabSchema = z.object({
-  institutionName: z.string().min(3).max(100),
-  contactNumber: z.string().min(7).max(15).optional(),
-  email: z.string().email().optional(),
-  address: z.string().max(255).optional(),
-  accreditationNumber: z.string().min(3).max(50),
-  licenseExpiryDate: z.string().optional(),
-  headTechnologistName: z.string().min(3).max(100).optional(),
-  availableTests: z.string().optional(), 
+  institutionName: z.string().min(3).max(150),
+  address: z.string().max(255),
+  city: z.string().max(100),
+  provinceState: z.string().max(100),
+  postalCode: z.string().max(20),
+  phoneNumber: z.string().min(7).max(20),
+  emailAddress: z.string().email(),
+  website: z.string().max(255).optional(),
+  licenseNumber: z.string().min(3).max(50),
+  institutionLogo: z.string().optional(),
+  adminUserId: z.number(),
 });
 
-const registerClinicSchema = z.object({
-  institutionName: z.string().min(3).max(100),
-  contactNumber: z.string().min(7).max(15).optional(),
-  email: z.string().email().optional(),
-  address: z.string().max(255).optional(),
-  registrationNumber: z.string().min(3).max(50),
-  registrationExpiryDate: z.string().optional(),
-  headPhysicianName: z.string().min(3).max(100).optional(),
-  specializations: z.string().optional(),
+
+
+export const registerClinicSchema = z.object({
+  institutionName: z.string().min(1, 'Institution name is required'),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  provinceState: z.string().min(1, 'Province/State is required'),
+  postalCode: z.string().optional(),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  emailAddress: z.string().email('Invalid email address'),
+  website: z.string().optional(),
+  licenseNumber: z.string().min(1, 'License number is required'),
+  institutionLogo: z.string().optional(),
+  adminUserId: z.number({
+    required_error: 'Admin user ID is required',
+    invalid_type_error: 'Admin user ID must be a number',
+  }),
 });
+
 
 export class InstitutionController {
   private institutionService: InstitutionService;
@@ -31,55 +43,77 @@ export class InstitutionController {
     this.institutionService = new InstitutionService();
   }
 
-  async labRegister(req: Request, res: Response): Promise<any> {
-    const {
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      accreditationNumber,
-      licenseExpiryDate,
-      headTechnologistName,
-      availableTests,
-    } = registerLabSchema.parse(req.body);
+  async labRegister(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const {
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode,
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      } = registerLabSchema.parse(req.body);
 
-    const lab = await this.institutionService.labRegister({
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      accreditationNumber,
-      licenseExpiryDate,
-      headTechnologistName,
-      availableTests,
-    });
+      const lab = await this.institutionService.labRegister({
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode,
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      });
 
-    return res.status(201).json(lab);
+      return res.status(201).json(lab);
+    } catch (error) {
+      next(error);
+    }
   }
 
-  async clinicRegister(req: Request, res: Response): Promise<any> {
-    const {
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      registrationNumber,
-      registrationExpiryDate,
-      headPhysicianName,
-      specializations,
-    } = registerClinicSchema.parse(req.body);
 
-    const clinic = await this.institutionService.clinicRegister({
-      institutionName,
-      contactNumber,
-      email,
-      address,
-      registrationNumber,
-      registrationExpiryDate,
-      headPhysicianName,
-      specializations,
-    });
+  async clinicRegister(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const {
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode,
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      } = registerClinicSchema.parse(req.body);
 
-    return res.status(201).json(clinic);
+      const clinic = await this.institutionService.clinicRegister({
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode: postalCode ?? "",
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      });
+
+      return res.status(201).json(clinic);
+    } catch (error) {
+      next(error);
+    }
   }
+
 }
