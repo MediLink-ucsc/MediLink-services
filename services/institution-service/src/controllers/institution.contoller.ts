@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
 import InstitutionService from '../services/institution.service';
 
@@ -43,69 +43,77 @@ export class InstitutionController {
     this.institutionService = new InstitutionService();
   }
 
-  async labRegister(req: Request, res: Response): Promise<any> {
-  const {
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-    adminUserId,
-  } = registerLabSchema.parse(req.body);
+  async labRegister(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const {
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode,
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      } = registerLabSchema.parse(req.body);
 
-  const lab = await this.institutionService.labRegister({
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-    adminUserId,
-  });
+      const lab = await this.institutionService.labRegister({
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode,
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      });
 
-  return res.status(201).json(lab);
-}
+      return res.status(201).json(lab);
+    } catch (error) {
+      next(error);
+    }
+  }
 
 
-  async clinicRegister(req: Request, res: Response): Promise<any> {
-  const {
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-    adminUserId,
-  } = registerClinicSchema.parse(req.body);
+  async clinicRegister(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const {
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode,
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      } = registerClinicSchema.parse(req.body);
 
-  const clinic = await this.institutionService.clinicRegister({
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode: postalCode ?? "",
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-    adminUserId,
-  });
+      const clinic = await this.institutionService.clinicRegister({
+        institutionName,
+        address,
+        city,
+        provinceState,
+        postalCode: postalCode ?? "",
+        phoneNumber,
+        emailAddress,
+        website,
+        licenseNumber,
+        institutionLogo,
+        adminUserId,
+      });
 
-  return res.status(201).json(clinic);
-}
+      return res.status(201).json(clinic);
+    } catch (error) {
+      next(error);
+    }
+  }
 
 }

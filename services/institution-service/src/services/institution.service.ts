@@ -4,6 +4,7 @@ import { Lab } from '../entity/lab.entity';
 import { Clinic } from '../entity/clinic.entity';
 import { createError } from '../utils';
 import { publishUserRegistered } from '../events/producers/institutionRegistered.producer';
+import logger from '../config/logger';
 
 interface RegisterLabDto {
   institutionName: string;
@@ -82,10 +83,16 @@ class InstitutionService {
 
   await this.labRepository.save(lab);
 
-  await publishUserRegistered({
-    key: lab.id?.toString(),
-    value: lab,
-  });
+  // Try to publish event, but don't fail if Kafka is unavailable
+  try {
+    await publishUserRegistered({
+      key: lab.id?.toString(),
+      value: lab,
+    });
+  } catch (kafkaError) {
+    logger.error('Failed to publish lab registration event to Kafka:', kafkaError);
+    // Continue execution - don't fail the registration because of Kafka issues
+  }
 
   return {
     labId: lab.id,
@@ -132,10 +139,16 @@ class InstitutionService {
 
   await this.clinicRepository.save(clinic);
 
-  await publishUserRegistered({
-    key: clinic.id?.toString(),
-    value: clinic,
-  });
+  // Try to publish event, but don't fail if Kafka is unavailable
+  try {
+    await publishUserRegistered({
+      key: clinic.id?.toString(),
+      value: clinic,
+    });
+  } catch (kafkaError) {
+    logger.error('Failed to publish clinic registration event to Kafka:', kafkaError);
+    // Continue execution - don't fail the registration because of Kafka issues
+  }
 
   return {
     clinicId: clinic.id,
