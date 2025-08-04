@@ -9,5 +9,15 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "MediLink",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^24.2.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "ioredis": "^5.7.0",
+    "winston": "^3.17.0"
+  }
 }

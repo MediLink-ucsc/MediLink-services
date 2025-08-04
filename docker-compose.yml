@@ -50,21 +50,21 @@ services:
     depends_on:
       - kafka
 
-  ocr-engine:
-    container_name: ocr-engine
-    build:
-      context: services/lab-report-service
-      dockerfile: docker/Dockerfile
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./services/lab-report-service/uploads:/app/uploads
-    environment:
-      - NODE_ENV=production
-      - PORT=3100
-      - POPPLER_PATH=/usr/bin
-      - TESSERACT_PATH=/usr/bin/tesseract
-    restart: unless-stopped
+  # ocr-engine:
+  #   container_name: ocr-engine
+  #   build:
+  #     context: services/lab-report-service
+  #     dockerfile: docker/Dockerfile
+  #   ports:
+  #     - "3100:3100"
+  #   volumes:
+  #     - ./services/lab-report-service/uploads:/app/uploads
+  #   environment:
+  #     - NODE_ENV=production
+  #     - PORT=3100
+  #     - POPPLER_PATH=/usr/bin
+  #     - TESSERACT_PATH=/usr/bin/tesseract
+  #   restart: unless-stopped
 
 volumes:
   redis_data:
