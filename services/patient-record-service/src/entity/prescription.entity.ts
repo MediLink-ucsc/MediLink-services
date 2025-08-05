@@ -9,16 +9,16 @@ import { Medication } from './medication.entity';
 
 @Entity()
 export class Prescription {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ name: 'patient_id' })
-  patientId: number;
+  @Column()
+  patientId: string;
 
-  @Column({ name: 'additional_instructions', type: 'text', nullable: true })
+  @Column({ type: 'text', nullable: true })
   additionalInstructions: string;
 
-  @CreateDateColumn({ name: 'created_at' })
+  @CreateDateColumn()
   createdAt: Date;
 
   @OneToMany(() => Medication, (medication) => medication.prescription, {

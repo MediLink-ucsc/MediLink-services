@@ -5,7 +5,7 @@ import PatientRecordService  from '../services/patientrecord.service';
 const patientrecordRouter = Router();
 const patientrecordController = new PatientRecordController();
 
-    patientrecordRouter.post('/prescription', patientrecordController.insertprescription.bind(patientrecordController));
+    patientrecordRouter.post('/prescriptions/insert', patientrecordController.insertprescription.bind(patientrecordController));
 
 
 export { patientrecordRouter };

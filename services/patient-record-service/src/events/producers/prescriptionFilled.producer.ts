@@ -1,10 +1,10 @@
 import logger from '../../config/logger';
-import { USER_TOPICS } from '../../constants';
+import { PATIENT_RECORD_SUBSCRIBE_TOPICS } from '../../constants';
 
 const { producer } = require('../kafka');
 
-export const publishUserRegistered = async (data: any) => {
-  const topic = USER_TOPICS.INSTITUTION_REGISTERED;
+export const publishPrescriptionFilled = async (data: any) => {
+  const topic = PATIENT_RECORD_SUBSCRIBE_TOPICS.PRESCRIPTION_FILLED;
 
   logger.info(
     `publishing message to topic: ${topic} with message: ${JSON.stringify(data)}`,
