@@ -15,7 +15,7 @@ export const errorHandler = (
     res.status(400).json({
       status: 'error',
       message: 'Invalid input',
-      errors: error.errors,
+      errors: error.issues,
     });
     return;
   }

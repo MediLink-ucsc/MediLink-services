@@ -11,6 +11,13 @@ class PatientRecordService {
   constructor() {
   }
 
+  async insertprescription({
+  
+}) {
+ 
+  
+}
+
  
 
 }
