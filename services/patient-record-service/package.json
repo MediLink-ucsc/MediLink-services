@@ -11,13 +11,20 @@
   "author": "MediLink",
   "license": "MIT",
   "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.2.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "express": "^5.1.0",
     "ioredis": "^5.7.0",
-    "winston": "^3.17.0"
+    "jsonwebtoken": "^9.0.2",
+    "kafkajs": "^2.2.4",
+    "typeorm": "^0.3.25",
+    "winston": "^3.17.0",
+    "zod": "^4.0.14"
   }
 }

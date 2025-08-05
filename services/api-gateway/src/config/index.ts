@@ -28,7 +28,7 @@ export const config: Config = {
   INSTITUTION_SERVICE_URL:
     process.env.INSTITUTION_SERVICE_URL || 'http://localhost:3002',
   PATIENT_RECORD_SERVICE_URL:
-    process.env.PATIENT_RECORD_SERVICE_URL || 'http://localhost:3003',
+    process.env.PATIENT_RECORD_SERVICE_URL || 'http://localhost:3005',
   LAB_REPORT_SERVICE_URL:
     process.env.LAB_REPORT_SERVICE_URL || 'http://localhost:3004',
   NODE_ENV: process.env.NODE_ENV || 'development',
