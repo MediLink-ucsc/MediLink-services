@@ -354,7 +354,8 @@ export class AuthController {
   }
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
-    const { username, password } = loginWithRoleSchema.parse(req.body);
+    const { username, password } = loginSchema.parse(req.body);
+    console.log(req.body)
     const result = await this.authService.medvaultproLogin(username, password);
 
     return res.status(200).json(result);

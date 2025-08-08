@@ -6,6 +6,6 @@ const patientrecordRouter = Router();
 const patientrecordController = new PatientRecordController();
 
     patientrecordRouter.post('/prescriptions/insert', patientrecordController.insertprescription.bind(patientrecordController));
-
+    patientrecordRouter.post('/laborders/insert', patientrecordController.insertlaborder.bind(patientrecordController));
 
 export { patientrecordRouter };
