@@ -30,6 +30,14 @@ export const insertLabTestSchema = z.object({
 
 });
 
+export const insertSoapNoteSchema = z.object({
+  patientId: z.string().min(1, 'Patient ID is required'),
+  dateTime: z.string().min(1, 'Date and time is required'),
+  subjective: z.string().min(1, 'Subjective is required'),
+  objective: z.string().min(1, 'Objective is required'),
+  assessment: z.string().min(1, 'Assessment is required'),
+  plan: z.string().min(1, 'Plan is required'),
+});
 
 export class PatientRecordController {
 
@@ -148,6 +156,68 @@ export class PatientRecordController {
         next(error);
       }
     }
+
+    async insertsoapnote(req: Request, res: Response, next: NextFunction): Promise<any> {
+      try {
+        // Validate input using Zod (you’ll need to define insertSoapNoteSchema separately)
+        const {
+          patientId,
+          dateTime,
+          subjective,
+          objective,
+          assessment,
+          plan,
+        } = insertSoapNoteSchema.parse(req.body);
+
+        // Extract Authorization header
+        const authHeader = req.headers.authorization;
+        console.log('Authorization header:', authHeader);
+
+        if (!authHeader) {
+          return res.status(401).json({ message: 'Unauthorized: No token provided' });
+        }
+
+        // Get token from "Bearer <token>"
+        const token = authHeader.split(' ')[1];
+        console.log('Token extracted:', token);
+
+        // Get JWT secret
+        const secret = process.env.AUTH_JWT_SECRET;
+        if (!secret) {
+          throw new Error('AUTH_JWT_SECRET is not defined');
+        }
+
+        // Decode and verify token
+        const decoded = jwt.verify(token, secret) as { id: number; role: string };
+        console.log('Decoded token:', decoded);
+
+        // Role-based access check
+        if (!decoded || decoded.role !== 'DOCTOR') {
+          return res.status(403).json({ message: 'Forbidden: Not a doctor' });
+        }
+
+        // Extract doctorUserId from token
+        const doctorUserId = decoded.id;
+
+        // Call service to insert SOAP note
+        const result = await this.patientRecordService.insertSoapNote({
+          patientId,
+          doctorUserId,
+          dateTime,
+          subjective,
+          objective,
+          assessment,
+          plan,
+        });
+
+        return res.status(201).json(result);
+      } catch (error) {
+        next(error);
+      }
+    }
+
+    
+
 
 
 

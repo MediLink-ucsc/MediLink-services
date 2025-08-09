@@ -7,7 +7,9 @@ import { Medication } from '../entity/medication.entity';
 import { Prescription } from '../entity/prescription.entity';
 import { LabOrder } from '../entity/laborder.entity';
 import { LabTest } from '../entity/labtest.entity';
+import { SoapNote } from '../entity/soap.entity';
 import { publishLabOrderCreated } from '../events/producers/laborderCreated.producer';
+
 export interface InsertPrescriptionDto {
   patientId: string;
   doctorUserId: number;
@@ -31,12 +33,23 @@ export interface InsertLabOrderDto {
   }[];
 }
 
+export interface InsertSoapNoteDto {
+  patientId: string;
+  doctorUserId: number;
+  dateTime: string | Date;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+}
+
 
 class PatientRecordService {
   private prescriptionRepository: Repository<Prescription>;
   private medicationRepository: Repository<Medication>;
-  private laborderRepository: Repository<LabOrder>
-  private labtestRepository: Repository<LabTest>
+  private laborderRepository: Repository<LabOrder>;
+  private labtestRepository: Repository<LabTest>;
+  private soapNoteRepository: Repository<SoapNote>;
 
 
   constructor() {
@@ -44,6 +57,7 @@ class PatientRecordService {
     this.medicationRepository = AppDataSource.getRepository(Medication);
     this.laborderRepository = AppDataSource.getRepository(LabOrder);
     this.labtestRepository = AppDataSource.getRepository(LabTest);
+    this.soapNoteRepository = AppDataSource.getRepository(SoapNote);
   }
 
   async insertprescription({
@@ -132,6 +146,46 @@ class PatientRecordService {
           message: 'Lab order with tests created successfully',
         };
       }
+
+      async insertSoapNote({
+        patientId,
+        doctorUserId,
+        dateTime,
+        subjective,
+        objective,
+        assessment,
+        plan,
+      }: InsertSoapNoteDto) {
+        // Create new SoapNote entity
+        const soapNote = new SoapNote();
+
+        soapNote.patientId = patientId;
+        soapNote.doctorUserId = doctorUserId;
+        soapNote.dateTime = new Date(dateTime);
+        soapNote.subjective = subjective;
+        soapNote.objective = objective;
+        soapNote.assessment = assessment;
+        soapNote.plan = plan;
+
+        // Save SoapNote entity
+        await this.soapNoteRepository.save(soapNote);
+
+        // Optional: publish event or logging here
+        try {
+          await publishSoapNoteCreated({
+            key: soapNote.soapNoteId.toString(),
+            value: soapNote,
+          });
+        } catch (error) {
+          logger.error('Failed to publish SOAP note event:', error);
+        }
+
+        return {
+          soapNoteId: soapNote.soapNoteId,
+          message: 'SOAP note created successfully',
+        };
+      }
+
 
   
 }
