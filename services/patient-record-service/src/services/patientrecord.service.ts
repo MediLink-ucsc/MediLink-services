@@ -9,6 +9,7 @@ import { LabOrder } from '../entity/laborder.entity';
 import { LabTest } from '../entity/labtest.entity';
 import { SoapNote } from '../entity/soap.entity';
 import { publishLabOrderCreated } from '../events/producers/laborderCreated.producer';
+import { publishSoapNoteCreated } from '../events/producers/soapnoteCreated.producer';
 
 export interface InsertPrescriptionDto {
   patientId: string;
@@ -173,7 +174,7 @@ class PatientRecordService {
         // Optional: publish event or logging here
         try {
           await publishSoapNoteCreated({
-            key: soapNote.soapNoteId.toString(),
+            key: soapNote.id.toString(),
             value: soapNote,
           });
         } catch (error) {
@@ -181,7 +182,7 @@ class PatientRecordService {
         }
 
         return {
-          soapNoteId: soapNote.soapNoteId,
+          soapNoteId: soapNote.id,
           message: 'SOAP note created successfully',
         };
       }
