@@ -7,7 +7,11 @@ interface ExtractedData {
 }
 
 class PythonService {
-  extractData(filePath: string, fileFormat: string): Promise<ExtractedData> {
+  extractData(
+    filePath: string,
+    fileFormat: string,
+    testTypeId?: number
+  ): Promise<ExtractedData> {
     return new Promise((resolve, reject) => {
       const scriptPath: string = path.join(
         __dirname,
@@ -18,15 +22,15 @@ class PythonService {
       const pythonCommand: string =
         process.env.NODE_ENV === "production" ? "python3" : "python";
 
-      console.log(
-        `🔍 Executing: ${pythonCommand} ${scriptPath} ${filePath} ${fileFormat}`
-      );
+      // Build command arguments
+      const args = [scriptPath, filePath, fileFormat];
+      if (testTypeId) {
+        args.push(testTypeId.toString());
+      }
 
-      const pythonProcess: ChildProcess = spawn(pythonCommand, [
-        scriptPath,
-        filePath,
-        fileFormat,
-      ]);
+      console.log(`🔍 Executing: ${pythonCommand} ${args.join(" ")}`);
+
+      const pythonProcess: ChildProcess = spawn(pythonCommand, args);
 
       let dataString: string = "";
       let errorString: string = "";

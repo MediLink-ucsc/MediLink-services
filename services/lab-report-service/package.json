@@ -26,7 +26,7 @@
     "multer": "^1.4.2",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.25"
+    "typeorm": "^0.3.20"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -37,7 +37,7 @@
     "nodemon": "^2.0.7",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typeorm-ts-node-commonjs": "^0.3.25"
+    "typeorm-ts-node-commonjs": "^0.3.20"
   },
   "author": "MediLink",
   "license": "MIT"

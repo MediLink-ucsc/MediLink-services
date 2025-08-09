@@ -13,6 +13,7 @@ import {
   reportRouter,
   labWorkflowRouter,
 } from "./routes";
+import templateRouter from "./routes/template.route";
 import { AppDataSource } from "./data-source";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/v1/labReport/", indexRouter);
 app.use("/api/v1/labReport/extract", extractionRouter);
 app.use("/api/v1/labReport/report", reportRouter);
 app.use("/api/v1/labReport/workflow", labWorkflowRouter);
+app.use("/api/v1/labReport/template", templateRouter);
 
 // Start server
 AppDataSource.initialize()

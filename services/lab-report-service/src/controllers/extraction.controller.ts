@@ -6,6 +6,7 @@ interface ExtractRequest extends Request {
   body: {
     filePath?: string;
     fileFormat: string;
+    testTypeId?: number;
   };
 }
 
@@ -25,6 +26,7 @@ class ExtractionController {
       // Handle file upload case
       const filePath = req.file ? req.file.path : req.body.filePath;
       const fileFormat = req.body.fileFormat;
+      const testTypeId = req.body.testTypeId;
 
       if (!filePath || !fileFormat) {
         res.status(400).json({
@@ -34,10 +36,16 @@ class ExtractionController {
         return;
       }
 
-      // Call the Python service to perform extraction
+      console.log(`🔬 Extracting data with dynamic parser:`);
+      console.log(`   File: ${filePath}`);
+      console.log(`   Format: ${fileFormat}`);
+      console.log(`   Test Type ID: ${testTypeId || "Not specified"}`);
+
+      // Call the Python service to perform extraction with optional test type ID
       const extractedData = await pythonService.extractData(
         filePath,
-        fileFormat
+        fileFormat,
+        testTypeId
       );
 
       res.status(200).json({

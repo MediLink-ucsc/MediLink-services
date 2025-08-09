@@ -4,10 +4,8 @@ import json
 from pdf2image import convert_from_path
 import pytesseract
 import utils
-from parser_patient_details import PatientDetailsParser
-from parser_prescription import PrescriptionParser
-from parser_lab_report import LabReportParser  
-from parser_fbc_report import FBCReportParser  
+from db_helper import db_helper
+from parser_factory import parser_factory
 
 # Use environment variables in Docker, fallback to hardcoded paths for local development
 import os
@@ -20,7 +18,7 @@ if os.getenv('NODE_ENV') == 'production':
 else:
     pytesseract.pytesseract.tesseract_cmd = TESSERACT_ENGINE_PATH
 
-def extract(file_path, file_format):
+def extract(file_path, file_format, test_type_id=None):
     try:
         # In Docker, poppler tools are in PATH
         if os.getenv('NODE_ENV') == 'production':
@@ -45,25 +43,34 @@ def extract(file_path, file_format):
         print(repr(document_text), file=sys.stderr)
         print("=== END COMPLETE OCR TEXT ===", file=sys.stderr)
 
-        # Parse the document
-        print(f"=== PARSING AS {file_format.upper()} ===", file=sys.stderr)
+        # Get test type configuration from database
+        print(f"=== GETTING TEST TYPE CONFIGURATION ===", file=sys.stderr)
         
-        if file_format == "prescription":
-            extracted_data = PrescriptionParser(document_text).parse()
-        elif file_format == "patient_details":
-            extracted_data = PatientDetailsParser(document_text).parse()
-        elif file_format == "lab_report":  
-            extracted_data = LabReportParser(document_text).parse()
-        elif file_format == "fbc":
-            extracted_data = FBCReportParser(document_text).parse()
+        if test_type_id:
+            # If test type ID is provided, use it to get configuration
+            test_type_config = db_helper.get_test_type_config(test_type_id)
+            print(f"=== USING TEST TYPE ID: {test_type_id} ===", file=sys.stderr)
         else:
-            raise Exception(f"Invalid file format: {file_format}")
+            # Otherwise, use file format to get configuration
+            test_type_config = db_helper.get_test_type_by_format(file_format)
+            print(f"=== USING FILE FORMAT: {file_format} ===", file=sys.stderr)
+        
+        print(f"=== TEST TYPE CONFIG: {test_type_config.get('label', 'Unknown')} ===", file=sys.stderr)
+        
+        # Create parser using the factory
+        print(f"=== CREATING DYNAMIC PARSER ===", file=sys.stderr)
+        parser = parser_factory.create_parser(document_text, test_type_config)
+        
+        # Parse the document
+        print(f"=== PARSING DOCUMENT ===", file=sys.stderr)
+        extracted_data = parser.parse()
         
         print(f"=== PARSED DATA ===", file=sys.stderr)
         print(json.dumps(extracted_data, indent=2), file=sys.stderr)
         print("=== END PARSED DATA ===", file=sys.stderr)
         
         return extracted_data
+        
     except Exception as e:
         print(f"=== EXTRACTION ERROR ===", file=sys.stderr)
         print(str(e), file=sys.stderr)
@@ -71,20 +78,22 @@ def extract(file_path, file_format):
         raise Exception(f"Extraction failed: {str(e)}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print(json.dumps({"error": "Usage: python extractor.py <file_path> <file_format>"}))
+    if len(sys.argv) < 3:
+        print(json.dumps({"error": "Usage: python extractor.py <file_path> <file_format> [test_type_id]"}))
         sys.exit(1)
     
     file_path = sys.argv[1]
     file_format = sys.argv[2]
+    test_type_id = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3].isdigit() else None
     
-    print(f"=== STARTING EXTRACTION ===", file=sys.stderr)
+    print(f"=== STARTING DYNAMIC EXTRACTION ===", file=sys.stderr)
     print(f"File: {file_path}", file=sys.stderr)
     print(f"Format: {file_format}", file=sys.stderr)
+    print(f"Test Type ID: {test_type_id}", file=sys.stderr)
     print("=== BEGIN PROCESSING ===", file=sys.stderr)
     
     try:
-        result = extract(file_path, file_format)
+        result = extract(file_path, file_format, test_type_id)
         print(json.dumps(result))  # This goes to stdout for Node.js
     except Exception as e:
         print(json.dumps({"error": str(e)}))

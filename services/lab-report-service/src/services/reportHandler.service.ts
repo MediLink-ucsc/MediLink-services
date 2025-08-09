@@ -5,6 +5,14 @@ import { LabResult } from "../entity/labResult.entity";
 import { AppDataSource } from "../data-source";
 import { CreateLabSampleDto, UpdateLabSampleDto } from "../dto/labSample.dto";
 import { CreateLabResultDto } from "../dto/labResult.dto";
+import {
+  CreateTestTypeDto,
+  UpdateTestTypeDto,
+  ReportTemplateDto,
+  AvailableParserDto,
+} from "../dto/testType.dto";
+import { spawn } from "child_process";
+import * as path from "path";
 
 export class ReportHandlerService {
   testTypesRepository: Repository<TestTypes>;
@@ -17,7 +25,7 @@ export class ReportHandlerService {
     this.labResultRepository = AppDataSource.getRepository(LabResult);
   }
 
-  // TestTypes methods
+  // Enhanced TestTypes methods with template support
   async getTestTypes(): Promise<TestTypes[]> {
     try {
       return await this.testTypesRepository.find();
@@ -36,8 +44,21 @@ export class ReportHandlerService {
     }
   }
 
-  async addTestType(testType: TestTypes): Promise<TestTypes> {
+  async addTestType(testTypeData: CreateTestTypeDto): Promise<TestTypes> {
     try {
+      const testType = this.testTypesRepository.create(testTypeData);
+
+      // Set complex fields using setters
+      if (testTypeData.reportFields) {
+        testType.reportFields = testTypeData.reportFields;
+      }
+      if (testTypeData.referenceRanges) {
+        testType.referenceRanges = testTypeData.referenceRanges;
+      }
+      if (testTypeData.basicFields) {
+        testType.basicFields = testTypeData.basicFields;
+      }
+
       return await this.testTypesRepository.save(testType);
     } catch (error) {
       console.error("Error adding test type:", error);
@@ -45,7 +66,99 @@ export class ReportHandlerService {
     }
   }
 
-  // LabSample methods
+  async updateTestType(
+    id: number,
+    updateData: UpdateTestTypeDto
+  ): Promise<TestTypes> {
+    try {
+      const testType = await this.getTestTypeById(id);
+      if (!testType) {
+        throw new Error("Test type not found");
+      }
+
+      // Update basic fields
+      Object.assign(testType, updateData);
+
+      // Update complex fields using setters
+      if (updateData.reportFields) {
+        testType.reportFields = updateData.reportFields;
+      }
+      if (updateData.referenceRanges) {
+        testType.referenceRanges = updateData.referenceRanges;
+      }
+      if (updateData.basicFields) {
+        testType.basicFields = updateData.basicFields;
+      }
+
+      return await this.testTypesRepository.save(testType);
+    } catch (error) {
+      console.error("Error updating test type:", error);
+      throw new Error("Failed to update test type");
+    }
+  }
+
+  async createReportTemplate(
+    templateData: ReportTemplateDto
+  ): Promise<TestTypes> {
+    try {
+      const testType = await this.getTestTypeById(templateData.testTypeId);
+      if (!testType) {
+        throw new Error("Test type not found");
+      }
+
+      // Update the test type with the new template
+      testType.reportFields = templateData.reportFields;
+      testType.referenceRanges = templateData.referenceRanges;
+
+      return await this.testTypesRepository.save(testType);
+    } catch (error) {
+      console.error("Error creating report template:", error);
+      throw new Error("Failed to create report template");
+    }
+  }
+
+  async getAvailableParsers(): Promise<AvailableParserDto[]> {
+    try {
+      // Get available parsers from Python parser factory
+      const pythonScript = path.join(
+        __dirname,
+        "../../python/get_available_parsers.py"
+      );
+
+      return new Promise((resolve, reject) => {
+        const pythonProcess = spawn("python", [pythonScript]);
+        let output = "";
+        let errorOutput = "";
+
+        pythonProcess.stdout.on("data", (data) => {
+          output += data.toString();
+        });
+
+        pythonProcess.stderr.on("data", (data) => {
+          errorOutput += data.toString();
+        });
+
+        pythonProcess.on("close", (code) => {
+          if (code === 0) {
+            try {
+              const parsers = JSON.parse(output);
+              resolve(parsers);
+            } catch (parseError) {
+              reject(new Error("Failed to parse available parsers"));
+            }
+          } else {
+            console.error("Python script error:", errorOutput);
+            reject(new Error("Failed to get available parsers"));
+          }
+        });
+      });
+    } catch (error) {
+      console.error("Error getting available parsers:", error);
+      throw new Error("Failed to get available parsers");
+    }
+  }
+
+  // LabSample methods (enhanced to pass test type ID to extraction)
   async createLabSample(labSampleData: CreateLabSampleDto): Promise<LabSample> {
     try {
       // Validate test type exists
@@ -116,12 +229,13 @@ export class ReportHandlerService {
     }
   }
 
-  // LabResult methods
+  // Enhanced LabResult methods with dynamic extraction
   async createLabResult(labResultData: CreateLabResultDto): Promise<LabResult> {
     try {
-      // Validate lab sample exists
+      // Validate lab sample exists and get test type information
       const labSample = await this.labSampleRepository.findOne({
         where: { id: labResultData.labSampleId },
+        relations: ["testType"],
       });
 
       if (!labSample) {

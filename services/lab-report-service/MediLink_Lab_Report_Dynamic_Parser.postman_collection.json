@@ -1,0 +1,347 @@
+{
+  "info": {
+    "name": "MediLink Lab Report - Dynamic Parser System",
+    "description": "Test collection for the dynamic parser and template system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3004/api/v1/labReport",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Template Configuration",
+      "item": [
+        {
+          "name": "Get Available Parsers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/template/parsers",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "parsers"]
+            }
+          }
+        },
+        {
+          "name": "Get Field Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/template/field-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "field-types"]
+            }
+          }
+        },
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/template/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "categories"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test Type Management",
+      "item": [
+        {
+          "name": "Create Lipid Panel Test Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"lipid_panel\",\n  \"label\": \"Lipid Panel\",\n  \"category\": \"biochemistry\",\n  \"parserClass\": \"LabReportParser\",\n  \"parserModule\": \"parser_lab_report\",\n  \"reportFields\": [\n    {\n      \"name\": \"Total Cholesterol\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \"<200\"\n    },\n    {\n      \"name\": \"HDL Cholesterol\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \">40\"\n    },\n    {\n      \"name\": \"LDL Cholesterol\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \"<100\"\n    },\n    {\n      \"name\": \"Triglycerides\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \"<150\"\n    }\n  ],\n  \"referenceRanges\": {\n    \"Total Cholesterol\": {\n      \"max\": 200,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \"<200\"\n    },\n    \"HDL Cholesterol\": {\n      \"min\": 40,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \">40\"\n    },\n    \"LDL Cholesterol\": {\n      \"max\": 100,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \"<100\"\n    },\n    \"Triglycerides\": {\n      \"max\": 150,\n      \"unit\": \"mg/dL\",\n      \"normalRange\": \"<150\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/template/test-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "test-types"]
+            }
+          }
+        },
+        {
+          "name": "Create Thyroid Function Test Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"thyroid_function\",\n  \"label\": \"Thyroid Function Test\",\n  \"category\": \"endocrinology\",\n  \"parserClass\": \"LabReportParser\",\n  \"parserModule\": \"parser_lab_report\",\n  \"reportFields\": [\n    {\n      \"name\": \"TSH\",\n      \"type\": \"decimal\",\n      \"required\": true,\n      \"unit\": \"mIU/L\",\n      \"normalRange\": \"0.4-4.0\"\n    },\n    {\n      \"name\": \"Free T4\",\n      \"type\": \"decimal\",\n      \"required\": true,\n      \"unit\": \"ng/dL\",\n      \"normalRange\": \"0.8-1.8\"\n    },\n    {\n      \"name\": \"Free T3\",\n      \"type\": \"decimal\",\n      \"required\": false,\n      \"unit\": \"pg/mL\",\n      \"normalRange\": \"2.3-4.2\"\n    }\n  ],\n  \"referenceRanges\": {\n    \"TSH\": {\n      \"min\": 0.4,\n      \"max\": 4.0,\n      \"unit\": \"mIU/L\",\n      \"normalRange\": \"0.4-4.0\"\n    },\n    \"Free T4\": {\n      \"min\": 0.8,\n      \"max\": 1.8,\n      \"unit\": \"ng/dL\",\n      \"normalRange\": \"0.8-1.8\"\n    },\n    \"Free T3\": {\n      \"min\": 2.3,\n      \"max\": 4.2,\n      \"unit\": \"pg/mL\",\n      \"normalRange\": \"2.3-4.2\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/template/test-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "test-types"]
+            }
+          }
+        },
+        {
+          "name": "Create Urinalysis Test Type (Generic Parser)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"urinalysis\",\n  \"label\": \"Urinalysis\",\n  \"category\": \"general\",\n  \"parserClass\": null,\n  \"parserModule\": null,\n  \"reportFields\": [\n    {\n      \"name\": \"Protein\",\n      \"type\": \"text\",\n      \"required\": true,\n      \"unit\": \"\",\n      \"normalRange\": \"Negative\"\n    },\n    {\n      \"name\": \"Glucose\",\n      \"type\": \"text\",\n      \"required\": true,\n      \"unit\": \"\",\n      \"normalRange\": \"Negative\"\n    },\n    {\n      \"name\": \"Specific Gravity\",\n      \"type\": \"decimal\",\n      \"required\": true,\n      \"unit\": \"\",\n      \"normalRange\": \"1.003-1.030\"\n    },\n    {\n      \"name\": \"pH\",\n      \"type\": \"decimal\",\n      \"required\": true,\n      \"unit\": \"\",\n      \"normalRange\": \"5.0-8.0\"\n    }\n  ],\n  \"referenceRanges\": {\n    \"Specific Gravity\": {\n      \"min\": 1.003,\n      \"max\": 1.030,\n      \"unit\": \"\",\n      \"normalRange\": \"1.003-1.030\"\n    },\n    \"pH\": {\n      \"min\": 5.0,\n      \"max\": 8.0,\n      \"unit\": \"\",\n      \"normalRange\": \"5.0-8.0\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/template/test-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "test-types"]
+            }
+          }
+        },
+        {
+          "name": "Get All Test Types",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/template/test-types",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "test-types"]
+            }
+          }
+        },
+        {
+          "name": "Get Test Type by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/template/test-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "test-types", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Test Type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Complete Blood Count (Updated)\",\n  \"reportFields\": [\n    {\n      \"name\": \"RBC\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"x 10^12/L\",\n      \"normalRange\": \"4.5-5.5\"\n    },\n    {\n      \"name\": \"Hemoglobin\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"g/dL\",\n      \"normalRange\": \"13.5-17.5\"\n    },\n    {\n      \"name\": \"Hematocrit\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"%\",\n      \"normalRange\": \"41-53\"\n    },\n    {\n      \"name\": \"WBC\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"x 10^9/L\",\n      \"normalRange\": \"4.0-11.0\"\n    },\n    {\n      \"name\": \"Platelets\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"x 10^9/L\",\n      \"normalRange\": \"150-450\"\n    },\n    {\n      \"name\": \"MCV\",\n      \"type\": \"number\",\n      \"required\": false,\n      \"unit\": \"fL\",\n      \"normalRange\": \"80-100\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/template/test-types/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "test-types", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Template Management",
+      "item": [
+        {
+          "name": "Create Report Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"testTypeId\": 1,\n  \"reportFields\": [\n    {\n      \"name\": \"RBC\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"x 10^12/L\",\n      \"normalRange\": \"4.5-5.5\"\n    },\n    {\n      \"name\": \"Hemoglobin\",\n      \"type\": \"number\",\n      \"required\": true,\n      \"unit\": \"g/dL\",\n      \"normalRange\": \"13.5-17.5\"\n    }\n  ],\n  \"referenceRanges\": {\n    \"RBC\": {\n      \"min\": 4.5,\n      \"max\": 5.5,\n      \"unit\": \"x 10^12/L\",\n      \"normalRange\": \"4.5-5.5\"\n    },\n    \"Hemoglobin\": {\n      \"min\": 13.5,\n      \"max\": 17.5,\n      \"unit\": \"g/dL\",\n      \"normalRange\": \"13.5-17.5\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/template/templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "templates"]
+            }
+          }
+        },
+        {
+          "name": "Get Report Template",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/template/templates/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["template", "templates", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Lab Workflow with Dynamic Parsing",
+      "item": [
+        {
+          "name": "Create Lab Sample (FBC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"labId\": \"LAB001\",\n  \"barcode\": \"BC123456789\",\n  \"testTypeId\": 1,\n  \"sampleType\": \"Blood\",\n  \"volume\": \"5ml\",\n  \"container\": \"EDTA Tube\",\n  \"patientId\": \"P123456\",\n  \"expectedTime\": \"2025-08-10T10:00:00Z\",\n  \"priority\": \"normal\",\n  \"notes\": \"Fasting sample\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workflow/lab-samples",
+              "host": ["{{baseUrl}}"],
+              "path": ["workflow", "lab-samples"]
+            }
+          }
+        },
+        {
+          "name": "Create Lab Sample (Custom Test Type)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"labId\": \"LAB002\",\n  \"barcode\": \"BC987654321\",\n  \"testTypeId\": 3,\n  \"sampleType\": \"Serum\",\n  \"volume\": \"3ml\",\n  \"container\": \"SST Tube\",\n  \"patientId\": \"P789012\",\n  \"expectedTime\": \"2025-08-10T11:00:00Z\",\n  \"priority\": \"high\",\n  \"notes\": \"Thyroid function test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/workflow/lab-samples",
+              "host": ["{{baseUrl}}"],
+              "path": ["workflow", "lab-samples"]
+            }
+          }
+        },
+        {
+          "name": "Get Lab Samples",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflow/lab-samples",
+              "host": ["{{baseUrl}}"],
+              "path": ["workflow", "lab-samples"]
+            }
+          }
+        },
+        {
+          "name": "Get Patient Lab History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/workflow/patients/P123456/history",
+              "host": ["{{baseUrl}}"],
+              "path": ["workflow", "patients", "P123456", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enhanced Extraction",
+      "item": [
+        {
+          "name": "Extract with Test Type ID (FBC)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filePath\": \"/path/to/fbc-report.pdf\",\n  \"fileFormat\": \"fbc\",\n  \"testTypeId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/extract",
+              "host": ["{{baseUrl}}"],
+              "path": ["extract"]
+            }
+          }
+        },
+        {
+          "name": "Extract with Test Type ID (Custom)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filePath\": \"/path/to/lipid-panel.pdf\",\n  \"fileFormat\": \"lab_report\",\n  \"testTypeId\": 4\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/extract",
+              "host": ["{{baseUrl}}"],
+              "path": ["extract"]
+            }
+          }
+        },
+        {
+          "name": "Extract without Test Type ID (Fallback)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"filePath\": \"/path/to/general-report.pdf\",\n  \"fileFormat\": \"lab_report\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/extract",
+              "host": ["{{baseUrl}}"],
+              "path": ["extract"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

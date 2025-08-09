@@ -91,13 +91,24 @@ export class LabWorkflowService {
         ` Starting background extraction for lab sample ${labSampleId}`
       );
 
-      // Extract data using Python service
+      // Get the lab sample with test type information
+      const labSample = await reportHandlerService.getLabSampleById(
+        labSampleId
+      );
+      if (!labSample) {
+        throw new Error("Lab sample not found during extraction");
+      }
+
+      // Extract data using Python service with test type ID for dynamic parsing
       const extractedData = await pythonService.extractData(
         reportFilePath,
-        testType
+        testType,
+        labSample.testTypeId // Pass the test type ID to enable dynamic parsing
       );
 
-      console.log(` Data extracted successfully for lab sample ${labSampleId}`);
+      console.log(
+        ` Data extracted successfully for lab sample ${labSampleId} using test type ${labSample.testTypeId}`
+      );
 
       // Create lab result with extracted data (will be encrypted automatically)
       const labResult = await reportHandlerService.createLabResult({
