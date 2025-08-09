@@ -15,6 +15,9 @@ export class Prescription {
   @Column()
   patientId: string;
 
+  @Column()
+  doctorUserId: number;
+
   @Column({ type: 'text', nullable: true })
   additionalInstructions: string;
 

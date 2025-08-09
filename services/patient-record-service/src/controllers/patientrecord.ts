@@ -47,8 +47,41 @@ export class PatientRecordController {
           additionalInstructions,
         } = insertprescriptionSchema.parse(req.body);
 
+        const authHeader = req.headers.authorization;
+        console.log('Authorization header:', authHeader);
+        if (!authHeader) {
+          return res.status(401).json({ message: 'Unauthorized: No token provided' });
+        }
+
+        const token = authHeader.split(' ')[1]; // Bearer <token>
+
+       
+        console.log('Token extracted:', token);
+
+
+        // Verify and decode token
+        const secret = process.env.AUTH_JWT_SECRET;
+        console.log(secret)
+
+        if (!secret) {
+          throw new Error('AUTH_JWT_SECRET is not defined');
+        }
+
+        const decoded = jwt.verify(token, secret) as unknown as { id: number; role: string };
+
+        
+        console.log('Decoded token:', decoded);
+
+        if (!decoded || decoded.role !== 'DOCTOR') {
+          return res.status(403).json({ message: 'Forbidden: Not a doctor' });
+        }
+
+        const doctorUserId = decoded.id;
+        console.log('Decoded doctorUserId:', doctorUserId);
+
         const result = await this.patientRecordService.insertprescription({
           patientId,
+          doctorUserId ,
           medications,
           additionalInstructions,
         });

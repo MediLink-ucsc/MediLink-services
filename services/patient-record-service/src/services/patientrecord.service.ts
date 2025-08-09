@@ -10,6 +10,7 @@ import { LabTest } from '../entity/labtest.entity';
 import { publishLabOrderCreated } from '../events/producers/laborderCreated.producer';
 export interface InsertPrescriptionDto {
   patientId: string;
+  doctorUserId: number;
   medications: {
     medicineName: string;
     dosage: string;
@@ -47,6 +48,7 @@ class PatientRecordService {
 
   async insertprescription({
         patientId,
+        doctorUserId,
         medications,
         additionalInstructions,
       
@@ -55,6 +57,7 @@ class PatientRecordService {
         // Create new Prescription entity
         const prescription = new Prescription();
         prescription.patientId = patientId;
+        prescription.doctorUserId = doctorUserId;
         prescription.additionalInstructions = additionalInstructions ?? '';
 
         // Save prescription first to get an ID
