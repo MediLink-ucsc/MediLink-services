@@ -31,20 +31,26 @@ app.use("/api/v1/labReport/report", reportRouter);
 app.use("/api/v1/labReport/workflow", labWorkflowRouter);
 app.use("/api/v1/labReport/template", templateRouter);
 
-// Start server
-AppDataSource.initialize()
-  .then(async () => {
-    await init();
-    logger.info("Database connection established successfully");
+// Initialize Data Source and optionally start server (skipped in test mode)
+if (!AppDataSource.isInitialized) {
+  AppDataSource.initialize()
+    .then(async () => {
+      await init();
+      logger.info("Database connection established successfully");
 
-    app.listen(config.PORT, () => {
-      logger.info(
-        `${config.SERVICE_NAME} is running on http://localhost:${config.PORT}`
-      );
+      if (process.env.SKIP_LISTEN !== "true") {
+        app.listen(config.PORT, () => {
+          logger.info(
+            `${config.SERVICE_NAME} is running on http://localhost:${config.PORT}`
+          );
+        });
+      } else {
+        logger.info("Server listen skipped (test mode)");
+      }
+    })
+    .catch((err) => {
+      console.error("Error during Data Source initialization", err);
     });
-  })
-  .catch((err) => {
-    console.error("Error during Data Source initialization", err);
-  });
+}
 
 export default app;

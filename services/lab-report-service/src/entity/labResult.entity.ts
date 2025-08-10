@@ -7,6 +7,7 @@ import {
   BeforeInsert,
   BeforeUpdate,
   AfterLoad,
+  CreateDateColumn,
 } from "typeorm";
 import { LabSample } from "./labSample.entity";
 import { encryptionService } from "../utils/encryption.util";
@@ -33,11 +34,8 @@ export class LabResult {
   // This field won't be persisted to database, used for application logic
   extractedData: Record<string, any>;
 
-  @Column({
-    name: "createdAt",
-    type: "timestamp",
-    default: () => "CURRENT_TIMESTAMP",
-  })
+  // Use CreateDateColumn without explicit type for cross-db compatibility (timestamp vs datetime)
+  @CreateDateColumn({ name: "createdAt" })
   createdAt: Date;
 
   @Column({ name: "status", default: "processed" })

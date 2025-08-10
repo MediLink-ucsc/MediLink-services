@@ -110,9 +110,9 @@ class DatabaseHelper:
             2: self._build_config(2, 'lab_report', 'General Lab Report', 'general', 'parser_lab_report', 'LabReportParser'),
             3: self._build_config(3, 'prescription', 'Prescription', 'prescription', 'parser_prescription', 'PrescriptionParser'),
             4: self._build_config(4, 'fbc_enhanced', 'Enhanced Full Blood Count', 'hematology', 'parser_fbc_report', 'FBCReportParser'),
-            5: self._build_config(5, 'patient_details', 'Patient Details', 'patient', 'parser_patient_details', 'PatientDetailsParser'),
+            5: self._build_config(5, 'lipid_panel', 'Lipid Panel', 'biochemistry', 'parser_lab_report', 'LabReportParser'),
             6: self._build_config(6, 'thyroid_function', 'Thyroid Function Test', 'endocrinology', 'parser_lab_report', 'LabReportParser'),
-            7: self._build_config(7, 'lipid_panel', 'Lipid Panel', 'biochemistry', 'parser_lab_report', 'LabReportParser'),
+            7: self._build_config(7, 'patient_details', 'Patient Details', 'patient', 'parser_patient_details', 'PatientDetailsParser'),
             8: self._build_config(8, 'liver_function', 'Liver Function Test', 'biochemistry', 'parser_lab_report', 'LabReportParser'),
         }
         

@@ -5,6 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
   OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from "typeorm";
 import { TestTypes } from "./testType.entity";
 import { LabResult } from "./labResult.entity";
@@ -42,22 +44,13 @@ export class LabSample {
   @OneToMany(() => LabResult, (labResult) => labResult.labSample)
   labResults: LabResult[];
 
-  @Column({
-    name: "createdAt",
-    type: "timestamp",
-    default: () => "CURRENT_TIMESTAMP",
-  })
+  @CreateDateColumn({ name: "createdAt" })
   createdAt: Date;
 
   @Column({ name: "expectedTime" })
   expectedTime: Date;
 
-  @Column({
-    name: "updatedAt",
-    type: "timestamp",
-    default: () => "CURRENT_TIMESTAMP",
-    onUpdate: "CURRENT_TIMESTAMP",
-  })
+  @UpdateDateColumn({ name: "updatedAt" })
   updatedAt: Date;
 
   @Column({ name: "status", default: "pending" })
