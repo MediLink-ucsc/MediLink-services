@@ -52,7 +52,16 @@ class BaseParser(ABC):
             for pattern in patterns:
                 match = re.search(pattern, self.text, re.IGNORECASE)
                 if match:
-                    value = match.group(1).strip()
+                    # Some legacy patterns (e.g. 'CENTRAL\s*MEDICAL\s*LABORATORY') have no capturing group.
+                    # Use first capturing group if present; otherwise the whole match to avoid IndexError.
+                    try:
+                        if match.lastindex and match.lastindex >= 1:
+                            value = match.group(1).strip()
+                        else:
+                            value = match.group(0).strip()
+                    except IndexError:
+                        # Fallback defensively to full match
+                        value = match.group(0).strip()
                     
                     # Special handling for laboratory field
                     if field_name == 'Laboratory' and 'CENTRAL' in pattern:
