@@ -8,8 +8,10 @@ import { Prescription } from '../entity/prescription.entity';
 import { LabOrder } from '../entity/laborder.entity';
 import { LabTest } from '../entity/labtest.entity';
 import { SoapNote } from '../entity/soap.entity';
+import { QuickExam } from '../entity/quickexam.entity';
 import { publishLabOrderCreated } from '../events/producers/laborderCreated.producer';
 import { publishSoapNoteCreated } from '../events/producers/soapnoteCreated.producer';
+import { publishQuickExamCreated } from '../events/producers/quickexamCreated.producer';
 
 export interface InsertPrescriptionDto {
   patientId: string;
@@ -44,6 +46,25 @@ export interface InsertSoapNoteDto {
   plan: string;
 }
 
+export interface InsertQuickExamDto {
+  patientId: string;          // patient ID as string
+  doctorUserId: number;       // ID of doctor creating the exam
+
+  bloodPressure?: string;     // e.g. "120/80"
+  heartRate?: number;         // bpm
+  temperature?: number;       // Celsius
+  spo2?: number;              // %
+  weight?: number;            // kg
+  height?: number;            // cm
+
+  generalAppearance?: string;
+  cardiovascular?: string;
+  respiratory?: string;
+  abdominal?: string;
+  neurological?: string;
+  additionalNotes?: string;
+}
+
 
 class PatientRecordService {
   private prescriptionRepository: Repository<Prescription>;
@@ -51,6 +72,7 @@ class PatientRecordService {
   private laborderRepository: Repository<LabOrder>;
   private labtestRepository: Repository<LabTest>;
   private soapNoteRepository: Repository<SoapNote>;
+  private quickExamRepository: Repository<QuickExam>;
 
 
   constructor() {
@@ -59,6 +81,7 @@ class PatientRecordService {
     this.laborderRepository = AppDataSource.getRepository(LabOrder);
     this.labtestRepository = AppDataSource.getRepository(LabTest);
     this.soapNoteRepository = AppDataSource.getRepository(SoapNote);
+    this.quickExamRepository = AppDataSource.getRepository(QuickExam);
   }
 
   async insertprescription({
@@ -186,6 +209,59 @@ class PatientRecordService {
           message: 'SOAP note created successfully',
         };
       }
+
+      async insertQuickExam({
+        patientId,
+        doctorUserId,
+        bloodPressure,
+        heartRate,
+        temperature,
+        spo2,
+        weight,
+        height,
+        generalAppearance,
+        cardiovascular,
+        respiratory,
+        abdominal,
+        neurological,
+        additionalNotes,
+      }: InsertQuickExamDto) {
+        const quickExam = new QuickExam();
+
+        quickExam.patientId = patientId; 
+        quickExam.doctorUserId = doctorUserId; 
+        quickExam.bloodPressure = bloodPressure;
+        quickExam.heartRate = heartRate;
+        quickExam.temperature = temperature;
+        quickExam.spo2 = spo2;
+        quickExam.weight = weight;
+        quickExam.height = height;
+        quickExam.generalAppearance = generalAppearance;
+        quickExam.cardiovascular = cardiovascular;
+        quickExam.respiratory = respiratory;
+        quickExam.abdominal = abdominal;
+        quickExam.neurological = neurological;
+        quickExam.additionalNotes = additionalNotes;
+
+        // Save QuickExam entity
+        await this.quickExamRepository.save(quickExam);
+
+        // Optional: publish event or logging here
+        try {
+          await publishQuickExamCreated({
+            key: quickExam.id.toString(),
+            value: quickExam,
+          });
+        } catch (error) {
+          logger.error('Failed to publish QuickExam event:', error);
+        }
+
+        return {
+          quickExamId: quickExam.id,
+          message: 'Quick exam record created successfully',
+        };
+      }
+
 
 
   

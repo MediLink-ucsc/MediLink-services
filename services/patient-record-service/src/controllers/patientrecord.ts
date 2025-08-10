@@ -39,6 +39,24 @@ export const insertSoapNoteSchema = z.object({
   plan: z.string().min(1, 'Plan is required'),
 });
 
+export const insertQuickExamSchema = z.object({
+  patientId: z.string().min(1, 'Patient ID is required'),
+
+  bloodPressure: z.string().max(20).optional(),       // e.g. "120/80"
+  heartRate: z.number().int().positive().optional(),  // bpm
+  temperature: z.number().optional(),                  // Celsius
+  spo2: z.number().int().min(0).max(100).optional(),  // %
+  weight: z.number().positive().optional(),           // kg
+  height: z.number().int().positive().optional(),     // cm
+
+  generalAppearance: z.string().optional(),
+  cardiovascular: z.string().optional(),
+  respiratory: z.string().optional(),
+  abdominal: z.string().optional(),
+  neurological: z.string().optional(),
+  additionalNotes: z.string().optional(),
+});
+
 export class PatientRecordController {
 
     private patientRecordService: PatientRecordService;
@@ -217,7 +235,76 @@ export class PatientRecordController {
     }
 
     
+     async insertquickexam(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+          // Validate input using Zod schema (you need to define insertQuickExamSchema)
+          const {
+            patientId,
+            bloodPressure,
+            heartRate,
+            temperature,
+            spo2,
+            weight,
+            height,
+            generalAppearance,
+            cardiovascular,
+            respiratory,
+            abdominal,
+            neurological,
+            additionalNotes,
+          } = insertQuickExamSchema.parse(req.body);
 
+          // Extract Authorization header
+          const authHeader = req.headers.authorization;
+          if (!authHeader) {
+            return res.status(401).json({ message: 'Unauthorized: No token provided' });
+          }
+
+          // Get token from "Bearer <token>"
+          const token = authHeader.split(' ')[1];
+          if (!token) {
+            return res.status(401).json({ message: 'Unauthorized: Invalid token format' });
+          }
+
+          // Get JWT secret
+          const secret = process.env.AUTH_JWT_SECRET;
+          if (!secret) {
+            throw new Error('AUTH_JWT_SECRET is not defined');
+          }
+
+          // Decode and verify token
+          const decoded = jwt.verify(token, secret) as { id: number; role: string };
+
+          // Role-based access check (adjust roles as needed)
+          if (!decoded || decoded.role !== 'DOCTOR') {
+            return res.status(403).json({ message: 'Forbidden: Not authorized' });
+          }
+
+          const doctorUserId = decoded.id;
+
+          // Call service to insert QuickExam record
+          const result = await this.patientRecordService.insertQuickExam({
+            patientId,
+            doctorUserId,
+            bloodPressure,
+            heartRate,
+            temperature,
+            spo2,
+            weight,
+            height,
+            generalAppearance,
+            cardiovascular,
+            respiratory,
+            abdominal,
+            neurological,
+            additionalNotes,
+          });
+
+          return res.status(201).json(result);
+        } catch (error) {
+          next(error);
+        }
+      }
 
 
 
