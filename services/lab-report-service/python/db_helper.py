@@ -99,21 +99,93 @@ class DatabaseHelper:
     
     def _get_config_by_id(self, test_type_id):
         """
-        Get configuration by test type ID with proper mapping.
+        Get configuration by test type ID with dynamic fallback.
+        This method provides fallback configs while the system transitions to full database integration.
         """
-        # Map test type IDs to formats for fallback
-        id_to_format_map = {
-            1: 'fbc',
-            2: 'lab_report', 
-            3: 'prescription',
-            4: 'fbc',  # Map ID 4 to FBC as well
-            5: 'patient_details'
+        print(f"=== FALLBACK CONFIG FOR TEST TYPE ID: {test_type_id} ===", file=sys.stderr)
+        
+        # Dynamic test type configurations - these should eventually come from database
+        dynamic_configs = {
+            1: self._build_config(1, 'fbc', 'Full Blood Count', 'hematology', 'parser_fbc_report', 'FBCReportParser'),
+            2: self._build_config(2, 'lab_report', 'General Lab Report', 'general', 'parser_lab_report', 'LabReportParser'),
+            3: self._build_config(3, 'prescription', 'Prescription', 'prescription', 'parser_prescription', 'PrescriptionParser'),
+            4: self._build_config(4, 'fbc_enhanced', 'Enhanced Full Blood Count', 'hematology', 'parser_fbc_report', 'FBCReportParser'),
+            5: self._build_config(5, 'patient_details', 'Patient Details', 'patient', 'parser_patient_details', 'PatientDetailsParser'),
+            6: self._build_config(6, 'thyroid_function', 'Thyroid Function Test', 'endocrinology', 'parser_lab_report', 'LabReportParser'),
+            7: self._build_config(7, 'lipid_panel', 'Lipid Panel', 'biochemistry', 'parser_lab_report', 'LabReportParser'),
+            8: self._build_config(8, 'liver_function', 'Liver Function Test', 'biochemistry', 'parser_lab_report', 'LabReportParser'),
         }
         
-        format_name = id_to_format_map.get(test_type_id, 'generic')
-        config = self._get_default_config_by_format(format_name)
-        config['id'] = test_type_id  # Update the ID to match requested ID
+        if test_type_id in dynamic_configs:
+            return dynamic_configs[test_type_id]
+        else:
+            # For unknown test types, try intelligent mapping
+            print(f"=== UNKNOWN TEST TYPE ID {test_type_id} - USING INTELLIGENT FALLBACK ===", file=sys.stderr)
+            return self._create_dynamic_config(test_type_id)
+    
+    def _build_config(self, id, value, label, category, parser_module, parser_class):
+        """
+        Build a configuration object dynamically.
+        """
+        config = {
+            'id': id,
+            'value': value,
+            'label': label,
+            'category': category,
+            'parser_module': parser_module,
+            'parser_class': parser_class,
+            'report_fields': [],
+            'reference_ranges': {}
+        }
+        
+        # Add specific field configurations based on test type
+        if value == 'thyroid_function':
+            config.update(self._get_thyroid_config())
+        elif value == 'fbc' or value == 'fbc_enhanced':
+            config.update(self._get_fbc_config())
+        elif value == 'lipid_panel':
+            config.update(self._get_lipid_config())
+        elif value == 'liver_function':
+            config.update(self._get_liver_config())
+        
         return config
+    
+    def _create_dynamic_config(self, test_type_id):
+        """
+        Create a dynamic configuration for unknown test types.
+        This simulates what would happen when new test types are added to the database.
+        """
+        # Intelligent defaults based on ID ranges
+        if test_type_id >= 100:  # Custom/User-defined test types
+            category = 'custom'
+            parser_module = 'parser_lab_report'  # Most flexible parser
+        elif test_type_id >= 50:  # Specialized tests
+            category = 'specialized'
+            parser_module = 'parser_lab_report'
+        else:  # Standard laboratory tests
+            category = 'laboratory'
+            parser_module = 'parser_lab_report'
+        
+        return {
+            'id': test_type_id,
+            'value': f'test_type_{test_type_id}',
+            'label': f'Test Type {test_type_id}',
+            'category': category,
+            'parser_module': parser_module,
+            'parser_class': 'LabReportParser',
+            'report_fields': self._get_generic_fields(),
+            'reference_ranges': {}
+        }
+    
+    def _get_generic_fields(self):
+        """
+        Generic field set for unknown test types.
+        """
+        return [
+            {'name': 'Result', 'type': 'text', 'required': False, 'unit': '', 'normalRange': ''},
+            {'name': 'Value', 'type': 'decimal', 'required': False, 'unit': '', 'normalRange': ''},
+            {'name': 'Status', 'type': 'text', 'required': False, 'unit': '', 'normalRange': ''},
+        ]
     
     def _get_default_config_by_format(self, file_format):
         """
@@ -179,10 +251,132 @@ class DatabaseHelper:
                 'parser_class': 'PatientDetailsParser',
                 'report_fields': [],
                 'reference_ranges': {}
+            },
+            'thyroid_function': {
+                'id': 6,
+                'value': 'thyroid_function',
+                'label': 'Thyroid Function Test',
+                'category': 'endocrinology',
+                'parser_module': 'parser_lab_report',
+                'parser_class': 'LabReportParser',
+                'report_fields': [
+                    {'name': 'TSH', 'type': 'decimal', 'required': True, 'unit': 'mIU/L', 'normalRange': '0.4-4.0'},
+                    {'name': 'Free T4', 'type': 'decimal', 'required': True, 'unit': 'ng/dL', 'normalRange': '0.8-1.8'},
+                    {'name': 'Free T3', 'type': 'decimal', 'required': False, 'unit': 'pg/mL', 'normalRange': '2.3-4.2'},
+                    {'name': 'T4:T3 Ratio', 'type': 'decimal', 'required': False, 'unit': 'ratio', 'normalRange': '2.5-5.0'},
+                    {'name': 'Free T4 Index', 'type': 'decimal', 'required': False, 'unit': 'index', 'normalRange': '4.5-10.5'}
+                ],
+                'reference_ranges': {
+                    'TSH': {'min': 0.4, 'max': 4.0, 'unit': 'mIU/L', 'normalRange': '0.4-4.0'},
+                    'Free T4': {'min': 0.8, 'max': 1.8, 'unit': 'ng/dL', 'normalRange': '0.8-1.8'},
+                    'Free T3': {'min': 2.3, 'max': 4.2, 'unit': 'pg/mL', 'normalRange': '2.3-4.2'},
+                    'T4:T3 Ratio': {'min': 2.5, 'max': 5.0, 'unit': 'ratio', 'normalRange': '2.5-5.0'},
+                    'Free T4 Index': {'min': 4.5, 'max': 10.5, 'unit': 'index', 'normalRange': '4.5-10.5'}
+                }
+            },
+            'lipid_panel': {
+                'id': 7,
+                'value': 'lipid_panel',
+                'label': 'Lipid Panel',
+                'category': 'biochemistry',
+                'parser_module': 'parser_lab_report',
+                'parser_class': 'LabReportParser',
+                'report_fields': [
+                    {'name': 'Total Cholesterol', 'type': 'number', 'required': True, 'unit': 'mg/dL', 'normalRange': '<200'},
+                    {'name': 'HDL Cholesterol', 'type': 'number', 'required': True, 'unit': 'mg/dL', 'normalRange': '>40'},
+                    {'name': 'LDL Cholesterol', 'type': 'number', 'required': True, 'unit': 'mg/dL', 'normalRange': '<100'},
+                    {'name': 'Triglycerides', 'type': 'number', 'required': True, 'unit': 'mg/dL', 'normalRange': '<150'}
+                ],
+                'reference_ranges': {
+                    'Total Cholesterol': {'max': 200, 'unit': 'mg/dL', 'normalRange': '<200'},
+                    'HDL Cholesterol': {'min': 40, 'unit': 'mg/dL', 'normalRange': '>40'},
+                    'LDL Cholesterol': {'max': 100, 'unit': 'mg/dL', 'normalRange': '<100'},
+                    'Triglycerides': {'max': 150, 'unit': 'mg/dL', 'normalRange': '<150'}
+                }
             }
         }
         
         return format_configs.get(file_format, self._get_default_config())
+    
+    def _get_thyroid_config(self):
+        """
+        Get thyroid-specific field configuration.
+        """
+        return {
+            'report_fields': [
+                {'name': 'TSH', 'type': 'decimal', 'required': True, 'unit': 'mIU/L', 'normalRange': '0.4-4.0'},
+                {'name': 'Free T4', 'type': 'decimal', 'required': True, 'unit': 'ng/dL', 'normalRange': '0.8-1.8'},
+                {'name': 'Free T3', 'type': 'decimal', 'required': False, 'unit': 'pg/mL', 'normalRange': '2.3-4.2'},
+                {'name': 'T4:T3 Ratio', 'type': 'decimal', 'required': False, 'unit': 'ratio', 'normalRange': '2.5-5.0'},
+                {'name': 'Free T4 Index', 'type': 'decimal', 'required': False, 'unit': 'index', 'normalRange': '4.5-10.5'}
+            ],
+            'reference_ranges': {
+                'TSH': {'min': 0.4, 'max': 4.0, 'unit': 'mIU/L', 'normalRange': '0.4-4.0'},
+                'Free T4': {'min': 0.8, 'max': 1.8, 'unit': 'ng/dL', 'normalRange': '0.8-1.8'},
+                'Free T3': {'min': 2.3, 'max': 4.2, 'unit': 'pg/mL', 'normalRange': '2.3-4.2'},
+                'T4:T3 Ratio': {'min': 2.5, 'max': 5.0, 'unit': 'ratio', 'normalRange': '2.5-5.0'},
+                'Free T4 Index': {'min': 4.5, 'max': 10.5, 'unit': 'index', 'normalRange': '4.5-10.5'}
+            }
+        }
+    
+    def _get_fbc_config(self):
+        """
+        Get FBC-specific field configuration.
+        """
+        return {
+            'report_fields': [
+                {'name': 'RBC', 'type': 'decimal', 'required': True, 'unit': 'x 10^12/L', 'normalRange': '4.5-5.5'},
+                {'name': 'Hemoglobin', 'type': 'decimal', 'required': True, 'unit': 'g/dL', 'normalRange': '13.5-17.5'},
+                {'name': 'Hematocrit', 'type': 'decimal', 'required': True, 'unit': '%', 'normalRange': '41-53'},
+                {'name': 'WBC', 'type': 'decimal', 'required': True, 'unit': 'x 10^9/L', 'normalRange': '4.0-11.0'},
+                {'name': 'Platelets', 'type': 'decimal', 'required': True, 'unit': 'x 10^9/L', 'normalRange': '150-450'},
+            ],
+            'reference_ranges': {
+                'RBC': {'min': 4.5, 'max': 5.5, 'unit': 'x 10^12/L', 'normalRange': '4.5-5.5'},
+                'Hemoglobin': {'min': 13.5, 'max': 17.5, 'unit': 'g/dL', 'normalRange': '13.5-17.5'},
+                'Hematocrit': {'min': 41, 'max': 53, 'unit': '%', 'normalRange': '41-53'},
+                'WBC': {'min': 4.0, 'max': 11.0, 'unit': 'x 10^9/L', 'normalRange': '4.0-11.0'},
+                'Platelets': {'min': 150, 'max': 450, 'unit': 'x 10^9/L', 'normalRange': '150-450'},
+            }
+        }
+    
+    def _get_lipid_config(self):
+        """
+        Get lipid panel field configuration.
+        """
+        return {
+            'report_fields': [
+                {'name': 'Total Cholesterol', 'type': 'decimal', 'required': True, 'unit': 'mg/dL', 'normalRange': '<200'},
+                {'name': 'HDL Cholesterol', 'type': 'decimal', 'required': True, 'unit': 'mg/dL', 'normalRange': '>40'},
+                {'name': 'LDL Cholesterol', 'type': 'decimal', 'required': True, 'unit': 'mg/dL', 'normalRange': '<100'},
+                {'name': 'Triglycerides', 'type': 'decimal', 'required': True, 'unit': 'mg/dL', 'normalRange': '<150'}
+            ],
+            'reference_ranges': {
+                'Total Cholesterol': {'max': 200, 'unit': 'mg/dL', 'normalRange': '<200'},
+                'HDL Cholesterol': {'min': 40, 'unit': 'mg/dL', 'normalRange': '>40'},
+                'LDL Cholesterol': {'max': 100, 'unit': 'mg/dL', 'normalRange': '<100'},
+                'Triglycerides': {'max': 150, 'unit': 'mg/dL', 'normalRange': '<150'}
+            }
+        }
+    
+    def _get_liver_config(self):
+        """
+        Get liver function test configuration.
+        """
+        return {
+            'report_fields': [
+                {'name': 'ALT', 'type': 'decimal', 'required': True, 'unit': 'U/L', 'normalRange': '7-45'},
+                {'name': 'AST', 'type': 'decimal', 'required': True, 'unit': 'U/L', 'normalRange': '8-40'},
+                {'name': 'Bilirubin', 'type': 'decimal', 'required': True, 'unit': 'mg/dL', 'normalRange': '0.2-1.2'},
+                {'name': 'Alkaline Phosphatase', 'type': 'decimal', 'required': False, 'unit': 'U/L', 'normalRange': '44-147'}
+            ],
+            'reference_ranges': {
+                'ALT': {'min': 7, 'max': 45, 'unit': 'U/L', 'normalRange': '7-45'},
+                'AST': {'min': 8, 'max': 40, 'unit': 'U/L', 'normalRange': '8-40'},
+                'Bilirubin': {'min': 0.2, 'max': 1.2, 'unit': 'mg/dL', 'normalRange': '0.2-1.2'},
+                'Alkaline Phosphatase': {'min': 44, 'max': 147, 'unit': 'U/L', 'normalRange': '44-147'}
+            }
+        }
 
 
 # Global database helper instance

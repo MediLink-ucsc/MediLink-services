@@ -9,45 +9,172 @@ class LabReportParser(BaseParser):
         """
         Extract general lab report data including vital signs and blood tests.
         """
+        import sys
+        
         # Use configured report fields if available, otherwise use defaults
         report_fields = self.test_type_config.get('report_fields', [])
         
         if report_fields:
-            # Use configured fields from database
-            self._extract_configured_fields(report_fields)
+            print(f" Using {len(report_fields)} configured fields", file=sys.stderr)
+            # Use configured fields from database with enhanced table extraction
+            self._extract_configured_fields_enhanced(report_fields)
         else:
             # Fallback to hardcoded lab parameters
+            print(" No configured fields, using default extraction", file=sys.stderr)
             self._extract_default_lab_parameters()
+        
+        # Always try table extraction as a fallback
+        if len([k for k in self.report_data.keys() if k not in ['Patient', 'Date', 'Doctor', 'Laboratory']]) < len(report_fields) / 2:
+            print(" Insufficient fields found, trying enhanced table extraction", file=sys.stderr)
+            self._extract_table_data_enhanced()
     
-    def _extract_configured_fields(self, report_fields):
+    def _extract_configured_fields_enhanced(self, report_fields):
         """
-        Extract fields based on database configuration.
+        Extract fields based on database configuration with enhanced table support.
         """
+        import sys
+        
+        # First try structured table extraction
+        table_data = self._extract_structured_table(self.text, report_fields)
+        for field_name, value in table_data.items():
+            self.report_data[field_name] = value
+        
+        # Then try individual field patterns for any missing fields
         for field_config in report_fields:
             field_name = field_config['name']
             unit = field_config.get('unit', '')
             
+            # Skip if already found in table extraction
+            if field_name in self.report_data:
+                continue
+            
             # Generate patterns for this field
-            patterns = self._generate_lab_field_patterns(field_name, unit)
+            patterns = self._generate_lab_field_patterns_enhanced(field_name, unit)
             
             # Extract the field value
             value = self._extract_numeric_value(self.text, patterns, unit)
             
             if value:
                 self.report_data[field_name] = value
-                print(f" Found configured field {field_name}: {value}", file=__import__('sys').stderr)
+                print(f" Found configured field {field_name}: {value}", file=sys.stderr)
     
-    def _generate_lab_field_patterns(self, field_name, unit=''):
+    def _extract_table_data_enhanced(self):
         """
-        Generate regex patterns for lab field names.
+        Enhanced table extraction for lab reports.
         """
-        escaped_name = re.escape(field_name)
+        import sys
+        
+        # Try general table extraction
+        table_data = self._extract_table_rows(self.text)
+        for field_name, value in table_data.items():
+            if field_name not in self.report_data:
+                self.report_data[field_name] = value
+        
+        # Specific patterns for common lab values in tables - ENHANCED TO AVOID REFERENCE RANGES
+        thyroid_patterns = {
+            'TSH': [
+                # PRIORITY: Result before reference range - "TSH 2.1 0.4-4.0" -> captures "2.1"
+                r'(?:TSH|Thyroid\s*Stimulating\s*Hormone)[^0-9]*?([\d\.\-\+]+)(?:\s+[\d\.\-\+]+\s*-\s*[\d\.\-\+]+)',
+                # Single value patterns (exclude ranges with negative lookbehind for dash)
+                r'TSH[:\|\s]*([\d\.\-\+]+)(?!\s*-)\s*(?:mIU/L|μIU/mL|uIU/mL)?',
+                r'Thyroid\s*Stimulating\s*Hormone[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'\|\s*TSH\s*\|\s*([\d\.\-\+]+)(?!\s*-)\s*\|',
+                # Multi-line patterns for table format (result on next line)
+                r'(?:TSH|Thyroid\s*Stimulating\s*Hormone)[^\n]*\n[^\d]*?([\d\.\-\+]+)(?!\s*-)',
+                # Last resort: any TSH value not followed by dash
+                r'TSH.*?([\d\.\-\+]+)(?!\s*-)',
+            ],
+            'Free T4': [
+                # PRIORITY: Result before reference range - "Free T4 1.3 0.8-1.8" -> captures "1.3"
+                r'(?:Free\s*T4|Free\s*Thyroxine)[^0-9]*?([\d\.\-\+]+)(?:\s+[\d\.\-\+]+\s*-\s*[\d\.\-\+]+)',
+                # Single value patterns
+                r'Free\s*T4[:\|\s]*([\d\.\-\+]+)(?!\s*-)\s*(?:ng/dL|pmol/L|ng/dl)?',
+                r'Free\s*Thyroxine[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'\|\s*Free\s*T4\s*\|\s*([\d\.\-\+]+)(?!\s*-)\s*\|',
+                # Multi-line patterns
+                r'(?:Free\s*T4|Free\s*Thyroxine)[^\n]*\n[^\d]*?([\d\.\-\+]+)(?!\s*-)',
+                # Last resort
+                r'Free\s*T4.*?([\d\.\-\+]+)(?!\s*-)',
+            ],
+            'Free T3': [
+                # PRIORITY: Result before reference range - "Free T3 3.2 2.3-4.2" -> captures "3.2"  
+                r'(?:Free\s*T3|Free\s*Triiodothyronine)[^0-9]*?([\d\.\-\+]+)(?:\s+[\d\.\-\+]+\s*-\s*[\d\.\-\+]+)',
+                # Single value patterns
+                r'Free\s*T3[:\|\s]*([\d\.\-\+]+)(?!\s*-)\s*(?:pg/mL|pmol/L)?',
+                r'Free\s*Triiodothyronine[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'\|\s*Free\s*T3\s*\|\s*([\d\.\-\+]+)(?!\s*-)\s*\|',
+                # Multi-line patterns
+                r'(?:Free\s*T3|Free\s*Triiodothyronine)[^\n]*\n[^\d]*?([\d\.\-\+]+)(?!\s*-)',
+                # Last resort
+                r'Free\s*T3.*?([\d\.\-\+]+)(?!\s*-)',
+            ],
+            'T4:T3 Ratio': [
+                # Ratio is typically a single value, should be fine as-is
+                r'T4[:T]*\s*T3\s*Ratio[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'T4/T3[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'\|\s*T4:T3\s*Ratio\s*\|\s*([\d\.\-\+]+)(?!\s*-)\s*\|',
+                # Multi-line patterns
+                r'T4[:T]*\s*T3\s*Ratio[^\n]*\n[^\d]*?([\d\.\-\+]+)(?!\s*-)',
+                r'T4[:T]*\s*T3\s*Ratio.*?([\d\.\-\+]+)(?!\s*-)',
+            ],
+            'Free T4 Index': [
+                # Index should be a single value like 6.8, not reference range
+                r'Free\s*T4\s*Index[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'FTI[:\|\s]*([\d\.\-\+]+)(?!\s*-)',
+                r'\|\s*Free\s*T4\s*Index\s*\|\s*([\d\.\-\+]+)(?!\s*-)\s*\|',
+                # Multi-line patterns
+                r'Free\s*T4\s*Index[^\n]*\n[^\d]*?([\d\.\-\+]+)(?!\s*-)',
+                r'Free\s*T4\s*Index.*?([\d\.\-\+]+)(?!\s*-)',
+            ]
+        }
+        
+        for field_name, patterns in thyroid_patterns.items():
+            if field_name not in self.report_data:
+                value = self._extract_numeric_value(self.text, patterns)
+                if value:
+                    self.report_data[field_name] = value
+                    print(f" Found table field {field_name}: {value}", file=sys.stderr)
+    
+    def _generate_lab_field_patterns_enhanced(self, field_name, unit=''):
+        """
+        Generate enhanced regex patterns for lab field names including table formats.
+        """
+        escaped_name = re.escape(field_name).replace(r'\ ', r'\s*')
         escaped_unit = re.escape(unit) if unit else ''
         
         patterns = [
-            rf'{escaped_name}[:\s]*(\d+\.?\d*\s*{escaped_unit})',
-            rf'{escaped_name}[:\s]*(\d+\.?\d*)',
+            # Table format with pipes
+            rf'\|\s*{escaped_name}\s*\|\s*([\d\.\-\+]+)\s*\|',
+            # Standard colon format
+            rf'{escaped_name}[:\s]*([\d\.\-\+]+\s*{escaped_unit})',
+            rf'{escaped_name}[:\s]*([\d\.\-\+]+)',
+            # Parentheses format for abbreviations
+            rf'{escaped_name}\s*\([^)]*\)[:\s]*([\d\.\-\+]+)',
+            # Space-separated table format
+            rf'{escaped_name}\s+([\d\.\-\+]+)\s*{escaped_unit}',
+            # Scientific notation
+            rf'{escaped_name}[:\s]*([\d\.\-\+]+\s*x?\s*10[\*\^]?[\d\-\+]*)',
         ]
+        
+        # Add specific patterns for common field names
+        field_lower = field_name.lower()
+        if 'tsh' in field_lower:
+            patterns.extend([
+                r'TSH[:\|\s]*([\d\.\-\+]+)',
+                r'Thyroid\s*Stimulating\s*Hormone[:\|\s]*([\d\.\-\+]+)',
+            ])
+        elif 'free t4' in field_lower or 't4' in field_lower:
+            patterns.extend([
+                r'Free\s*T4[:\|\s]*([\d\.\-\+]+)',
+                r'Free\s*Thyroxine[:\|\s]*([\d\.\-\+]+)',
+            ])
+        elif 'free t3' in field_lower or 't3' in field_lower:
+            patterns.extend([
+                r'Free\s*T3[:\|\s]*([\d\.\-\+]+)',
+                r'Free\s*Triiodothyronine[:\|\s]*([\d\.\-\+]+)',
+            ])
+        
+        return patterns
         
         # Add common variations
         field_variations = {

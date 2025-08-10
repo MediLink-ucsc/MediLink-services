@@ -169,3 +169,129 @@ class BaseParser(ABC):
                     break
         
         return extracted_data
+    
+    def _extract_table_rows(self, text):
+        """
+        Enhanced table extraction method for structured data.
+        Detects and extracts data from table-like structures.
+        """
+        extracted_data = {}
+        lines = text.split('\n')
+        
+        # Look for table headers and data rows
+        table_patterns = [
+            # Pattern 1: Parameter | Result | Reference | Units | Status
+            r'([A-Za-z\s\(\)]+?)\s*\|\s*([\d\.\-\+]+)\s*\|\s*([\d\.\-\+\s\<\>]+)\s*\|\s*([A-Za-z/%]+)\s*\|\s*([A-Z]+)',
+            # Pattern 2: Parameter Result Reference Units Status (space separated)
+            r'([A-Za-z\s\(\)]+?)\s+([\d\.\-\+]+)\s+([\d\.\-\+\s\<\>]+)\s+([A-Za-z/%]+)\s+([A-Z]+)',
+            # Pattern 3: Simple Parameter: Value Unit pattern
+            r'([A-Za-z\s\(\)]+?)[:\.]\s*([\d\.\-\+]+)\s*([A-Za-z/%]*)',
+            # Pattern 4: TSH specific patterns for thyroid tests
+            r'(TSH|Free\s*T[34]|T[34][:T]*\s*Ratio|T[34]\s*Index)\s*[:\|\s]\s*([\d\.\-\+]+)\s*([A-Za-z/%]*)',
+            # Pattern 5: Lab values with units in parentheses  
+            r'([A-Za-z\s\(\)]+?)\s+([\d\.\-\+]+)\s*\(([A-Za-z/%]+)\)',
+        ]
+        
+        for line in lines:
+            line = line.strip()
+            if not line or len(line) < 5:
+                continue
+                
+            for pattern in table_patterns:
+                matches = re.finditer(pattern, line, re.IGNORECASE)
+                for match in matches:
+                    groups = match.groups()
+                    if len(groups) >= 2:
+                        param_name = groups[0].strip()
+                        value = groups[1].strip()
+                        unit = groups[2].strip() if len(groups) > 2 else ''
+                        
+                        # Clean parameter name
+                        param_name = re.sub(r'[^\w\s\(\)]', '', param_name).strip()
+                        
+                        # Skip if parameter name is too short or generic
+                        if len(param_name) < 2 or param_name.lower() in ['test', 'result', 'reference', 'units', 'status']:
+                            continue
+                            
+                        # Combine value with unit if available
+                        if unit and unit not in value:
+                            full_value = f"{value} {unit}"
+                        else:
+                            full_value = value
+                            
+                        extracted_data[param_name] = full_value
+                        print(f" Found table field {param_name}: {full_value}", file=sys.stderr)
+        
+        return extracted_data
+    
+    def _extract_structured_table(self, text, field_configs):
+        """
+        Extract data from structured tables using field configurations.
+        This method specifically looks for configured field names in table format.
+        """
+        extracted_data = {}
+        
+        for field_config in field_configs:
+            field_name = field_config['name']
+            field_type = field_config.get('type', 'text')
+            unit = field_config.get('unit', '')
+            
+            # Generate multiple patterns for this field
+            patterns = self._generate_table_patterns(field_name, unit, field_type)
+            
+            # Try to extract the value
+            value = self._extract_numeric_value(text, patterns, unit)
+            
+            if value:
+                extracted_data[field_name] = value
+                print(f" Found configured table field {field_name}: {value}", file=sys.stderr)
+        
+        return extracted_data
+    
+    def _generate_table_patterns(self, field_name, unit='', field_type='text'):
+        """
+        Generate table-specific patterns for a field.
+        """
+        # Escape special characters in field name
+        escaped_name = re.escape(field_name).replace(r'\ ', r'\s*')
+        escaped_unit = re.escape(unit) if unit else ''
+        
+        patterns = []
+        
+        if field_type in ['number', 'decimal']:
+            # Numeric patterns for tables - prioritize single values over ranges
+            patterns.extend([
+                # PRIORITY 1: Single numeric value before reference range
+                # Pattern: "TSH 2.1 0.4-4.0" -> captures "2.1" not "0.4-4.0"
+                rf'{escaped_name}[^0-9]*?([\d\.\-\+]+)(?:\s+[\d\.\-\+]+\s*-\s*[\d\.\-\+]+)',
+                
+                # PRIORITY 2: Single value with unit, avoiding ranges  
+                rf'{escaped_name}[^0-9]*?([\d\.\-\+]+)\s*{escaped_unit}(?!\s*-)',
+                
+                # PRIORITY 3: Value in table cells with pipes, excluding ranges
+                rf'\|\s*{escaped_name}\s*\|\s*([\d\.\-\+]+)(?!\s*-)\s*\|',
+                
+                # PRIORITY 4: Colon/space separated single values
+                rf'{escaped_name}[:\.]\s*([\d\.\-\+]+)(?!\s*-)\s*{escaped_unit}',
+                rf'{escaped_name}\s+([\d\.\-\+]+)(?!\s*-)\s*{escaped_unit}',
+                
+                # PRIORITY 5: Multi-line table format - result on next line
+                rf'{escaped_name}[^\n]*\n[^\d]*?([\d\.\-\+]+)(?!\s*-)',
+                
+                # PRIORITY 6: Parentheses format: Field Name (TSH): Value
+                rf'{escaped_name}\s*\([^)]*\)[:\.]\s*([\d\.\-\+]+)(?!\s*-)',
+                
+                # PRIORITY 7: Scientific notation (single values only)
+                rf'{escaped_name}[^0-9]*?([\d\.\-\+]+\s*x?\s*10[\*\^]?[\d\-\+]+)(?!\s*-)',
+                
+                # FALLBACK: Any single number after field name (as last resort)
+                rf'{escaped_name}[^0-9]*?([\d\.\-\+]+)(?!\s*-)',
+            ])
+        else:
+            # Text patterns
+            patterns.extend([
+                rf'{escaped_name}[:\.]\s*([^\|\n\r]+)',
+                rf'\|\s*{escaped_name}\s*\|\s*([^\|\n\r]+)\s*\|',
+            ])
+        
+        return patterns

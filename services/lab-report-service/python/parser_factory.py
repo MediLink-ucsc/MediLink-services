@@ -134,16 +134,61 @@ class GenericParser(BaseParser):
         """
         text_lower = self.text.lower()
         
+        # Check for thyroid function content
+        if any(keyword in text_lower for keyword in ['thyroid function', 'tsh', 'free t4', 'free t3', 'endocrine']):
+            print("=== DETECTED THYROID CONTENT: Using thyroid extraction patterns ===", file=sys.stderr)
+            self._extract_thyroid_patterns()
         # Check for FBC/CBC content
-        if any(keyword in text_lower for keyword in ['full blood count', 'complete blood count', 'fbc', 'cbc', 'hemoglobin', 'hematocrit']):
+        elif any(keyword in text_lower for keyword in ['full blood count', 'complete blood count', 'fbc', 'cbc', 'hemoglobin', 'hematocrit']):
             print("=== DETECTED FBC CONTENT: Using FBC extraction patterns ===", file=sys.stderr)
             self._extract_fbc_patterns()
         elif any(keyword in text_lower for keyword in ['cholesterol', 'glucose', 'creatinine', 'urea']):
             print("=== DETECTED LAB CONTENT: Using general lab patterns ===", file=sys.stderr)
             self._extract_lab_patterns()
         else:
-            print("=== GENERIC CONTENT: Using basic extraction patterns ===", file=sys.stderr)
-            self._extract_basic_patterns()
+            print("=== GENERIC CONTENT: Using enhanced table extraction ===", file=sys.stderr)
+            self._extract_enhanced_table_data()
+    
+    def _extract_thyroid_patterns(self):
+        """
+        Extract thyroid function test values using standard patterns.
+        """
+        thyroid_patterns = {
+            'TSH': [
+                r'TSH[:\|\s]*([\d\.\-\+]+)\s*mIU/L',
+                r'Thyroid\s*Stimulating\s*Hormone[:\|\s]*([\d\.\-\+]+)',
+                r'\|\s*TSH\s*\|\s*([\d\.\-\+]+)\s*\|',
+                r'TSH.*?([\d\.\-\+]+)',
+            ],
+            'Free T4': [
+                r'Free\s*T4[:\|\s]*([\d\.\-\+]+)\s*ng/dL',
+                r'Free\s*Thyroxine[:\|\s]*([\d\.\-\+]+)',
+                r'\|\s*Free\s*T4\s*\|\s*([\d\.\-\+]+)\s*\|',
+                r'Free\s*T4.*?([\d\.\-\+]+)',
+            ],
+            'Free T3': [
+                r'Free\s*T3[:\|\s]*([\d\.\-\+]+)\s*pg/mL',
+                r'Free\s*Triiodothyronine[:\|\s]*([\d\.\-\+]+)',
+                r'\|\s*Free\s*T3\s*\|\s*([\d\.\-\+]+)\s*\|',
+                r'Free\s*T3.*?([\d\.\-\+]+)',
+            ],
+            'T4:T3 Ratio': [
+                r'T4[:T]*\s*T3\s*Ratio[:\|\s]*([\d\.\-\+]+)',
+                r'T4/T3[:\|\s]*([\d\.\-\+]+)',
+                r'\|\s*T4:T3\s*Ratio\s*\|\s*([\d\.\-\+]+)\s*\|',
+            ],
+            'Free T4 Index': [
+                r'Free\s*T4\s*Index[:\|\s]*([\d\.\-\+]+)',
+                r'FTI[:\|\s]*([\d\.\-\+]+)',
+                r'\|\s*Free\s*T4\s*Index\s*\|\s*([\d\.\-\+]+)\s*\|',
+            ]
+        }
+        
+        for field_name, patterns in thyroid_patterns.items():
+            value = self._extract_numeric_value(self.text, patterns)
+            if value:
+                self.report_data[field_name] = value
+                print(f" Found thyroid field {field_name}: {value}", file=sys.stderr)
     
     def _extract_fbc_patterns(self):
         """
@@ -183,22 +228,63 @@ class GenericParser(BaseParser):
                 self.report_data[field_name] = value
                 print(f" Found lab field {field_name}: {value}", file=sys.stderr)
     
+    def _extract_enhanced_table_data(self):
+        """
+        Enhanced table extraction using the base parser's table methods.
+        """
+        # Use the enhanced table extraction from base parser
+        table_data = self._extract_table_rows(self.text)
+        for field_name, value in table_data.items():
+            self.report_data[field_name] = value
+        
+        # If still no data, try the basic patterns as final fallback
+        if not table_data:
+            self._extract_basic_patterns()
+    
     def _extract_basic_patterns(self):
         """
         Extract any numeric values with units as a fallback.
         """
-        # Find any pattern that looks like "Name: Value Unit"
-        basic_pattern = r'([A-Za-z\s]+)[:.\s]*([\d\.]+\s*[A-Za-z/\%\^\*\s]*)'
-        matches = re.findall(basic_pattern, self.text, re.IGNORECASE)
+        # Improved basic pattern to avoid fragmented matches
+        # Look for complete parameter-value pairs
+        basic_patterns = [
+            # Pattern 1: Parameter: Value Unit (more restrictive)
+            r'([A-Za-z][A-Za-z\s]{2,25})[:\.]\s*([\d\.\-\+]+(?:\s*x?\s*10[\*\^]?[\d\-\+]*)?)\s*([A-Za-z/%\^\*\s]{0,15})',
+            # Pattern 2: Parameter (Abbrev): Value
+            r'([A-Za-z\s]+)\s*\([A-Za-z0-9]+\)[:\.]\s*([\d\.\-\+]+)',
+            # Pattern 3: Single word parameter: value
+            r'([A-Z][A-Za-z]{2,15})[:\.]\s*([\d\.\-\+]+)',
+        ]
         
-        for field_name, value in matches:
-            clean_name = field_name.strip()
-            clean_value = value.strip()
-            
-            # Skip if too generic or too long
-            if len(clean_name) > 2 and len(clean_name) < 30 and clean_value:
-                self.report_data[clean_name] = clean_value
-                print(f" Found basic field {clean_name}: {clean_value}", file=sys.stderr)
+        for pattern in basic_patterns:
+            matches = re.finditer(pattern, self.text, re.IGNORECASE)
+            for match in matches:
+                groups = match.groups()
+                if len(groups) >= 2:
+                    field_name = groups[0].strip()
+                    value = groups[1].strip()
+                    unit = groups[2].strip() if len(groups) > 2 else ''
+                    
+                    # Clean field name and apply filters
+                    field_name = re.sub(r'[^\w\s\(\)]', '', field_name).strip()
+                    
+                    # Skip if field name is too short, too long, or generic
+                    if (len(field_name) < 3 or len(field_name) > 30 or 
+                        field_name.lower() in ['test', 'result', 'reference', 'units', 'status', 'normal', 'report', 'date', 'page']):
+                        continue
+                    
+                    # Skip if field name is already found
+                    if field_name in self.report_data:
+                        continue
+                        
+                    # Combine value with unit if available
+                    if unit and unit not in value and len(unit) < 10:
+                        full_value = f"{value} {unit}"
+                    else:
+                        full_value = value
+                        
+                    self.report_data[field_name] = full_value
+                    print(f" Found basic field {field_name}: {full_value}", file=sys.stderr)
     
     def _generate_numeric_patterns(self, field_name, unit=''):
         """
