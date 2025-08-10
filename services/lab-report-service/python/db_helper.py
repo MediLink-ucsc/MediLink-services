@@ -3,6 +3,7 @@ import json
 import sys
 import subprocess
 import os
+import platform
 
 class DatabaseHelper:
     """
@@ -10,7 +11,83 @@ class DatabaseHelper:
     """
     
     def __init__(self):
-        self.node_service_path = os.path.join(os.path.dirname(__file__), '../src')
+        # Service root (directory containing package.json)
+        self.service_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        # Source directory
+        self.src_path = os.path.join(self.service_root, 'src')
+        # Path to the TypeScript helper script
+        self.script_path = os.path.join(self.src_path, 'utils', 'db_helper.ts')
+        # Determine ts-node executable candidates
+        self.ts_node_candidates = self._build_ts_node_candidates()
+
+    def _build_ts_node_candidates(self):
+        candidates = []
+        bin_dir = os.path.join(self.service_root, 'node_modules', '.bin')
+        is_windows = platform.system().lower().startswith('win')
+        # Local project ts-node first
+        if is_windows:
+            candidates.append(os.path.join(bin_dir, 'ts-node.cmd'))
+        candidates.append(os.path.join(bin_dir, 'ts-node'))
+        # Fallback to npx invocation (will look in PATH)
+        candidates.append('npx ts-node')  # Will be split later
+        # Direct ts-node if globally available
+        candidates.append('ts-node')
+        return candidates
+
+    def _resolve_ts_node(self):
+        for cand in self.ts_node_candidates:
+            if os.path.isfile(cand) and os.access(cand, os.X_OK):
+                return [cand]
+            # For string commands with space (like 'npx ts-node'), just return split parts
+            if ' ' in cand:
+                return cand.split(' ')
+            # Plain command name (rely on PATH)
+            if cand in ('ts-node',) or cand.endswith('.cmd'):
+                return [cand]
+        return ['ts-node']
+
+    def _build_command(self, action, *args):
+        runner = self._resolve_ts_node()
+        cmd = runner + [self.script_path, action]
+        cmd.extend(map(str, args))
+        return cmd
+
+    def _run_helper(self, action, *args):
+        if not os.path.exists(self.script_path):
+            print(f"=== DATABASE HELPER NOT FOUND: {self.script_path} ===", file=sys.stderr)
+            return None, f"helper script missing: {self.script_path}"
+        cmd = self._build_command(action, *args)
+        # Debug logging
+        print(f"=== EXECUTING TS HELPER: {' '.join(cmd)} (cwd={self.service_root}) ===", file=sys.stderr)
+        env = os.environ.copy()
+        # Speed up ts-node & avoid typechecking overhead
+        env.setdefault('TS_NODE_TRANSPILE_ONLY', '1')
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                cwd=self.service_root,
+                env=env,
+                timeout=15
+            )
+        except FileNotFoundError as e:
+            return None, f"runner not found: {e}"
+        except subprocess.TimeoutExpired:
+            return None, 'timeout executing ts-node helper'
+
+        if result.returncode != 0:
+            stderr_snippet = result.stderr.strip()[:500]
+            print(f"=== TS HELPER ERROR (rc={result.returncode}) STDERR: {stderr_snippet} ===", file=sys.stderr)
+            return None, stderr_snippet
+        stdout = result.stdout.strip()
+        if not stdout:
+            return None, 'empty stdout from helper'
+        try:
+            data = json.loads(stdout)
+            return data, None
+        except json.JSONDecodeError as e:
+            return None, f"json parse error: {e}: {stdout[:200]}"
     
     def get_test_type_config(self, test_type_id):
         """
@@ -23,28 +100,14 @@ class DatabaseHelper:
             Dictionary containing test type configuration
         """
         try:
-            # Call Node.js script to fetch test type configuration
-            script_path = os.path.join(self.node_service_path, 'utils', 'db_helper.js')
-            
-            if not os.path.exists(script_path):
-                print(f"=== DATABASE HELPER NOT FOUND: {script_path} ===", file=sys.stderr)
-                return self._get_config_by_id(test_type_id)
-            
-            # Use ts-node instead of node for TypeScript support
-            result = subprocess.run([
-                'npx', 'ts-node', script_path, 'getTestType', str(test_type_id)
-            ], capture_output=True, text=True, cwd=self.node_service_path)
-            
-            if result.returncode == 0:
-                config = json.loads(result.stdout)
-                print(f"=== LOADED TEST TYPE CONFIG: {config.get('label', 'Unknown')} ===", file=sys.stderr)
-                return config
-            else:
-                print(f"=== DATABASE ERROR: {result.stderr} ===", file=sys.stderr)
-                return self._get_config_by_id(test_type_id)
-                
+            data, err = self._run_helper('getTestType', test_type_id)
+            if data is not None:
+                print(f"=== LOADED TEST TYPE CONFIG: {data.get('label', 'Unknown')} ===", file=sys.stderr)
+                return data
+            print(f"=== DATABASE HELPER ERROR: {err} ===", file=sys.stderr)
+            return self._get_config_by_id(test_type_id)
         except Exception as e:
-            print(f"=== DATABASE HELPER ERROR: {str(e)} ===", file=sys.stderr)
+            print(f"=== DATABASE HELPER UNHANDLED ERROR: {str(e)} ===", file=sys.stderr)
             return self._get_config_by_id(test_type_id)
     
     def get_test_type_by_format(self, file_format):
@@ -58,27 +121,14 @@ class DatabaseHelper:
             Dictionary containing test type configuration
         """
         try:
-            script_path = os.path.join(self.node_service_path, 'utils', 'db_helper.js')
-            
-            if not os.path.exists(script_path):
-                print(f"=== DATABASE HELPER NOT FOUND: {script_path} ===", file=sys.stderr)
-                return self._get_default_config_by_format(file_format)
-            
-            # Use ts-node instead of node for TypeScript support
-            result = subprocess.run([
-                'npx', 'ts-node', script_path, 'getTestTypeByFormat', file_format
-            ], capture_output=True, text=True, cwd=self.node_service_path)
-            
-            if result.returncode == 0:
-                config = json.loads(result.stdout)
-                print(f"=== LOADED CONFIG FOR FORMAT {file_format}: {config.get('label', 'Unknown')} ===", file=sys.stderr)
-                return config
-            else:
-                print(f"=== DATABASE ERROR: {result.stderr} ===", file=sys.stderr)
-                return self._get_default_config_by_format(file_format)
-                
+            data, err = self._run_helper('getTestTypeByFormat', file_format)
+            if data is not None:
+                print(f"=== LOADED CONFIG FOR FORMAT {file_format}: {data.get('label', 'Unknown')} ===", file=sys.stderr)
+                return data
+            print(f"=== DATABASE HELPER ERROR: {err} ===", file=sys.stderr)
+            return self._get_default_config_by_format(file_format)
         except Exception as e:
-            print(f"=== DATABASE HELPER ERROR: {str(e)} ===", file=sys.stderr)
+            print(f"=== DATABASE HELPER UNHANDLED ERROR: {str(e)} ===", file=sys.stderr)
             return self._get_default_config_by_format(file_format)
     
     def _get_default_config(self):
