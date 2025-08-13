@@ -11,6 +11,9 @@ import { config } from './config';
 import init from './init';
 import { errorHandler } from './middlewares/error.middleware';
 
+import metricsRouter from './routes/metrics.route';
+
+
 const app = express();
 
 app.use(reqLogger);
@@ -19,6 +22,9 @@ app.use(verifyToken);
 
 app.use('/', indexRouter);
 app.use('/api/v1/patientRecords', patientrecordRouter);
+
+app.use('/api/v1/metrics', metricsRouter);
+
 
 app.use(errorHandler);
 
