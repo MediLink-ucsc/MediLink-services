@@ -4,6 +4,7 @@ import AuthService from '../services/auth.service';
 import { AppDataSource } from '../data-source';
 import { Doctor } from '../entity/doctor.entity';
 
+
 export const registerLabAdminSchema = z.object({
   // User fields
   firstName: z.string().min(1, 'First name is required'),
@@ -149,6 +150,24 @@ export class AuthController {
       dateOfBirth: doctor.dateOfBirth,
     });
   }
+
+  async getPatients(req: Request, res: Response): Promise<any> {
+    try {
+      const patients = await this.authService.getPatients();
+
+      if (!patients || patients.length === 0) {
+        return res.status(404).json({ message: `No patients found` });
+      }
+
+      return res.json(patients);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+ 
+
+  
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
   const {

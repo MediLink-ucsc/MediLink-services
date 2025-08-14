@@ -128,6 +128,29 @@ class AuthService {
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
   }
 
+   async getPatients(): Promise<any[]> {
+      const patients = await this.patientRepository.find({
+        relations: ['user'], // correct relation
+      });
+
+      if (!patients || patients.length === 0) {
+        return []; // return empty array
+      }
+
+      return patients.map((patient) => ({
+        patientId: patient.id,
+        age: patient.age,
+        gender: patient.gender,
+        user: {
+          id: patient.user.id,
+          firstName: patient.user.firstName,
+          lastName: patient.user.lastName,
+          username: patient.user.username,
+        },
+      }));
+    }
+
+
   async labAdminRegister({
     firstName,
     lastName,
