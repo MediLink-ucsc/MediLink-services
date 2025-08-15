@@ -14,16 +14,29 @@ const publicRoutes = [
   '/api/v1/auth/medvaultpro/clinicadmin/register',
   '/api/v1/auth/medvaultpro/doctor/profile/:doctorId',
   '/api/v1/auth/medvaultpro/doctor/patients',
+  '/api/v1/auth/medvaultpro/doctor/patient/:username',
 ];
+
+function isPublicRoute(path: string): boolean {
+  return publicRoutes.some(route => {
+    // Convert route with params (e.g., :doctorId) into regex
+    const regex = new RegExp('^' + route.replace(/:[^\s/]+/g, '([^/]+)') + '$');
+    return regex.test(path);
+  });
+}
 
 export const verifyToken = (
   req: Request,
   res: Response,
   next: NextFunction,
 ): any => {
-  if (publicRoutes.includes(req.path)) {
+
+  if (isPublicRoute(req.path)) {
     return next();
   }
+  // if (publicRoutes.includes(req.path)) {
+  //   return next();
+  // }
 
   const token = req.headers['authorization']?.split(' ')[1];
 

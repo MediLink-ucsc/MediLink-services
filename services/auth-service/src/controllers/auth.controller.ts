@@ -165,6 +165,28 @@ export class AuthController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
+
+  async getPatientByUsername(req: Request, res: Response): Promise<any> {
+    try {
+      const username = req.params.username;
+
+      if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+      }
+
+      const patient = await this.authService.getPatientByUsername(username);
+
+      if (!patient) {
+        return res.status(404).json({ message: `No patient found with username ${username}` });
+      }
+
+      return res.json(patient);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
  
 
   

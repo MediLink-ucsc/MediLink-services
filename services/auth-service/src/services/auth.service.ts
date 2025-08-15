@@ -150,6 +150,30 @@ class AuthService {
       }));
     }
 
+    async getPatientByUsername(username: string): Promise<any | null> {
+      const patient = await this.patientRepository.findOne({
+        where: { user: { username } }, // filtering by username inside related user
+        relations: ['user'], // include related user details
+      });
+
+      if (!patient) {
+        return null; // return null if not found
+      }
+
+      return {
+        patientId: patient.id,
+        age: patient.age,
+        gender: patient.gender,
+        user: {
+          id: patient.user.id,
+          firstName: patient.user.firstName,
+          lastName: patient.user.lastName,
+          username: patient.user.username,
+        },
+      };
+    }
+
+
 
   async labAdminRegister({
     firstName,
