@@ -97,6 +97,34 @@ export class ReportHandlerService {
     }
   }
 
+  async deleteTestType(id: number): Promise<boolean> {
+    try {
+      // Check if test type exists
+      const testType = await this.getTestTypeById(id);
+      if (!testType) {
+        return false;
+      }
+
+      // Check if there are any lab samples using this test type
+      const samplesCount = await this.labSampleRepository.count({
+        where: { testTypeId: id },
+      });
+
+      if (samplesCount > 0) {
+        throw new Error(
+          `Cannot delete test type. It is being used by ${samplesCount} lab sample(s).`
+        );
+      }
+
+      // Delete the test type
+      const result = await this.testTypesRepository.delete(id);
+      return (result.affected ?? 0) > 0;
+    } catch (error) {
+      console.error("Error deleting test type:", error);
+      throw error;
+    }
+  }
+
   async createReportTemplate(
     templateData: ReportTemplateDto
   ): Promise<TestTypes> {

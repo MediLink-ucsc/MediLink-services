@@ -8,6 +8,7 @@ router.post("/test-types", templateController.createTestType);
 router.get("/test-types", templateController.getTestTypes);
 router.get("/test-types/:id", templateController.getTestTypeById);
 router.put("/test-types/:id", templateController.updateTestType);
+router.delete("/test-types/:id", templateController.deleteTestType);
 
 // Template Management Routes
 router.post("/templates", templateController.createReportTemplate);

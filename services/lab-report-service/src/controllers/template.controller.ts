@@ -120,6 +120,41 @@ class TemplateController {
     }
   }
 
+  async deleteTestType(req: TemplateRequest, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id!);
+
+      if (isNaN(id)) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid test type ID",
+        });
+        return;
+      }
+
+      const deleted = await reportHandlerService.deleteTestType(id);
+
+      if (!deleted) {
+        res.status(404).json({
+          success: false,
+          message: "Test type not found",
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Test type deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting test type:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to delete test type",
+      });
+    }
+  }
+
   // Template Management
   async createReportTemplate(
     req: TemplateRequest,
