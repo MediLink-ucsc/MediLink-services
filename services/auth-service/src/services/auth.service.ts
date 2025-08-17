@@ -141,6 +141,8 @@ class AuthService {
         patientId: patient.id,
         age: patient.age,
         gender: patient.gender,
+        lastVisited: patient.lastVisited,
+        condition: patient.condition,
         user: {
           id: patient.user.id,
           firstName: patient.user.firstName,
