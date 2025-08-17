@@ -173,6 +173,35 @@ class AuthService {
       };
     }
 
+    async getDoctorByUserid(userid: string): Promise<any> {
+      const doctor = await this.doctorRepository.findOne({
+        where: { user: { id: parseInt(userid) } }, // match by user ID
+        relations: ['user'], // include related user details
+      });
+
+      if (!doctor) {
+        return null; // return null if not found
+      }
+
+      return {
+        doctorId: doctor.id,
+        licenseNumber: doctor.licenseNumber,
+        specialty: doctor.specialty,
+        yearsOfExperience: doctor.yearsOfExperience,
+        hospitalId: doctor.hospitalId,
+        hospitalName: doctor.hospitalName,
+        gender: doctor.gender,
+        dateOfBirth: doctor.dateOfBirth,
+        user: {
+          id: doctor.user.id,
+          firstName: doctor.user.firstName,
+          lastName: doctor.user.lastName,
+          username: doctor.user.username,
+        },
+      };
+    }
+
+
 
 
   async labAdminRegister({

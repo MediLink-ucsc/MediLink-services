@@ -187,9 +187,26 @@ export class AuthController {
     }
   }
 
- 
+  async getDoctorByUserid(req: Request, res: Response): Promise<any> {
+    try {
+      const userid = req.params.doctorUserid;
 
-  
+      if (!userid) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      const doctor = await this.authService.getDoctorByUserid(userid);
+
+      if (!doctor) {
+        return res.status(404).json({ message: `No doctor found with user ID ${userid}` });
+      }
+
+      return res.json(doctor);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
   const {

@@ -28,6 +28,8 @@ authRouter.post('/medvaultpro/medicalstaff/register', authController.medicalStaf
 authRouter.get('/medvaultpro/doctor/profile/:doctorId', authController.getDoctorById.bind(authController));
 authRouter.get('/medvaultpro/doctor/patients',authController.getPatients.bind(authController));
 authRouter.get('/medvaultpro/doctor/patient/:username',authController.getPatientByUsername.bind(authController));
+authRouter.get('/medvaultpro/doctor/:doctorUserid',authController.getDoctorByUserid.bind(authController));
+
 
 
 
