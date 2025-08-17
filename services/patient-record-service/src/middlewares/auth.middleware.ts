@@ -3,16 +3,34 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import redis from '../config/redis';
 
-const publicRoutes = ['/', '/health','/api/v1/patientRecords/prescriptions/insert','/api/v1/patientRecords/laborders/insert'];
+const publicRoutes = ['/', '/health',
+  '/api/v1/patientRecords/prescriptions/insert',
+  '/api/v1/patientRecords/laborders/insert',
+  '/api/v1/patientRecords/soapnotes/insert',
+  '/api/v1/patientRecords/quickexams/insert',
+  '/api/v1/patientRecords/soapnote/:patientid',
+];
+
+  function isPublicRoute(path: string): boolean {
+  return publicRoutes.some(route => {
+    // Convert route with params (e.g., :doctorId) into regex
+    const regex = new RegExp('^' + route.replace(/:[^\s/]+/g, '([^/]+)') + '$');
+    return regex.test(path);
+  });
+}
 
 export const verifyToken = (
   req: Request,
   res: Response,
   next: NextFunction,
 ): any => {
-  if (publicRoutes.includes(req.path)) {
+
+   if (isPublicRoute(req.path)) {
     return next();
   }
+  // if (publicRoutes.includes(req.path)) {
+  //   return next();
+  // }
 
   const token = req.headers['authorization']?.split(' ')[1];
 

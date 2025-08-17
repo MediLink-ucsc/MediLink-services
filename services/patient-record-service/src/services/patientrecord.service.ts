@@ -12,6 +12,7 @@ import { QuickExam } from '../entity/quickexam.entity';
 import { publishLabOrderCreated } from '../events/producers/laborderCreated.producer';
 import { publishSoapNoteCreated } from '../events/producers/soapnoteCreated.producer';
 import { publishQuickExamCreated } from '../events/producers/quickexamCreated.producer';
+import axios from 'axios';
 
 export interface InsertPrescriptionDto {
   patientId: string;
@@ -84,50 +85,101 @@ class PatientRecordService {
     this.quickExamRepository = AppDataSource.getRepository(QuickExam);
   }
 
-  async insertprescription({
-        patientId,
-        doctorUserId,
-        medications,
-        additionalInstructions,
-      
-    }:InsertPrescriptionDto){
 
-        // Create new Prescription entity
-        const prescription = new Prescription();
-        prescription.patientId = patientId;
-        prescription.doctorUserId = doctorUserId;
-        prescription.additionalInstructions = additionalInstructions ?? '';
+    async getSoapBypatientid(patientId: string): Promise<any[]> {
+      // 1. Fetch SOAP notes for the patient
+      const soapNotes = await this.soapNoteRepository.find({
+        where: { patientId },
+      });
 
-        // Save prescription first to get an ID
-        await this.prescriptionRepository.save(prescription);
-
-        // Create and save medications
-        for (const med of medications) {
-          const medication = new Medication();
-          medication.prescription = prescription;
-          medication.medicineName = med.medicineName;
-          medication.dosage = med.dosage;
-          medication.frequency = med.frequency;
-          medication.duration = med.duration;
-
-          await this.medicationRepository.save(medication);
-        }
-
-        // Optional: Publish event (can be replaced with appropriate Kafka topic)
-        try {
-          await publishPrescriptionFilled({
-            key: prescription.id.toString(),
-            value: prescription,
-          });
-        } catch (kafkaError) {
-          logger.error('Failed to publish prescription creation event:', kafkaError);
-        }
-
-        return {
-          prescriptionId: prescription.id,
-          message: 'Prescription created successfully',
-        };
+      if (!soapNotes || soapNotes.length === 0) {
+        return [];
       }
+
+      // 2. For each SOAP note, fetch doctor details from external API
+      const soapNotesWithDoctor = await Promise.all(
+        soapNotes.map(async (note) => {
+          try {
+            const doctorResponse = await axios.get(
+              `http://localhost:3000/api/v1/auth/medvaultpro/doctor/${note.doctorUserId}`
+            );
+
+            return {
+              id: note.id,
+              patientId: note.patientId,
+              doctorUserId: note.doctorUserId,
+              doctor: doctorResponse.data, // doctor details from API
+              dateTime: note.dateTime,
+              subjective: note.subjective,
+              objective: note.objective,
+              assessment: note.assessment,
+              plan: note.plan,
+            };
+          } catch (error) {
+            console.error(`Error fetching doctor details for doctorUserId ${note.doctorUserId}:`, error);
+            return {
+              id: note.id,
+              patientId: note.patientId,
+              doctorUserId: note.doctorUserId,
+              doctor: null, // If API fails, doctor info is null
+              dateTime: note.dateTime,
+              subjective: note.subjective,
+              objective: note.objective,
+              assessment: note.assessment,
+              plan: note.plan,
+            };
+          }
+        })
+      );
+
+      return soapNotesWithDoctor;
+    }
+
+
+    async insertprescription({
+          patientId,
+          doctorUserId,
+          medications,
+          additionalInstructions,
+        
+      }:InsertPrescriptionDto){
+
+          // Create new Prescription entity
+          const prescription = new Prescription();
+          prescription.patientId = patientId;
+          prescription.doctorUserId = doctorUserId;
+          prescription.additionalInstructions = additionalInstructions ?? '';
+
+          // Save prescription first to get an ID
+          await this.prescriptionRepository.save(prescription);
+
+          // Create and save medications
+          for (const med of medications) {
+            const medication = new Medication();
+            medication.prescription = prescription;
+            medication.medicineName = med.medicineName;
+            medication.dosage = med.dosage;
+            medication.frequency = med.frequency;
+            medication.duration = med.duration;
+
+            await this.medicationRepository.save(medication);
+          }
+
+          // Optional: Publish event (can be replaced with appropriate Kafka topic)
+          try {
+            await publishPrescriptionFilled({
+              key: prescription.id.toString(),
+              value: prescription,
+            });
+          } catch (kafkaError) {
+            logger.error('Failed to publish prescription creation event:', kafkaError);
+          }
+
+          return {
+            prescriptionId: prescription.id,
+            message: 'Prescription created successfully',
+          };
+        }
 
       async insertlaborder({
         patientId,

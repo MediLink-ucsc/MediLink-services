@@ -64,6 +64,28 @@ export class PatientRecordController {
   constructor() {
     this.patientRecordService = new PatientRecordService();
   }
+  
+    async getSoapBypatientid(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        const soapNotes = await this.patientRecordService.getSoapBypatientid(patientId);
+
+        if (!soapNotes || soapNotes.length === 0) {
+          return res.status(404).json({ message: `No SOAP notes found for patient ID ${patientId}` });
+        }
+
+        return res.json(soapNotes);
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
 
      async insertprescription(req: Request, res: Response, next: NextFunction): Promise<any> {
       try {
