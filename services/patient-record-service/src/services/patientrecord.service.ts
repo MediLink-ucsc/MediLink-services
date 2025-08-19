@@ -136,6 +136,77 @@ class PatientRecordService {
       return soapNotesWithDoctor;
     }
 
+    async getQuickExamByPatientId(patientId: string): Promise<any[]> {
+      // 1. Fetch Quick Exams for the patient
+      const quickExams = await this.quickExamRepository.find({
+        where: { patientId },
+        order: { createdAt: 'DESC' }, 
+      });
+
+      if (!quickExams || quickExams.length === 0) {
+        return [];
+      }
+
+      // 2. Attach doctor details to each Quick Exam
+      const quickExamsWithDoctor = await Promise.all(
+        quickExams.map(async (exam) => {
+          try {
+            const doctorResponse = await axios.get(
+              `http://localhost:3000/api/v1/auth/medvaultpro/doctor/${exam.doctorUserId}`
+            );
+
+            return {
+              id: exam.id,
+              patientId: exam.patientId,
+              doctorUserId: exam.doctorUserId,
+              doctor: doctorResponse.data, // doctor details from API
+              bloodPressure: exam.bloodPressure,
+              heartRate: exam.heartRate,
+              temperature: exam.temperature,
+              spo2: exam.spo2,
+              weight: exam.weight,
+              height: exam.height,
+              generalAppearance: exam.generalAppearance,
+              cardiovascular: exam.cardiovascular,
+              respiratory: exam.respiratory,
+              abdominal: exam.abdominal,
+              neurological: exam.neurological,
+              additionalNotes: exam.additionalNotes,
+              createdAt: exam.createdAt,
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching doctor details for doctorUserId ${exam.doctorUserId}:`,
+              error
+            );
+
+            return {
+              id: exam.id,
+              patientId: exam.patientId,
+              doctorUserId: exam.doctorUserId,
+              doctor: null, // If API fails, doctor info is null
+              bloodPressure: exam.bloodPressure,
+              heartRate: exam.heartRate,
+              temperature: exam.temperature,
+              spo2: exam.spo2,
+              weight: exam.weight,
+              height: exam.height,
+              generalAppearance: exam.generalAppearance,
+              cardiovascular: exam.cardiovascular,
+              respiratory: exam.respiratory,
+              abdominal: exam.abdominal,
+              neurological: exam.neurological,
+              additionalNotes: exam.additionalNotes,
+              createdAt: exam.createdAt,
+            };
+          }
+        })
+      );
+
+      return quickExamsWithDoctor;
+    }
+
+
     async getLabOrderByPatientId(patientId: string): Promise<any[]> {
       // 1. Fetch Lab Orders for the patient (including lab tests)
       const labOrders = await this.laborderRepository.find({

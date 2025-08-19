@@ -12,6 +12,7 @@ const patientrecordController = new PatientRecordController();
     patientrecordRouter.get('/soapnote/:patientid', patientrecordController.getSoapBypatientid.bind(patientrecordController));
     patientrecordRouter.get('/laborder/:patientid', patientrecordController.getLabOrderByPatientId.bind(patientrecordController));
     patientrecordRouter.get('/prescription/:patientid', patientrecordController.getPrescriptionByPatientId.bind(patientrecordController));
+    patientrecordRouter.get('/quickexam/:patientid', patientrecordController.getQuickExamByPatientId.bind(patientrecordController));
 
 
 export { patientrecordRouter };
