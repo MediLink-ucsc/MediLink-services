@@ -197,6 +197,70 @@ class PatientRecordService {
       return labOrdersWithDoctor;
     }
 
+    async getPrescriptionByPatientId(patientId: string): Promise<any[]> {
+      // 1. Fetch prescriptions for the patient (including medications)
+      const prescriptions = await this.prescriptionRepository.find({
+        where: { patientId: patientId }, // patientId is string (UUID)
+        relations: ['medications'], // include associated medications
+        order: { createdAt: 'DESC' }, // latest prescriptions first
+      });
+
+      if (!prescriptions || prescriptions.length === 0) {
+        return [];
+      }
+
+      // 2. For each prescription, fetch doctor details from external API
+      const prescriptionsWithDoctor = await Promise.all(
+        prescriptions.map(async (prescription) => {
+          try {
+            const doctorResponse = await axios.get(
+              `http://localhost:3000/api/v1/auth/medvaultpro/doctor/${prescription.doctorUserId}`
+            );
+
+            return {
+              prescriptionId: prescription.id,
+              patientId: prescription.patientId,
+              doctorUserId: prescription.doctorUserId,
+              doctor: doctorResponse.data, // doctor details
+              additionalInstructions: prescription.additionalInstructions,
+              createdAt: prescription.createdAt,
+              medications: prescription.medications.map((med) => ({
+                medicationId: med.id,
+                medicineName: med.medicineName,
+                dosage: med.dosage,
+                frequency: med.frequency,
+                duration: med.duration,
+              })),
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching doctor details for doctorUserId ${prescription.doctorUserId}:`,
+              error
+            );
+
+            return {
+              prescriptionId: prescription.id,
+              patientId: prescription.patientId,
+              doctorUserId: prescription.doctorUserId,
+              doctor: null, // doctor info missing if API fails
+              additionalInstructions: prescription.additionalInstructions,
+              createdAt: prescription.createdAt,
+              medications: prescription.medications.map((med) => ({
+                medicationId: med.id,
+                medicineName: med.medicineName,
+                dosage: med.dosage,
+                frequency: med.frequency,
+                duration: med.duration,
+              })),
+            };
+          }
+        })
+      );
+
+      return prescriptionsWithDoctor;
+    }
+
+
 
     async insertprescription({
           patientId,

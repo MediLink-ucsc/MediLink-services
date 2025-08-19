@@ -107,6 +107,28 @@ export class PatientRecordController {
       }
     }
 
+    async getPrescriptionByPatientId(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        const prescriptions = await this.patientRecordService.getPrescriptionByPatientId(patientId);
+
+        if (!prescriptions || prescriptions.length === 0) {
+          return res.status(404).json({ message: `No prescriptions found for patient ID ${patientId}` });
+        }
+
+        return res.json(prescriptions);
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
 
 
      async insertprescription(req: Request, res: Response, next: NextFunction): Promise<any> {
