@@ -128,6 +128,18 @@ class AuthService {
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
   }
 
+  async updateLastVisited(patientId: number, lastVisited?: string): Promise<Patient> {
+    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+
+    if (!patient) {
+      throw createError(`Patient with ID ${patientId} not found`, 404);
+    }
+
+    patient.lastVisited = lastVisited || new Date().toISOString();
+
+    return this.patientRepository.save(patient);
+  }
+
    async getPatients(): Promise<any[]> {
       const patients = await this.patientRepository.find({
         relations: ['user'], // correct relation
@@ -151,6 +163,35 @@ class AuthService {
         },
       }));
     }
+
+    async updatePatientCondition(patientId: number, condition: string): Promise<Patient | null> {
+    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+
+    if (!patient) {
+      return null;
+    }
+
+    // Optional: validate condition against allowed enum values
+    const allowedConditions = [
+      'Not Updated',
+      'Stable',
+      'Critical',
+      'Serious',
+      'Fair',
+      'Good',
+      'Recovering',
+      'Under Observation',
+      'Intensive Care',
+      'Emergency',
+    ];
+
+    if (!allowedConditions.includes(condition)) {
+      throw new Error(`Invalid condition. Allowed values: ${allowedConditions.join(', ')}`);
+    }
+
+    patient.condition = condition;
+    return this.patientRepository.save(patient);
+  }
 
     async getPatientByUsername(username: string): Promise<any | null> {
       const patient = await this.patientRepository.findOne({

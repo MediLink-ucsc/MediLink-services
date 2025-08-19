@@ -28,8 +28,8 @@ export class Patient {
   lastVisited: string;
 
   // Condition column with default "Not Updated"
-  @Column({ type: 'varchar', default: 'Not Updated' })
-  condition: string;
+   @Column({ type: 'varchar', default: 'Not Updated' })
+condition: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

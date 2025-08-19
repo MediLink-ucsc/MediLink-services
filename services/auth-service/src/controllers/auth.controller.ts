@@ -124,6 +124,57 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
+  async updatePatientLastVisited(req: Request, res: Response): Promise<any> {
+    try {
+      const patientId = Number(req.params.patientId);
+      const { lastVisited } = req.body;
+
+      if (!patientId) {
+        return res.status(400).json({ message: 'Patient ID is required' });
+      }
+
+      const updatedPatient = await this.authService.updateLastVisited(patientId, lastVisited);
+
+      return res.status(200).json({
+        message: 'Last visited date updated',
+        patient: updatedPatient,
+      });
+    } catch (error: any) {
+      console.error(error);
+      const status = error.status || 500;
+      return res.status(status).json({ message: error.message || 'Internal server error' });
+    }
+  }
+
+   async updatePatientCondition(req: Request, res: Response): Promise<any> {
+    try {
+      const patientId = Number(req.params.patientId);
+      const { condition } = req.body;
+
+      if (!patientId) {
+        return res.status(400).json({ message: 'Patient ID is required' });
+      }
+
+      if (!condition) {
+        return res.status(400).json({ message: 'Condition is required' });
+      }
+
+      const updatedPatient = await this.authService.updatePatientCondition(patientId, condition);
+
+      if (!updatedPatient) {
+        return res.status(404).json({ message: `Patient with ID ${patientId} not found` });
+      }
+
+      return res.status(200).json({
+        message: 'Patient condition updated successfully',
+        patient: updatedPatient,
+      });
+    } catch (error: any) {
+      console.error(error);
+      return res.status(500).json({ message: error.message || 'Internal server error' });
+    }
+  }
+
   async getDoctorById(req: Request, res: Response): Promise<any> {
     const doctorId = req.params.doctorId;
 
