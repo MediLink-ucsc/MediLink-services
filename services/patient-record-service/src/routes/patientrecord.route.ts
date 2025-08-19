@@ -10,6 +10,7 @@ const patientrecordController = new PatientRecordController();
     patientrecordRouter.post('/soapnotes/insert', patientrecordController.insertsoapnote.bind(patientrecordController));
     patientrecordRouter.post('/quickexams/insert', patientrecordController.insertquickexam.bind(patientrecordController));
     patientrecordRouter.get('/soapnote/:patientid', patientrecordController.getSoapBypatientid.bind(patientrecordController));
+    patientrecordRouter.get('/laborder/:patientid', patientrecordController.getLabOrderByPatientId.bind(patientrecordController));
 
 
 export { patientrecordRouter };

@@ -86,6 +86,28 @@ export class PatientRecordController {
       }
     }
 
+    async getLabOrderByPatientId(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        const labOrders = await this.patientRecordService.getLabOrderByPatientId(patientId);
+
+        if (!labOrders || labOrders.length === 0) {
+          return res.status(404).json({ message: `No lab orders found for patient ID ${patientId}` });
+        }
+
+        return res.json(labOrders);
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
 
      async insertprescription(req: Request, res: Response, next: NextFunction): Promise<any> {
       try {

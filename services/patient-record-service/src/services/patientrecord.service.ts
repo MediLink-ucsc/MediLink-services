@@ -74,6 +74,7 @@ class PatientRecordService {
   private labtestRepository: Repository<LabTest>;
   private soapNoteRepository: Repository<SoapNote>;
   private quickExamRepository: Repository<QuickExam>;
+  
 
 
   constructor() {
@@ -133,6 +134,67 @@ class PatientRecordService {
       );
 
       return soapNotesWithDoctor;
+    }
+
+    async getLabOrderByPatientId(patientId: string): Promise<any[]> {
+      // 1. Fetch Lab Orders for the patient (including lab tests)
+      const labOrders = await this.laborderRepository.find({
+        where: { patientId: Number(patientId) }, // ensure numeric comparison
+        relations: ['labTests'], // include associated lab tests
+        order: { createdAt: 'DESC' }, // latest orders first
+      });
+
+      if (!labOrders || labOrders.length === 0) {
+        return [];
+      }
+
+      // 2. For each Lab Order, fetch doctor details from external API
+      const labOrdersWithDoctor = await Promise.all(
+        labOrders.map(async (order) => {
+          try {
+            const doctorResponse = await axios.get(
+              `http://localhost:3000/api/v1/auth/medvaultpro/doctor/${order.doctorUserId}`
+            );
+
+            return {
+              labOrderId: order.labOrderId,
+              patientId: order.patientId,
+              doctorUserId: order.doctorUserId,
+              doctor: doctorResponse.data, // doctor details
+              clinicalInformation: order.clinicalInformation,
+              createdAt: order.createdAt,
+              labTests: order.labTests.map((test) => ({
+                labTestId: test.labTestId,
+                name: test.name,
+                urgency: test.urgency,
+                specialInstructions: test.specialInstructions,
+              })),
+            };
+          } catch (error) {
+            console.error(
+              `Error fetching doctor details for doctorUserId ${order.doctorUserId}:`,
+              error
+            );
+
+            return {
+              labOrderId: order.labOrderId,
+              patientId: order.patientId,
+              doctorUserId: order.doctorUserId,
+              doctor: null, // doctor info missing if API fails
+              clinicalInformation: order.clinicalInformation,
+              createdAt: order.createdAt,
+              labTests: order.labTests.map((test) => ({
+                labTestId: test.labTestId,
+                name: test.name,
+                urgency: test.urgency,
+                specialInstructions: test.specialInstructions,
+              })),
+            };
+          }
+        })
+      );
+
+      return labOrdersWithDoctor;
     }
 
 
