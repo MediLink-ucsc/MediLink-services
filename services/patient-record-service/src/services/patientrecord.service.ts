@@ -13,15 +13,15 @@ import { publishLabOrderCreated } from '../events/producers/laborderCreated.prod
 import { publishSoapNoteCreated } from '../events/producers/soapnoteCreated.producer';
 import { publishQuickExamCreated } from '../events/producers/quickexamCreated.producer';
 import axios from 'axios';
-import { CarePlan, PlanType, PlanPriority } from '../entity/careplan.entity';
 import { CareTask } from '../entity/caretask.entity';
 import { publishCarePlanCreated } from '../events/producers/careplanCreated.producer';
+import { CarePlan } from '../entity/careplan.entity';
 
 export interface InsertCarePlanDto {
   patientId: string;
   nurseUserId: number; // ID of the nurse creating the care plan
-  planType: PlanType;
-  priority?: PlanPriority;
+  planType: string; // e.g., "Post-Surgical Care"
+  priority?: string; // e.g., "Low", "Medium", "High"
   startDate: string; // ISO date string
   endDate: string;   // ISO date string
   description: string;
@@ -29,7 +29,7 @@ export interface InsertCarePlanDto {
   tasks?: {
     taskDescription: string;
     dueDate: string; // ISO date string
-    priority?: PlanPriority;
+    priority?: string; // e.g., "Low", "Medium", "High"
   }[];
 }
 
@@ -372,7 +372,7 @@ class PatientRecordService {
       carePlan.patientId = patientId;
       carePlan.nurseId = nurseUserId.toString(); // nurse assigned to this plan
       carePlan.planType = planType;
-      carePlan.priority = priority ?? PlanPriority.MEDIUM;
+      carePlan.priority = priority ?? 'Medium'; // Default priority as string
       carePlan.startDate = new Date(startDate);
       carePlan.endDate = new Date(endDate);
       carePlan.description = description;
@@ -388,7 +388,7 @@ class PatientRecordService {
           task.carePlan = carePlan;
           task.taskDescription = t.taskDescription;
           task.dueDate = new Date(t.dueDate);
-          task.priority = t.priority ?? PlanPriority.MEDIUM;
+          task.priority = t.priority ?? 'Medium'; 
 
           await this.careTaskRepository.save(task);
         }
@@ -595,5 +595,4 @@ class PatientRecordService {
 }
 
 
-
-
+export default PatientRecordService;

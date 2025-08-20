@@ -3,23 +3,25 @@ import { z } from 'zod';
 import PatientRecordService from '../services/patientrecord.service';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { PlanType, PlanPriority } from '../entity/careplan.entity';
+
 
 export const insertCarePlanSchema = z.object({
   patientId: z.string().min(1, 'Patient ID is required'),
-  planType: z.nativeEnum(PlanType),
-  priority: z.nativeEnum(PlanPriority).optional(),
+  planType: z.string().min(1, 'Plan type is required'), // e.g., "Post-Surgical Care"
+  priority: z.string().optional(), // e.g., "Low", "Medium", "High"
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   description: z.string().min(1, 'Description is required'),
   goals: z.string().optional(),
-  tasks: z.array(
-    z.object({
-      taskDescription: z.string().min(1, 'Task description is required'),
-      dueDate: z.string().min(1, 'Due date is required'),
-      priority: z.nativeEnum(PlanPriority).optional(),
-    })
-  ).optional(),
+  tasks: z
+    .array(
+      z.object({
+        taskDescription: z.string().min(1, 'Task description is required'),
+        dueDate: z.string().min(1, 'Due date is required'),
+        priority: z.string().optional(), // e.g., "Low", "Medium", "High"
+      })
+    )
+    .optional(),
 });
 
 export const insertprescriptionSchema = z.object({
@@ -208,7 +210,7 @@ export class PatientRecordController {
         console.log('Decoded token:', decoded);
 
         // Check if user is a nurse
-        if (!decoded || decoded.role.toUpperCase() !== 'NURSE') {
+        if (!decoded || decoded.role.toUpperCase() !== 'MEDICAL_STAFF') {
           return res.status(403).json({ message: 'Forbidden: Only nurses can create care plans' });
         }
 

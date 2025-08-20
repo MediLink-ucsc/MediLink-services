@@ -4,7 +4,7 @@ import {
   Column,
   ManyToOne,
 } from 'typeorm';
-import { CarePlan, PlanPriority } from './careplan.entity';
+import { CarePlan } from './careplan.entity';
 
 @Entity({ name: 'care_tasks' })
 export class CareTask {
@@ -22,10 +22,6 @@ export class CareTask {
   @Column({ type: 'date', name: 'due_date' })
   dueDate: Date;
 
-  @Column({
-    type: 'enum',
-    enum: PlanPriority,
-    default: PlanPriority.MEDIUM,
-  })
-  priority: PlanPriority;
+  @Column({ name: 'priority', type: 'varchar', length: 50, default: 'Medium' })
+  priority: string;
 }
