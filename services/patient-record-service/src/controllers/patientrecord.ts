@@ -3,7 +3,24 @@ import { z } from 'zod';
 import PatientRecordService from '../services/patientrecord.service';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { PlanType, PlanPriority } from '../entity/careplan.entity';
 
+export const insertCarePlanSchema = z.object({
+  patientId: z.string().min(1, 'Patient ID is required'),
+  planType: z.nativeEnum(PlanType),
+  priority: z.nativeEnum(PlanPriority).optional(),
+  startDate: z.string().min(1, 'Start date is required'),
+  endDate: z.string().min(1, 'End date is required'),
+  description: z.string().min(1, 'Description is required'),
+  goals: z.string().optional(),
+  tasks: z.array(
+    z.object({
+      taskDescription: z.string().min(1, 'Task description is required'),
+      dueDate: z.string().min(1, 'Due date is required'),
+      priority: z.nativeEnum(PlanPriority).optional(),
+    })
+  ).optional(),
+});
 
 export const insertprescriptionSchema = z.object({
     patientId: z.string().min(1, 'Patient ID is required'),
@@ -149,6 +166,73 @@ export class PatientRecordController {
       }
     }
 
+    
+    async insertCarePlan(req: Request, res: Response, next: NextFunction): Promise<any> {
+      try {
+        // Validate input
+        const {
+          patientId,
+          planType,
+          priority,
+          startDate,
+          endDate,
+          description,
+          goals,
+          tasks
+        } = insertCarePlanSchema.parse(req.body);
+
+        // Check for authorization header
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+          return res.status(401).json({ message: 'Unauthorized: No token provided' });
+        }
+
+        const token = authHeader.split(' ')[1]; // Bearer <token>
+        console.log('Extracted token:', token);
+
+        // Verify token
+        const secret = process.env.AUTH_JWT_SECRET;
+        if (!secret) {
+          throw new Error('AUTH_JWT_SECRET is not defined');
+        }
+
+        const decoded = jwt.verify(token, secret) as unknown as {
+          id: number;
+          username: string;
+          firstName: string;
+          lastName: string;
+          role: string;
+          hospitalId: number;
+        };
+
+        console.log('Decoded token:', decoded);
+
+        // Check if user is a nurse
+        if (!decoded || decoded.role.toUpperCase() !== 'NURSE') {
+          return res.status(403).json({ message: 'Forbidden: Only nurses can create care plans' });
+        }
+
+        const nurseUserId = decoded.id; // Extract nurse ID
+        console.log('Nurse User ID:', nurseUserId);
+
+        // Call service to insert care plan
+        const result = await this.patientRecordService.insertCarePlan({
+          patientId,
+          nurseUserId,
+          planType,
+          priority,
+          startDate,
+          endDate,
+          description,
+          goals,
+          tasks
+        });
+
+        return res.status(201).json(result);
+      } catch (error) {
+        next(error);
+      }
+    }
 
 
 

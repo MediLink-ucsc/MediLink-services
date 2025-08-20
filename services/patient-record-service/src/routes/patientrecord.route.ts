@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { PatientRecordController } from '../controllers/patientrecord';
-import PatientRecordService  from '../services/patientrecord.service';
 
 const patientrecordRouter = Router();
 const patientrecordController = new PatientRecordController();
@@ -9,6 +8,7 @@ const patientrecordController = new PatientRecordController();
     patientrecordRouter.post('/laborders/insert', patientrecordController.insertlaborder.bind(patientrecordController));
     patientrecordRouter.post('/soapnotes/insert', patientrecordController.insertsoapnote.bind(patientrecordController));
     patientrecordRouter.post('/quickexams/insert', patientrecordController.insertquickexam.bind(patientrecordController));
+    patientrecordRouter.post('/careplans/insert', patientrecordController.insertCarePlan.bind(patientrecordController));
     patientrecordRouter.get('/soapnote/:patientid', patientrecordController.getSoapBypatientid.bind(patientrecordController));
     patientrecordRouter.get('/laborder/:patientid', patientrecordController.getLabOrderByPatientId.bind(patientrecordController));
     patientrecordRouter.get('/prescription/:patientid', patientrecordController.getPrescriptionByPatientId.bind(patientrecordController));

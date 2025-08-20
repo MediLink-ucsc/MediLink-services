@@ -13,6 +13,25 @@ import { publishLabOrderCreated } from '../events/producers/laborderCreated.prod
 import { publishSoapNoteCreated } from '../events/producers/soapnoteCreated.producer';
 import { publishQuickExamCreated } from '../events/producers/quickexamCreated.producer';
 import axios from 'axios';
+import { CarePlan, PlanType, PlanPriority } from '../entity/careplan.entity';
+import { CareTask } from '../entity/caretask.entity';
+import { publishCarePlanCreated } from '../events/producers/careplanCreated.producer';
+
+export interface InsertCarePlanDto {
+  patientId: string;
+  nurseUserId: number; // ID of the nurse creating the care plan
+  planType: PlanType;
+  priority?: PlanPriority;
+  startDate: string; // ISO date string
+  endDate: string;   // ISO date string
+  description: string;
+  goals?: string;
+  tasks?: {
+    taskDescription: string;
+    dueDate: string; // ISO date string
+    priority?: PlanPriority;
+  }[];
+}
 
 export interface InsertPrescriptionDto {
   patientId: string;
@@ -74,6 +93,8 @@ class PatientRecordService {
   private labtestRepository: Repository<LabTest>;
   private soapNoteRepository: Repository<SoapNote>;
   private quickExamRepository: Repository<QuickExam>;
+  private carePlanRepository: Repository<CarePlan>;
+  private careTaskRepository: Repository<CareTask>;
   
 
 
@@ -84,6 +105,8 @@ class PatientRecordService {
     this.labtestRepository = AppDataSource.getRepository(LabTest);
     this.soapNoteRepository = AppDataSource.getRepository(SoapNote);
     this.quickExamRepository = AppDataSource.getRepository(QuickExam);
+    this.carePlanRepository = AppDataSource.getRepository(CarePlan);
+    this.careTaskRepository = AppDataSource.getRepository(CareTask);
   }
 
 
@@ -331,6 +354,61 @@ class PatientRecordService {
       return prescriptionsWithDoctor;
     }
 
+    
+
+    async insertCarePlan({
+      patientId,
+      nurseUserId,
+      planType,
+      priority,
+      startDate,
+      endDate,
+      description,
+      goals,
+      tasks,
+    }: InsertCarePlanDto) {
+      // Create new CarePlan entity
+      const carePlan = new CarePlan();
+      carePlan.patientId = patientId;
+      carePlan.nurseId = nurseUserId.toString(); // nurse assigned to this plan
+      carePlan.planType = planType;
+      carePlan.priority = priority ?? PlanPriority.MEDIUM;
+      carePlan.startDate = new Date(startDate);
+      carePlan.endDate = new Date(endDate);
+      carePlan.description = description;
+      carePlan.goals = goals ?? '';
+
+      // Save care plan first to get an ID
+      await this.carePlanRepository.save(carePlan);
+
+      // Create and save tasks if any
+      if (tasks && tasks.length > 0) {
+        for (const t of tasks) {
+          const task = new CareTask();
+          task.carePlan = carePlan;
+          task.taskDescription = t.taskDescription;
+          task.dueDate = new Date(t.dueDate);
+          task.priority = t.priority ?? PlanPriority.MEDIUM;
+
+          await this.careTaskRepository.save(task);
+        }
+      }
+
+      // Optional: Publish event (Kafka or other message bus)
+      try {
+        await publishCarePlanCreated({
+          key: carePlan.id.toString(),
+          value: carePlan,
+        });
+      } catch (error) {
+        logger.error('Failed to publish care plan creation event:', error);
+      }
+
+      return {
+        carePlanId: carePlan.id,
+        message: 'Care plan created successfully',
+      };
+    }
 
 
     async insertprescription({
@@ -517,4 +595,5 @@ class PatientRecordService {
 }
 
 
-export default PatientRecordService;
+
+
