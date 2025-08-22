@@ -168,6 +168,29 @@ export class PatientRecordController {
       }
     }
 
+    async getLastQuickExamByPatientId(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        // Assuming your service supports ordering and limit
+        const lastQuickExam = await this.patientRecordService.getLastQuickExamByPatientId(patientId);
+
+        if (!lastQuickExam) {
+          return res.status(404).json({ message: `No quick exams found for patient ID ${patientId}` });
+        }
+
+        return res.json(lastQuickExam);
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
     
     async insertCarePlan(req: Request, res: Response, next: NextFunction): Promise<any> {
       try {

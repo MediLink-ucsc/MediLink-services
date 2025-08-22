@@ -29,7 +29,7 @@ export class Patient {
 
   // Condition column with default "Not Updated"
    @Column({ type: 'varchar', default: 'Not Updated' })
-condition: string;
+  condition: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

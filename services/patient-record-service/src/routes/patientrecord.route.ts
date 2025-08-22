@@ -13,6 +13,8 @@ const patientrecordController = new PatientRecordController();
     patientrecordRouter.get('/laborder/:patientid', patientrecordController.getLabOrderByPatientId.bind(patientrecordController));
     patientrecordRouter.get('/prescription/:patientid', patientrecordController.getPrescriptionByPatientId.bind(patientrecordController));
     patientrecordRouter.get('/quickexam/:patientid', patientrecordController.getQuickExamByPatientId.bind(patientrecordController));
+    patientrecordRouter.get('/quickexam/last/:patientid',patientrecordController.getLastQuickExamByPatientId.bind(patientrecordController));
+
 
 
 export { patientrecordRouter };
