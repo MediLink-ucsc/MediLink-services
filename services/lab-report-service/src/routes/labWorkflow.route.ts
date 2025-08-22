@@ -39,4 +39,15 @@ labWorkflowRouter.get(
   labWorkflowController.getPatientLabHistory.bind(labWorkflowController)
 );
 
+// Lab Result Management
+labWorkflowRouter.get(
+  "/results/:resultId",
+  labWorkflowController.getLabResult.bind(labWorkflowController)
+);
+
+labWorkflowRouter.put(
+  "/results/:resultId/edit",
+  labWorkflowController.editLabResult.bind(labWorkflowController)
+);
+
 export { labWorkflowRouter };

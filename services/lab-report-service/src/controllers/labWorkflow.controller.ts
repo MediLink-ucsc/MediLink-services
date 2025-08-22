@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { labWorkflowService } from "../services/labWorkflow.service";
 import { reportHandlerService } from "../services/reportHandler.service";
+import { EditLabResultDto } from "../dto/labResult.dto";
 
 interface ExtractRequest extends Request {
   file?: Express.Multer.File;
@@ -210,6 +211,90 @@ export class LabWorkflowController {
           error instanceof Error
             ? error.message
             : "Failed to update lab sample",
+      });
+    }
+  }
+
+  // Get lab result by ID
+  async getLabResult(req: Request, res: Response): Promise<void> {
+    try {
+      const { resultId } = req.params;
+
+      if (!resultId || isNaN(parseInt(resultId))) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid result ID provided",
+        });
+        return;
+      }
+
+      const labResult = await reportHandlerService.getLabResultById(
+        parseInt(resultId)
+      );
+
+      if (!labResult) {
+        res.status(404).json({
+          success: false,
+          message: "Lab result not found",
+        });
+        return;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: labResult,
+        message: "Lab result retrieved successfully",
+      });
+    } catch (error) {
+      console.error("Error in getLabResult:", error);
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to retrieve lab result",
+      });
+    }
+  }
+
+  // Edit lab result data (for manual corrections)
+  async editLabResult(req: Request, res: Response): Promise<void> {
+    try {
+      const { resultId } = req.params;
+      const editData: EditLabResultDto = req.body;
+
+      if (!resultId || isNaN(parseInt(resultId))) {
+        res.status(400).json({
+          success: false,
+          message: "Invalid result ID provided",
+        });
+        return;
+      }
+
+      if (!editData.extractedData) {
+        res.status(400).json({
+          success: false,
+          message: "Extracted data is required for editing",
+        });
+        return;
+      }
+
+      const updatedResult = await reportHandlerService.editLabResult(
+        parseInt(resultId),
+        editData
+      );
+
+      res.status(200).json({
+        success: true,
+        data: updatedResult,
+        message: "Lab result updated successfully",
+      });
+    } catch (error) {
+      console.error("Error in editLabResult:", error);
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to edit lab result",
       });
     }
   }

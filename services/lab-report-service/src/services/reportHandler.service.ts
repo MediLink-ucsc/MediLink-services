@@ -4,7 +4,7 @@ import { LabSample } from "../entity/labSample.entity";
 import { LabResult } from "../entity/labResult.entity";
 import { AppDataSource } from "../data-source";
 import { CreateLabSampleDto, UpdateLabSampleDto } from "../dto/labSample.dto";
-import { CreateLabResultDto } from "../dto/labResult.dto";
+import { CreateLabResultDto, EditLabResultDto } from "../dto/labResult.dto";
 import {
   CreateTestTypeDto,
   UpdateTestTypeDto,
@@ -288,7 +288,9 @@ export class ReportHandlerService {
         status: "completed",
       });
 
-      return savedResult;
+      // Refetch the entity to ensure proper decryption of the saved data
+      const finalResult = await this.getLabResultById(savedResult.id);
+      return finalResult || savedResult;
     } catch (error) {
       console.error("Error creating lab result:", error);
       throw new Error("Failed to create lab result");
@@ -318,6 +320,53 @@ export class ReportHandlerService {
     } catch (error) {
       console.error("Error fetching lab result:", error);
       throw new Error("Failed to fetch lab result");
+    }
+  }
+
+  async editLabResult(
+    id: number,
+    editData: EditLabResultDto
+  ): Promise<LabResult> {
+    try {
+      // Check if lab result exists
+      const labResult = await this.getLabResultById(id);
+      if (!labResult) {
+        throw new Error("Lab result not found");
+      }
+
+      // Update the extracted data (will be re-encrypted automatically)
+      labResult.setExtractedData(editData.extractedData);
+
+      // Update status to indicate manual editing
+      labResult.status = "manually_edited";
+
+      // Add edit metadata to the extracted data
+      const updatedData = {
+        ...editData.extractedData,
+        _editMetadata: {
+          editedAt: new Date().toISOString(),
+          editedBy: editData.editedBy || "lab_operator",
+          notes: editData.notes || "Manual correction by lab operator",
+          originalEditTimestamp: Date.now(),
+        },
+      };
+
+      labResult.setExtractedData(updatedData);
+
+      await this.labResultRepository.save(labResult);
+
+      console.log("🔒 Lab result updated with manually edited encrypted data");
+
+      // Refetch the entity to ensure proper decryption of the saved data
+      const updatedResult = await this.getLabResultById(id);
+      if (!updatedResult) {
+        throw new Error("Failed to retrieve updated lab result");
+      }
+
+      return updatedResult;
+    } catch (error) {
+      console.error("Error editing lab result:", error);
+      throw new Error("Failed to edit lab result");
     }
   }
 }
