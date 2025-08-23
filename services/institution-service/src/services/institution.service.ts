@@ -167,6 +167,33 @@ class InstitutionService {
     return this.labRepository.save(lab);
   }
 
+  async verifyClinic(id: number): Promise<Clinic> {
+    const clinic = await this.clinicRepository.findOne({ where: { id } });
+
+    if (!clinic) {
+      throw createError(`Clinic with ID ${id} not found`, 404);
+    }
+
+    clinic.status = 'verified';
+    return this.clinicRepository.save(clinic);
+  }
+
+  async getAllClinics(): Promise<Clinic[]> {
+    return await this.clinicRepository.find({
+      order: {
+        createdAt: "DESC", // newest first
+      },
+    });
+  }
+
+  async getAllLabs(): Promise<Lab[]> {
+    return await this.labRepository.find({
+      order: {
+        createdAt: "DESC", // newest first
+      },
+    });
+  }
+
 }
 
 export default InstitutionService;

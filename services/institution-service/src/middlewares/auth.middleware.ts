@@ -6,6 +6,9 @@ import redis from '../config/redis';
 const publicRoutes = ['/', '/health', '/api/v1/institutions/lab/register',
        '/api/v1/institutions/clinic/register',
         '/api/v1/institutions/lab/verify/:labid',
+        '/api/v1/institutions/clinic/verify/:clinicid',
+        '/api/v1/institutions/clinics',
+        '/api/v1/institutions/labs',
       ];
 
 
