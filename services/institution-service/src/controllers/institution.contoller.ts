@@ -116,4 +116,19 @@ export class InstitutionController {
     }
   }
 
+  async verifyLab(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const { labid } = req.params; // ✅ using labid from the route
+      const lab = await this.institutionService.verifyLab(Number(labid));
+
+      return res.status(200).json({
+        message: 'Lab verified successfully',
+        data: lab,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
 }

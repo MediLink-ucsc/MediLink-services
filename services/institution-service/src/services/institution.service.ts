@@ -156,6 +156,17 @@ class InstitutionService {
   };
 }
 
+  async verifyLab(id: number): Promise<Lab> {
+    const lab = await this.labRepository.findOne({ where: { id } });
+
+    if (!lab) {
+      throw createError(`Lab with ID ${id} not found`, 404);
+    }
+
+    lab.status = 'verified';
+    return this.labRepository.save(lab);
+  }
+
 }
 
 export default InstitutionService;
