@@ -128,6 +128,47 @@ services:
       - medilink-network
     restart: unless-stopped
 
+  medilink-lab-report-service:
+    image: medilink/lab-report-service:latest
+    build:
+      context: .
+      dockerfile: services/lab-report-service/Dockerfile
+    container_name: lab-report-service
+    ports:
+      - "3004:3004"
+    env_file:
+      - services/lab-report-service/.env.production
+    environment:
+      - NODE_ENV=production
+      - TESSERACT_PATH=/usr/bin/tesseract
+      - POPPLER_PATH=/usr/bin
+      - KAFKA_BROKERS=kafka:9092
+      - KAFKA_BROKER=kafka:9092
+      - DATABASE_URL=postgresql://admin:medilink@postgres:5432/medilink
+      - REDIS_URL=redis://:medilink@redis:6379
+    volumes:
+      - ./services/lab-report-service/uploads:/workspace/services/lab-report-service/uploads
+      - lab_reports_data:/workspace/services/lab-report-service/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      medilink-api-gateway:
+        condition: service_started
+    networks:
+      - medilink-network
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:3004/api/v1/labReport/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
 volumes:
   redis_data:
   postgres_data:

@@ -4,8 +4,11 @@
   "description": "Service for medical data extraction using Node.js and Python.",
   "main": "src/app.ts",
   "scripts": {
-    "start": "ts-node src/app.ts",
-    "dev": "ts-node-dev src/app.ts",
+    "start": "node dist/app.js",
+    "start:dev": "ts-node src/app.ts",
+    "build": "tsc",
+    "dev": "npm run dev:setup && ts-node-dev src/app.ts",
+    "dev:setup": "cd ../../packages/logger && npm run build && cd ../kafka-client && npm run build && cd ../redis-client && npm run build",
     "test": "cross-env NODE_ENV=test SKIP_LISTEN=true jest --runInBand --detectOpenHandles",
     "test:watch": "cross-env NODE_ENV=test SKIP_LISTEN=true jest --watch",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data-source.ts",
