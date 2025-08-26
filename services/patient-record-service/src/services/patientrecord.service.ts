@@ -13,15 +13,15 @@ import { publishLabOrderCreated } from '../events/producers/laborderCreated.prod
 import { publishSoapNoteCreated } from '../events/producers/soapnoteCreated.producer';
 import { publishQuickExamCreated } from '../events/producers/quickexamCreated.producer';
 import axios from 'axios';
-import { CarePlan, PlanType, PlanPriority } from '../entity/careplan.entity';
 import { CareTask } from '../entity/caretask.entity';
 import { publishCarePlanCreated } from '../events/producers/careplanCreated.producer';
+import { CarePlan } from '../entity/careplan.entity';
 
 export interface InsertCarePlanDto {
   patientId: string;
   nurseUserId: number; // ID of the nurse creating the care plan
-  planType: PlanType;
-  priority?: PlanPriority;
+  planType: string; // e.g., "Post-Surgical Care"
+  priority?: string; // e.g., "Low", "Medium", "High"
   startDate: string; // ISO date string
   endDate: string;   // ISO date string
   description: string;
@@ -29,7 +29,7 @@ export interface InsertCarePlanDto {
   tasks?: {
     taskDescription: string;
     dueDate: string; // ISO date string
-    priority?: PlanPriority;
+    priority?: string; // e.g., "Low", "Medium", "High"
   }[];
 }
 
@@ -229,6 +229,69 @@ class PatientRecordService {
       return quickExamsWithDoctor;
     }
 
+    async getLastQuickExamByPatientId(patientId: string): Promise<any | null> {
+      // 1. Fetch the latest Quick Exam for the patient
+      const exam = await this.quickExamRepository.findOne({
+        where: { patientId },
+        order: { createdAt: 'DESC' }, // newest first
+      });
+
+      if (!exam) return null;
+
+      // 2. Attach doctor details
+      try {
+        const doctorResponse = await axios.get(
+          `http://localhost:3000/api/v1/auth/medvaultpro/doctor/${exam.doctorUserId}`
+        );
+
+        return {
+          id: exam.id,
+          patientId: exam.patientId,
+          doctorUserId: exam.doctorUserId,
+          doctor: doctorResponse.data,
+          bloodPressure: exam.bloodPressure,
+          heartRate: exam.heartRate,
+          temperature: exam.temperature,
+          spo2: exam.spo2,
+          weight: exam.weight,
+          height: exam.height,
+          generalAppearance: exam.generalAppearance,
+          cardiovascular: exam.cardiovascular,
+          respiratory: exam.respiratory,
+          abdominal: exam.abdominal,
+          neurological: exam.neurological,
+          additionalNotes: exam.additionalNotes,
+          createdAt: exam.createdAt,
+        };
+      } catch (error) {
+        console.error(
+          `Error fetching doctor details for doctorUserId ${exam.doctorUserId}:`,
+          error
+        );
+
+        return {
+          id: exam.id,
+          patientId: exam.patientId,
+          doctorUserId: exam.doctorUserId,
+          doctor: null,
+          bloodPressure: exam.bloodPressure,
+          heartRate: exam.heartRate,
+          temperature: exam.temperature,
+          spo2: exam.spo2,
+          weight: exam.weight,
+          height: exam.height,
+          generalAppearance: exam.generalAppearance,
+          cardiovascular: exam.cardiovascular,
+          respiratory: exam.respiratory,
+          abdominal: exam.abdominal,
+          neurological: exam.neurological,
+          additionalNotes: exam.additionalNotes,
+          createdAt: exam.createdAt,
+        };
+      }
+    }
+
+
 
     async getLabOrderByPatientId(patientId: string): Promise<any[]> {
       // 1. Fetch Lab Orders for the patient (including lab tests)
@@ -372,7 +435,7 @@ class PatientRecordService {
       carePlan.patientId = patientId;
       carePlan.nurseId = nurseUserId.toString(); // nurse assigned to this plan
       carePlan.planType = planType;
-      carePlan.priority = priority ?? PlanPriority.MEDIUM;
+      carePlan.priority = priority ?? 'Medium'; // Default priority as string
       carePlan.startDate = new Date(startDate);
       carePlan.endDate = new Date(endDate);
       carePlan.description = description;
@@ -388,7 +451,7 @@ class PatientRecordService {
           task.carePlan = carePlan;
           task.taskDescription = t.taskDescription;
           task.dueDate = new Date(t.dueDate);
-          task.priority = t.priority ?? PlanPriority.MEDIUM;
+          task.priority = t.priority ?? 'Medium'; 
 
           await this.careTaskRepository.save(task);
         }
@@ -595,5 +658,4 @@ class PatientRecordService {
 }
 
 
-
-
+export default PatientRecordService;

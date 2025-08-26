@@ -9,25 +9,6 @@ import {
 } from 'typeorm';
 import { CareTask } from './caretask.entity';
 
-export enum PlanPriority {
-  LOW = 'Low',
-  MEDIUM = 'Medium',
-  HIGH = 'High',
-  CRITICAL = 'Critical',
-}
-
-export enum PlanType {
-  POST_SURGICAL_CARE = 'Post-Surgical Care',
-  DIABETES_MANAGEMENT = 'Diabetes Management',
-  HYPERTENSION_CARE = 'Hypertension Care',
-  MEDICATION_MANAGEMENT = 'Medication Management',
-  WOUND_CARE = 'Wound Care',
-  MOBILITY_ASSISTANCE = 'Mobility Assistance',
-  PAIN_MANAGEMENT = 'Pain Management',
-  NUTRITIONAL_SUPPORT = 'Nutritional Support',
-  RESPIRATORY_CARE = 'Respiratory Care',
-  MENTAL_HEALTH_SUPPORT = 'Mental Health Support'
-}
 
 @Entity({ name: 'care_plans' })
 export class CarePlan {
@@ -40,18 +21,11 @@ export class CarePlan {
   @Column({ name: 'nurse_id', nullable: true })
   nurseId: string;
 
-  @Column({
-    type: 'enum',
-    enum: PlanType,
-    })
-    planType: PlanType;
+   @Column({ name: 'plan_type', type: 'varchar', length: 100 })
+  planType: string; // Example: "Post-Surgical Care"
 
-  @Column({
-    type: 'enum',
-    enum: PlanPriority,
-    default: PlanPriority.MEDIUM,
-  })
-  priority: PlanPriority;
+  @Column({ name: 'priority', type: 'varchar', length: 50, default: 'Medium' })
+  priority: string;
 
   @Column({ type: 'date', name: 'start_date' })
   startDate: Date;

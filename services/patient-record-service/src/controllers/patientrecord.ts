@@ -3,23 +3,25 @@ import { z } from 'zod';
 import PatientRecordService from '../services/patientrecord.service';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { PlanType, PlanPriority } from '../entity/careplan.entity';
+
 
 export const insertCarePlanSchema = z.object({
   patientId: z.string().min(1, 'Patient ID is required'),
-  planType: z.nativeEnum(PlanType),
-  priority: z.nativeEnum(PlanPriority).optional(),
+  planType: z.string().min(1, 'Plan type is required'), // e.g., "Post-Surgical Care"
+  priority: z.string().optional(), // e.g., "Low", "Medium", "High"
   startDate: z.string().min(1, 'Start date is required'),
   endDate: z.string().min(1, 'End date is required'),
   description: z.string().min(1, 'Description is required'),
   goals: z.string().optional(),
-  tasks: z.array(
-    z.object({
-      taskDescription: z.string().min(1, 'Task description is required'),
-      dueDate: z.string().min(1, 'Due date is required'),
-      priority: z.nativeEnum(PlanPriority).optional(),
-    })
-  ).optional(),
+  tasks: z
+    .array(
+      z.object({
+        taskDescription: z.string().min(1, 'Task description is required'),
+        dueDate: z.string().min(1, 'Due date is required'),
+        priority: z.string().optional(), // e.g., "Low", "Medium", "High"
+      })
+    )
+    .optional(),
 });
 
 export const insertprescriptionSchema = z.object({
@@ -166,6 +168,29 @@ export class PatientRecordController {
       }
     }
 
+    async getLastQuickExamByPatientId(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        // Assuming your service supports ordering and limit
+        const lastQuickExam = await this.patientRecordService.getLastQuickExamByPatientId(patientId);
+
+        if (!lastQuickExam) {
+          return res.status(404).json({ message: `No quick exams found for patient ID ${patientId}` });
+        }
+
+        return res.json(lastQuickExam);
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
     
     async insertCarePlan(req: Request, res: Response, next: NextFunction): Promise<any> {
       try {
@@ -208,7 +233,7 @@ export class PatientRecordController {
         console.log('Decoded token:', decoded);
 
         // Check if user is a nurse
-        if (!decoded || decoded.role.toUpperCase() !== 'NURSE') {
+        if (!decoded || decoded.role.toUpperCase() !== 'MEDICAL_STAFF') {
           return res.status(403).json({ message: 'Forbidden: Only nurses can create care plans' });
         }
 
