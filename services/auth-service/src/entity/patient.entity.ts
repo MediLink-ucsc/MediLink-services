@@ -24,6 +24,13 @@ export class Patient {
   @Column()
   gender: string;
 
+  @Column({ name: 'last_visited', type: 'varchar', default: 'Not Updated' })
+  lastVisited: string;
+
+  // Condition column with default "Not Updated"
+   @Column({ type: 'varchar', default: 'Not Updated' })
+  condition: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

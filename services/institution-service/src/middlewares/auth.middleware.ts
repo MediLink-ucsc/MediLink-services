@@ -3,14 +3,33 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import redis from '../config/redis';
 
-const publicRoutes = ['/', '/health', '/api/v1/institutions/lab/register', '/api/v1/institutions/clinic/register'];
+const publicRoutes = ['/', '/health', '/api/v1/institutions/lab/register',
+       '/api/v1/institutions/clinic/register',
+        '/api/v1/institutions/lab/verify/:labid',
+        '/api/v1/institutions/clinic/verify/:clinicid',
+        '/api/v1/institutions/clinics',
+        '/api/v1/institutions/labs',
+      ];
+
+
+  function isPublicRoute(path: string): boolean {
+  return publicRoutes.some(route => {
+    // Convert route with params (e.g., :doctorId) into regex
+    const regex = new RegExp('^' + route.replace(/:[^\s/]+/g, '([^/]+)') + '$');
+    return regex.test(path);
+  });
+}
 
 export const verifyToken = (
   req: Request,
   res: Response,
   next: NextFunction,
 ): any => {
-  if (publicRoutes.includes(req.path)) {
+  // if (publicRoutes.includes(req.path)) {
+  //   return next();
+  // }
+
+  if (isPublicRoute(req.path)) {
     return next();
   }
 

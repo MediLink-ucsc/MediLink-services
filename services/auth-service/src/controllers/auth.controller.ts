@@ -4,6 +4,7 @@ import AuthService from '../services/auth.service';
 import { AppDataSource } from '../data-source';
 import { Doctor } from '../entity/doctor.entity';
 
+
 export const registerLabAdminSchema = z.object({
   // User fields
   firstName: z.string().min(1, 'First name is required'),
@@ -123,6 +124,57 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
+  async updatePatientLastVisited(req: Request, res: Response): Promise<any> {
+    try {
+      const patientId = Number(req.params.patientId);
+      const { lastVisited } = req.body;
+
+      if (!patientId) {
+        return res.status(400).json({ message: 'Patient ID is required' });
+      }
+
+      const updatedPatient = await this.authService.updateLastVisited(patientId, lastVisited);
+
+      return res.status(200).json({
+        message: 'Last visited date updated',
+        patient: updatedPatient,
+      });
+    } catch (error: any) {
+      console.error(error);
+      const status = error.status || 500;
+      return res.status(status).json({ message: error.message || 'Internal server error' });
+    }
+  }
+
+   async updatePatientCondition(req: Request, res: Response): Promise<any> {
+    try {
+      const patientId = Number(req.params.patientId);
+      const { condition } = req.body;
+
+      if (!patientId) {
+        return res.status(400).json({ message: 'Patient ID is required' });
+      }
+
+      if (!condition) {
+        return res.status(400).json({ message: 'Condition is required' });
+      }
+
+      const updatedPatient = await this.authService.updatePatientCondition(patientId, condition);
+
+      if (!updatedPatient) {
+        return res.status(404).json({ message: `Patient with ID ${patientId} not found` });
+      }
+
+      return res.status(200).json({
+        message: 'Patient condition updated successfully',
+        patient: updatedPatient,
+      });
+    } catch (error: any) {
+      console.error(error);
+      return res.status(500).json({ message: error.message || 'Internal server error' });
+    }
+  }
+
   async getDoctorById(req: Request, res: Response): Promise<any> {
     const doctorId = req.params.doctorId;
 
@@ -148,6 +200,63 @@ export class AuthController {
       gender: doctor.gender,
       dateOfBirth: doctor.dateOfBirth,
     });
+  }
+
+  async getPatients(req: Request, res: Response): Promise<any> {
+    try {
+      const patients = await this.authService.getPatients();
+
+      if (!patients || patients.length === 0) {
+        return res.status(404).json({ message: `No patients found` });
+      }
+
+      return res.json(patients);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getPatientByUsername(req: Request, res: Response): Promise<any> {
+    try {
+      const username = req.params.username;
+
+      if (!username) {
+        return res.status(400).json({ message: 'Username is required' });
+      }
+
+      const patient = await this.authService.getPatientByUsername(username);
+
+      if (!patient) {
+        return res.status(404).json({ message: `No patient found with username ${username}` });
+      }
+
+      return res.json(patient);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getDoctorByUserid(req: Request, res: Response): Promise<any> {
+    try {
+      const userid = req.params.doctorUserid;
+
+      if (!userid) {
+        return res.status(400).json({ message: 'User ID is required' });
+      }
+
+      const doctor = await this.authService.getDoctorByUserid(userid);
+
+      if (!doctor) {
+        return res.status(404).json({ message: `No doctor found with user ID ${userid}` });
+      }
+
+      return res.json(doctor);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
   }
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
@@ -354,7 +463,8 @@ export class AuthController {
   }
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
-    const { username, password } = loginWithRoleSchema.parse(req.body);
+    const { username, password } = loginSchema.parse(req.body);
+    console.log(req.body)
     const result = await this.authService.medvaultproLogin(username, password);
 
     return res.status(200).json(result);

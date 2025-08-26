@@ -128,6 +128,125 @@ class AuthService {
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
   }
 
+  async updateLastVisited(patientId: number, lastVisited?: string): Promise<Patient> {
+    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+
+    if (!patient) {
+      throw createError(`Patient with ID ${patientId} not found`, 404);
+    }
+
+    patient.lastVisited = lastVisited || new Date().toISOString();
+
+    return this.patientRepository.save(patient);
+  }
+
+   async getPatients(): Promise<any[]> {
+      const patients = await this.patientRepository.find({
+        relations: ['user'], // correct relation
+      });
+
+      if (!patients || patients.length === 0) {
+        return []; // return empty array
+      }
+
+      return patients.map((patient) => ({
+        patientId: patient.id,
+        age: patient.age,
+        gender: patient.gender,
+        lastVisited: patient.lastVisited,
+        condition: patient.condition,
+        user: {
+          id: patient.user.id,
+          firstName: patient.user.firstName,
+          lastName: patient.user.lastName,
+          username: patient.user.username,
+        },
+      }));
+    }
+
+    async updatePatientCondition(patientId: number, condition: string): Promise<Patient | null> {
+    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+
+    if (!patient) {
+      return null;
+    }
+
+    // Optional: validate condition against allowed enum values
+    const allowedConditions = [
+      'Not Updated',
+      'Stable',
+      'Critical',
+      'Serious',
+      'Fair',
+      'Good',
+      'Recovering',
+      'Under Observation',
+      'Intensive Care',
+      'Emergency',
+    ];
+
+    if (!allowedConditions.includes(condition)) {
+      throw new Error(`Invalid condition. Allowed values: ${allowedConditions.join(', ')}`);
+    }
+
+    patient.condition = condition;
+    return this.patientRepository.save(patient);
+  }
+
+    async getPatientByUsername(username: string): Promise<any | null> {
+      const patient = await this.patientRepository.findOne({
+        where: { user: { username } }, // filtering by username inside related user
+        relations: ['user'], // include related user details
+      });
+
+      if (!patient) {
+        return null; // return null if not found
+      }
+
+      return {
+        patientId: patient.id,
+        age: patient.age,
+        gender: patient.gender,
+        user: {
+          id: patient.user.id,
+          firstName: patient.user.firstName,
+          lastName: patient.user.lastName,
+          username: patient.user.username,
+        },
+      };
+    }
+
+    async getDoctorByUserid(userid: string): Promise<any> {
+      const doctor = await this.doctorRepository.findOne({
+        where: { user: { id: parseInt(userid) } }, // match by user ID
+        relations: ['user'], // include related user details
+      });
+
+      if (!doctor) {
+        return null; // return null if not found
+      }
+
+      return {
+        doctorId: doctor.id,
+        licenseNumber: doctor.licenseNumber,
+        specialty: doctor.specialty,
+        yearsOfExperience: doctor.yearsOfExperience,
+        hospitalId: doctor.hospitalId,
+        hospitalName: doctor.hospitalName,
+        gender: doctor.gender,
+        dateOfBirth: doctor.dateOfBirth,
+        user: {
+          id: doctor.user.id,
+          firstName: doctor.user.firstName,
+          lastName: doctor.user.lastName,
+          username: doctor.user.username,
+        },
+      };
+    }
+
+
+
+
   async labAdminRegister({
     firstName,
     lastName,

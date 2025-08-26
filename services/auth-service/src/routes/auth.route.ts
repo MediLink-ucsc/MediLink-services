@@ -26,6 +26,12 @@ authRouter.post('/medvaultpro/labassistant/register', authController.labAssistan
 authRouter.post('/medvaultpro/medicalstaff/register', authController.medicalStaffRegister.bind(authController));
 
 authRouter.get('/medvaultpro/doctor/profile/:doctorId', authController.getDoctorById.bind(authController));
+authRouter.get('/medvaultpro/doctor/patients',authController.getPatients.bind(authController));
+authRouter.get('/medvaultpro/doctor/patient/:username',authController.getPatientByUsername.bind(authController));
+authRouter.get('/medvaultpro/doctor/:doctorUserid',authController.getDoctorByUserid.bind(authController));
+
+authRouter.patch('/medvaultpro/patient/:patientId/last-visited',authController.updatePatientLastVisited.bind(authController));
+authRouter.patch('/medvaultpro/patient/:patientId/condition',authController.updatePatientCondition.bind(authController));
 
 
 

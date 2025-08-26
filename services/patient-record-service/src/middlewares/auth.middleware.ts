@@ -3,24 +3,20 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config';
 import redis from '../config/redis';
 
-const publicRoutes = [
-  '/api/v1/auth/patient/login',
-  '/api/v1/auth/patient/register',
-  '/api/v1/auth/medvaultpro/login',
-  '/api/v1/auth/medvaultpro/doctor/register',
-  '/api/v1/auth/medvaultpro/labassistant/register',
-  '/api/v1/auth/medvaultpro/medicalstaff/register',
-  '/api/v1/auth/medvaultpro/labadmin/register',
-  '/api/v1/auth/medvaultpro/clinicadmin/register',
-  '/api/v1/auth/medvaultpro/doctor/profile/:doctorId',
-  '/api/v1/auth/medvaultpro/doctor/patients',
-  '/api/v1/auth/medvaultpro/doctor/patient/:username',
-  '/api/v1/auth/medvaultpro/doctor/:doctorUserid',
-  '/api/v1/auth/medvaultpro/patient/:patientId/last-visited',
-  '/api/v1/auth/medvaultpro/patient/:patientId/condition',
+const publicRoutes = ['/', '/health',
+  '/api/v1/patientRecords/prescriptions/insert',
+  '/api/v1/patientRecords/laborders/insert',
+  '/api/v1/patientRecords/soapnotes/insert',
+  '/api/v1/patientRecords/quickexams/insert',
+  '/api/v1/patientRecords/soapnote/:patientid',
+  '/api/v1/patientRecords/laborder/:patientid',
+  '/api/v1/patientRecords/prescription/:patientid',
+  '/api/v1/patientRecords/quickexam/:patientid',
+  '/api/v1/patientRecords/careplans/insert',
+  '/api/v1/patientRecords/quickexam/last/:patientid',
 ];
 
-function isPublicRoute(path: string): boolean {
+  function isPublicRoute(path: string): boolean {
   return publicRoutes.some(route => {
     // Convert route with params (e.g., :doctorId) into regex
     const regex = new RegExp('^' + route.replace(/:[^\s/]+/g, '([^/]+)') + '$');
@@ -34,7 +30,7 @@ export const verifyToken = (
   next: NextFunction,
 ): any => {
 
-  if (isPublicRoute(req.path)) {
+   if (isPublicRoute(req.path)) {
     return next();
   }
   // if (publicRoutes.includes(req.path)) {
@@ -49,7 +45,6 @@ export const verifyToken = (
 
   jwt.verify(token, config.JWT_SECRET, async (err: any, decoded: any) => {
     if (err) {
-      console.log('JWT verification error:', err);
       return res.status(401).send({ message: 'unauthorized' });
     }
 
@@ -57,10 +52,7 @@ export const verifyToken = (
     const redisToken = await redis.get(redisKey);
 
     if (!redisToken) {
-      console.log('Token not found in Redis:', redisKey);
-      return res
-        .status(401)
-        .json({ message: 'unauthorized. Redis Token not found' });
+      return res.status(401).json({ message: 'unauthorized' });
     }
 
     req.userId = decoded.id;

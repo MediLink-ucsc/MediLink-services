@@ -116,4 +116,55 @@ export class InstitutionController {
     }
   }
 
+  async verifyLab(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const { labid } = req.params; // ✅ using labid from the route
+      const lab = await this.institutionService.verifyLab(Number(labid));
+
+      return res.status(200).json({
+        message: 'Lab verified successfully',
+        data: lab,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyClinic(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const { clinicid } = req.params; // ✅ using clinicid from the route
+      const clinic = await this.institutionService.verifyClinic(Number(clinicid));
+
+      return res.status(200).json({
+        message: 'Clinic verified successfully',
+        data: clinic,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+ async getAllClinics(req: Request, res: Response, next: NextFunction): Promise<any> {
+    try {
+      const clinics = await this.institutionService.getAllClinics();
+
+      return res.status(200).json({
+        data: clinics,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getAllLabs(req: Request, res: Response, next: NextFunction): Promise<any> {
+      try {
+        const labs = await this.institutionService.getAllLabs();
+  
+        return res.status(200).json({
+          data: labs,
+        });
+      } catch (error) {
+        next(error);
+      }
+    } 
+
 }

@@ -44,6 +44,9 @@ export class Lab {
   @Column({ name: 'admin_user_id' })
   adminUserId: number;
 
+  @Column({ length: 20, default: 'unverified' })
+  status: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

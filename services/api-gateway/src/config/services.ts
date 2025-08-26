@@ -20,7 +20,7 @@ class ServiceProxy {
       name: 'institute-service',
     },
     {
-      path: '/api/v1/transactions/',
+      path: '/api/v1/patientRecords/',
       url: config.PATIENT_RECORD_SERVICE_URL,
       pathRewrite: { '^/': '/api/v1/patientRecords/' },
       name: 'patient-records-service',
