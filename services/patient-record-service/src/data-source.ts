@@ -7,11 +7,22 @@ import { SoapNote } from './entity/soap.entity';
 import { QuickExam } from './entity/quickexam.entity';
 import { CarePlan } from './entity/careplan.entity';
 import { CareTask } from './entity/caretask.entity';
+import { Metric } from './entity/metric.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
   synchronize: true,
   logging: false,
-  entities: [Prescription, Medication, LabOrder, LabTest, SoapNote, QuickExam, CarePlan, CareTask],
+  entities: [
+    Prescription,
+    Medication,
+    LabOrder,
+    LabTest,
+    SoapNote,
+    QuickExam,
+    CarePlan,
+    CareTask,
+    Metric,
+  ],
 });
