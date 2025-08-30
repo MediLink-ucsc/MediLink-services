@@ -319,6 +319,35 @@ export class LabWorkflowService {
       throw error;
     }
   }
+
+  /**
+   * Get single lab result by ID with lab authorization
+   */
+  async getLabResultById(
+    resultId: number,
+    userLabId?: string
+  ): Promise<LabResult> {
+    try {
+      const labResult = await reportHandlerService.getLabResultById(resultId);
+
+      if (!labResult) {
+        throw new Error("Lab result not found");
+      }
+
+      // If userLabId is provided, check authorization
+      if (userLabId && labResult.labSample.labId !== userLabId) {
+        throw new Error(
+          "Access denied. You can only access results from your own lab."
+        );
+      }
+
+      console.log(` Retrieved lab result with ID: ${resultId}`);
+      return labResult;
+    } catch (error) {
+      console.error(" Failed to get lab result by ID:", error);
+      throw error;
+    }
+  }
 }
 
 export const labWorkflowService = new LabWorkflowService();

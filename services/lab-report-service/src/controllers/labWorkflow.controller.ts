@@ -370,8 +370,8 @@ export class LabWorkflowController {
     }
   }
 
-  // Get lab result by ID
-  async getLabResult(req: Request, res: Response): Promise<void> {
+  // Get lab result by ID (with authorization)
+  async getLabResult(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const { resultId } = req.params;
 
@@ -383,25 +383,54 @@ export class LabWorkflowController {
         return;
       }
 
-      const labResult = await reportHandlerService.getLabResultById(
-        parseInt(resultId)
-      );
-
-      if (!labResult) {
-        res.status(404).json({
+      // Check if user is authenticated
+      if (!req.user) {
+        res.status(401).json({
           success: false,
-          message: "Lab result not found",
+          message: "Authentication required",
         });
         return;
       }
 
+      // Get user's lab/hospital ID
+      const userLabId = req.user.labId || req.user.hospitalId;
+
+      // Admin users can access any lab result, regular users need lab authorization
+      const isAdmin = req.user.role === "admin" || req.user.role === "ADMIN";
+
+      const labResult = await labWorkflowService.getLabResultById(
+        parseInt(resultId),
+        isAdmin ? undefined : userLabId // Skip lab authorization for admin users
+      );
+
       res.status(200).json({
         success: true,
         data: labResult,
+        userLabId: userLabId,
+        isAdmin: isAdmin,
         message: "Lab result retrieved successfully",
       });
     } catch (error) {
       console.error("Error in getLabResult:", error);
+
+      // Check if it's an authorization error
+      if (error instanceof Error && error.message.includes("Access denied")) {
+        res.status(403).json({
+          success: false,
+          message: error.message,
+        });
+        return;
+      }
+
+      // Check if it's a not found error
+      if (error instanceof Error && error.message.includes("not found")) {
+        res.status(404).json({
+          success: false,
+          message: error.message,
+        });
+        return;
+      }
+
       res.status(500).json({
         success: false,
         message:

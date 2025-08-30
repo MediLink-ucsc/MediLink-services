@@ -64,6 +64,7 @@ labWorkflowRouter.get(
 // Lab Result Management
 labWorkflowRouter.get(
   "/results/:resultId",
+  verifyToken,
   labWorkflowController.getLabResult.bind(labWorkflowController)
 );
 
