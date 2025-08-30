@@ -3,10 +3,22 @@ import jwt from "jsonwebtoken";
 import { config } from "../config";
 import redis from "../config/redis";
 
+interface AuthenticatedRequest extends Request {
+  user?: {
+    id: string;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    labId?: string;
+    hospitalId?: string;
+    role?: string;
+  };
+}
+
 const publicRoutes = ["/", "/health"];
 
 export const verifyToken = (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): any => {
@@ -32,9 +44,19 @@ export const verifyToken = (
       return res.status(401).json({ message: "unauthorized" });
     }
 
-    // req.userId = decoded.id;
-    // req.token = token;
+    // Add user information to request object
+    req.user = {
+      id: decoded.id,
+      username: decoded.username,
+      firstName: decoded.firstName,
+      lastName: decoded.lastName,
+      labId: decoded.labId || decoded.hospitalId?.toString(), // Use hospitalId as labId if labId is not present
+      hospitalId: decoded.hospitalId?.toString(),
+      role: decoded.role,
+    };
 
     return next();
   });
 };
+
+export { AuthenticatedRequest };

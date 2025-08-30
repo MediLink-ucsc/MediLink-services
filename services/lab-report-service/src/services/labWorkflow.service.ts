@@ -248,6 +248,77 @@ export class LabWorkflowService {
       throw error;
     }
   }
+
+  /**
+   * Get lab samples by lab ID
+   */
+  async getLabSamplesByLabId(
+    labId: string,
+    filters?: {
+      status?: string;
+      priority?: string;
+      fromDate?: string;
+      toDate?: string;
+    }
+  ): Promise<LabSample[]> {
+    try {
+      const labSamples = await reportHandlerService.getLabSamplesByLabId(
+        labId,
+        filters
+      );
+      console.log(
+        ` Retrieved ${labSamples.length} lab samples for lab: ${labId}`
+      );
+      return labSamples;
+    } catch (error) {
+      console.error(" Failed to get lab samples by labId:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all lab results with optional filtering
+   */
+  async getAllLabResults(filters?: {
+    status?: string;
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<LabResult[]> {
+    try {
+      const labResults = await reportHandlerService.getAllLabResults(filters);
+      console.log(` Retrieved ${labResults.length} lab results`);
+      return labResults;
+    } catch (error) {
+      console.error(" Failed to get all lab results:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get lab results for a specific lab using labId
+   */
+  async getLabResultsByLabId(
+    labId: string,
+    filters?: {
+      status?: string;
+      fromDate?: string;
+      toDate?: string;
+    }
+  ): Promise<LabResult[]> {
+    try {
+      const labResults = await reportHandlerService.getLabResultsByLabId(
+        labId,
+        filters
+      );
+      console.log(
+        ` Retrieved ${labResults.length} lab results for lab: ${labId}`
+      );
+      return labResults;
+    } catch (error) {
+      console.error(" Failed to get lab results by labId:", error);
+      throw error;
+    }
+  }
 }
 
 export const labWorkflowService = new LabWorkflowService();

@@ -1,6 +1,7 @@
 import express from "express";
 import { LabWorkflowController } from "../controllers/labWorkflow.controller";
 import upload from "../middleware/upload.middleware";
+import { verifyToken } from "../middleware/auth.middleware";
 
 const labWorkflowRouter = express.Router();
 const labWorkflowController = new LabWorkflowController();
@@ -14,6 +15,27 @@ labWorkflowRouter.post(
 labWorkflowRouter.get(
   "/samples",
   labWorkflowController.getLabSamples.bind(labWorkflowController)
+);
+
+// Get lab samples by lab ID (from token)
+labWorkflowRouter.get(
+  "/lab/samples",
+  verifyToken,
+  labWorkflowController.getLabSamplesByLabId.bind(labWorkflowController)
+);
+
+// Get lab samples by specific lab ID (with authorization)
+labWorkflowRouter.get(
+  "/lab/:labId/samples",
+  verifyToken,
+  labWorkflowController.getLabSamplesBySpecificLabId.bind(labWorkflowController)
+);
+
+// Debug endpoint to check token information
+labWorkflowRouter.get(
+  "/debug/token",
+  verifyToken,
+  labWorkflowController.debugTokenInfo.bind(labWorkflowController)
 );
 
 labWorkflowRouter.get(
@@ -48,6 +70,27 @@ labWorkflowRouter.get(
 labWorkflowRouter.put(
   "/results/:resultId/edit",
   labWorkflowController.editLabResult.bind(labWorkflowController)
+);
+
+// Get all lab results (admin only)
+labWorkflowRouter.get(
+  "/results",
+  verifyToken,
+  labWorkflowController.getAllLabResults.bind(labWorkflowController)
+);
+
+// Get lab results by lab ID (from token)
+labWorkflowRouter.get(
+  "/lab/results",
+  verifyToken,
+  labWorkflowController.getLabResultsByLabId.bind(labWorkflowController)
+);
+
+// Get lab results by specific lab ID (with authorization)
+labWorkflowRouter.get(
+  "/lab/:labId/results",
+  verifyToken,
+  labWorkflowController.getLabResultsBySpecificLabId.bind(labWorkflowController)
 );
 
 export { labWorkflowRouter };

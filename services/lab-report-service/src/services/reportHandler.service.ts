@@ -228,6 +228,53 @@ export class ReportHandlerService {
     }
   }
 
+  async getLabSamplesByLabId(
+    labId: string,
+    filters?: {
+      status?: string;
+      priority?: string;
+      fromDate?: string;
+      toDate?: string;
+    }
+  ): Promise<LabSample[]> {
+    try {
+      const query = this.labSampleRepository
+        .createQueryBuilder("labSample")
+        .leftJoinAndSelect("labSample.testType", "testType")
+        .leftJoinAndSelect("labSample.labResults", "labResults")
+        .where("labSample.labId = :labId", { labId });
+
+      // Apply filters if provided
+      if (filters) {
+        if (filters.status) {
+          query.andWhere("labSample.status = :status", {
+            status: filters.status,
+          });
+        }
+        if (filters.priority) {
+          query.andWhere("labSample.priority = :priority", {
+            priority: filters.priority,
+          });
+        }
+        if (filters.fromDate) {
+          query.andWhere("labSample.createdAt >= :fromDate", {
+            fromDate: filters.fromDate,
+          });
+        }
+        if (filters.toDate) {
+          query.andWhere("labSample.createdAt <= :toDate", {
+            toDate: filters.toDate,
+          });
+        }
+      }
+
+      return await query.orderBy("labSample.createdAt", "DESC").getMany();
+    } catch (error) {
+      console.error("Error fetching lab samples by labId:", error);
+      throw new Error("Failed to fetch lab samples by labId");
+    }
+  }
+
   async getLabSampleById(id: number): Promise<LabSample | null> {
     try {
       return await this.labSampleRepository.findOne({
@@ -367,6 +414,86 @@ export class ReportHandlerService {
     } catch (error) {
       console.error("Error editing lab result:", error);
       throw new Error("Failed to edit lab result");
+    }
+  }
+
+  // Get all lab results with optional filtering
+  async getAllLabResults(filters?: {
+    status?: string;
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<LabResult[]> {
+    try {
+      const query = this.labResultRepository
+        .createQueryBuilder("labResult")
+        .leftJoinAndSelect("labResult.labSample", "labSample")
+        .leftJoinAndSelect("labSample.testType", "testType");
+
+      // Apply filters if provided
+      if (filters) {
+        if (filters.status) {
+          query.andWhere("labResult.status = :status", {
+            status: filters.status,
+          });
+        }
+        if (filters.fromDate) {
+          query.andWhere("labResult.createdAt >= :fromDate", {
+            fromDate: filters.fromDate,
+          });
+        }
+        if (filters.toDate) {
+          query.andWhere("labResult.createdAt <= :toDate", {
+            toDate: filters.toDate,
+          });
+        }
+      }
+
+      return await query.orderBy("labResult.createdAt", "DESC").getMany();
+    } catch (error) {
+      console.error("Error fetching all lab results:", error);
+      throw new Error("Failed to fetch all lab results");
+    }
+  }
+
+  // Get lab results for a specific lab using labId
+  async getLabResultsByLabId(
+    labId: string,
+    filters?: {
+      status?: string;
+      fromDate?: string;
+      toDate?: string;
+    }
+  ): Promise<LabResult[]> {
+    try {
+      const query = this.labResultRepository
+        .createQueryBuilder("labResult")
+        .leftJoinAndSelect("labResult.labSample", "labSample")
+        .leftJoinAndSelect("labSample.testType", "testType")
+        .where("labSample.labId = :labId", { labId });
+
+      // Apply filters if provided
+      if (filters) {
+        if (filters.status) {
+          query.andWhere("labResult.status = :status", {
+            status: filters.status,
+          });
+        }
+        if (filters.fromDate) {
+          query.andWhere("labResult.createdAt >= :fromDate", {
+            fromDate: filters.fromDate,
+          });
+        }
+        if (filters.toDate) {
+          query.andWhere("labResult.createdAt <= :toDate", {
+            toDate: filters.toDate,
+          });
+        }
+      }
+
+      return await query.orderBy("labResult.createdAt", "DESC").getMany();
+    } catch (error) {
+      console.error("Error fetching lab results by labId:", error);
+      throw new Error("Failed to fetch lab results by labId");
     }
   }
 }
