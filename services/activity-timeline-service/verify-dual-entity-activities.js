@@ -5,8 +5,8 @@ const AppDataSource = new DataSource({
   type: "postgres",
   host: process.env.DB_HOST || "localhost",
   port: parseInt(process.env.DB_PORT) || 5432,
-  username: process.env.DB_USERNAME || "postgres",
-  password: process.env.DB_PASSWORD || "password",
+  username: process.env.DB_USERNAME || "admin",
+  password: process.env.DB_PASSWORD || "medilink",
   database: process.env.DB_NAME || "medilink",
   schema: "activity_timeline",
   entities: [],
@@ -21,16 +21,16 @@ async function verifyDualEntityActivities() {
   // Query for recent lab workflow activities
   const recentActivities = await AppDataSource.query(`
     SELECT 
-      entity_type,
-      entity_id,
-      activity_type,
+      "entityType",
+      "entityId",
+      "activityType",
       description,
       metadata,
       source,
-      created_at
+      "createdAt"
     FROM activity_timeline.activity_events 
-    WHERE activity_type IN ('LAB_SAMPLE_CREATED', 'LAB_SAMPLE_UPDATED', 'LAB_RESULT_PROCESSED', 'LAB_RESULT_EXTRACTED')
-    ORDER BY created_at DESC 
+    WHERE "activityType" IN ('LAB_SAMPLE_CREATED', 'LAB_SAMPLE_UPDATED', 'LAB_RESULT_PROCESSED', 'LAB_RESULT_EXTRACTED')
+    ORDER BY "createdAt" DESC 
     LIMIT 10
   `);
 
@@ -38,36 +38,32 @@ async function verifyDualEntityActivities() {
   console.log("=====================================");
 
   recentActivities.forEach((activity, index) => {
-    console.log(
-      `${index + 1}. ${activity.entity_type.toUpperCase()} Activity:`
-    );
-    console.log(`   Entity ID: ${activity.entity_id}`);
-    console.log(`   Type: ${activity.activity_type}`);
+    console.log(`${index + 1}. ${activity.entityType.toUpperCase()} Activity:`);
+    console.log(`   Entity ID: ${activity.entityId}`);
+    console.log(`   Type: ${activity.activityType}`);
     console.log(`   Description: ${activity.description}`);
     console.log(`   Metadata:`, JSON.stringify(activity.metadata, null, 2));
     console.log(`   Source:`, JSON.stringify(activity.source, null, 2));
-    console.log(`   Created: ${activity.created_at}`);
+    console.log(`   Created: ${activity.createdAt}`);
     console.log("   ---");
   });
 
   // Count activities by entity type for lab workflow topics
   const entityCounts = await AppDataSource.query(`
     SELECT 
-      entity_type,
-      activity_type,
+      "entityType",
+      "activityType",
       COUNT(*) as count
     FROM activity_timeline.activity_events 
-    WHERE activity_type IN ('LAB_SAMPLE_CREATED', 'LAB_SAMPLE_UPDATED', 'LAB_RESULT_PROCESSED', 'LAB_RESULT_EXTRACTED')
-    GROUP BY entity_type, activity_type
-    ORDER BY entity_type, activity_type
+    WHERE "activityType" IN ('LAB_SAMPLE_CREATED', 'LAB_SAMPLE_UPDATED', 'LAB_RESULT_PROCESSED', 'LAB_RESULT_EXTRACTED')
+    GROUP BY "entityType", "activityType"
+    ORDER BY "entityType", "activityType"
   `);
 
   console.log("📈 Activity counts by entity type:");
   console.log("===================================");
   entityCounts.forEach((count) => {
-    console.log(
-      `${count.entity_type}: ${count.activity_type} = ${count.count}`
-    );
+    console.log(`${count.entityType}: ${count.activityType} = ${count.count}`);
   });
 
   await AppDataSource.destroy();

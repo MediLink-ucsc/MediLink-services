@@ -1,6 +1,6 @@
 const { Kafka } = require("kafkajs");
 
-const kafka = Kafka({
+const kafka = new Kafka({
   clientId: "lab-workflow-test-producer",
   brokers: ["localhost:9094"],
 });
