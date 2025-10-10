@@ -169,6 +169,37 @@ services:
       start_period: 60s
     restart: unless-stopped
 
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: notification-service
+    ports:
+      - "3005:3005"
+    env_file:
+      - services/notification-service/.env.production
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://admin:medilink@postgres:5432/medilink
+      - REDIS_URL=redis://:medilink@redis:6379
+      - KAFKA_BROKER=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - medilink-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3005/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
 volumes:
   redis_data:
   postgres_data:
