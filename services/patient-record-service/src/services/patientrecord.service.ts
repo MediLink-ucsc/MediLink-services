@@ -16,6 +16,7 @@ import axios from 'axios';
 import { CareTask } from '../entity/caretask.entity';
 import { publishCarePlanCreated } from '../events/producers/careplanCreated.producer';
 import { CarePlan } from '../entity/careplan.entity';
+import { PatientDoctorRecord } from '../entity/patientvisit.entity';
 
 export interface InsertCarePlanDto {
   patientId: string;
@@ -95,6 +96,8 @@ class PatientRecordService {
   private quickExamRepository: Repository<QuickExam>;
   private carePlanRepository: Repository<CarePlan>;
   private careTaskRepository: Repository<CareTask>;
+  private patientDoctorRecordRepository: Repository<PatientDoctorRecord>;
+
   
 
 
@@ -107,6 +110,7 @@ class PatientRecordService {
     this.quickExamRepository = AppDataSource.getRepository(QuickExam);
     this.carePlanRepository = AppDataSource.getRepository(CarePlan);
     this.careTaskRepository = AppDataSource.getRepository(CareTask);
+    this.patientDoctorRecordRepository = AppDataSource.getRepository(PatientDoctorRecord);
   }
 
 
@@ -503,6 +507,30 @@ class PatientRecordService {
             await this.medicationRepository.save(medication);
           }
 
+          let record = await this.patientDoctorRecordRepository.findOne({
+          where: { patientId: Number(patientId), doctorId: doctorUserId },
+        });
+
+        if (record) {
+          // Update last visited date to the current time
+          record.lastVisitedDate = new Date();
+
+          console.log('updating record');
+          console.log(record);
+        } else {
+          // Create new record
+          record = this.patientDoctorRecordRepository.create({
+            patientId: Number(patientId),
+            doctorId: doctorUserId,
+            lastVisitedDate: new Date(),
+          });
+
+          console.log('creating new record');
+          console.log(record);
+        }
+
+        await this.patientDoctorRecordRepository.save(record);
+
           // Optional: Publish event (can be replaced with appropriate Kafka topic)
           try {
             await publishPrescriptionFilled({
@@ -545,6 +573,30 @@ class PatientRecordService {
           await this.labtestRepository.save(labTest);
         }
 
+        let record = await this.patientDoctorRecordRepository.findOne({
+          where: { patientId: Number(patientId), doctorId: doctorUserId },
+        });
+
+        if (record) {
+          // Update last visited date to the current time
+          record.lastVisitedDate = new Date();
+
+          console.log('updating record');
+          console.log(record);
+        } else {
+          // Create new record
+          record = this.patientDoctorRecordRepository.create({
+            patientId: Number(patientId),
+            doctorId: doctorUserId,
+            lastVisitedDate: new Date(),
+          });
+
+          console.log('creating new record');
+          console.log(record);
+        }
+
+        await this.patientDoctorRecordRepository.save(record);
+
         // Optional: publish event or logging here
         try {
           await publishLabOrderCreated({
@@ -583,6 +635,32 @@ class PatientRecordService {
 
         // Save SoapNote entity
         await this.soapNoteRepository.save(soapNote);
+
+        let record = await this.patientDoctorRecordRepository.findOne({
+          where: { patientId: Number(patientId), doctorId: doctorUserId },
+        });
+
+        if (record) {
+          // Update last visited date to the current time
+          record.lastVisitedDate = new Date();
+
+          console.log('updating record');
+          console.log(record);
+        } else {
+          // Create new record
+          record = this.patientDoctorRecordRepository.create({
+            patientId: Number(patientId),
+            doctorId: doctorUserId,
+            lastVisitedDate: new Date(),
+          });
+
+          console.log('creating new record');
+          console.log(record);
+        }
+
+        await this.patientDoctorRecordRepository.save(record);
+
+
 
         // Optional: publish event or logging here
         try {
@@ -635,6 +713,30 @@ class PatientRecordService {
 
         // Save QuickExam entity
         await this.quickExamRepository.save(quickExam);
+
+        let record = await this.patientDoctorRecordRepository.findOne({
+          where: { patientId: Number(patientId), doctorId: doctorUserId },
+        });
+
+        if (record) {
+          // Update last visited date to the current time
+          record.lastVisitedDate = new Date();
+
+          console.log('updating record');
+          console.log(record);
+        } else {
+          // Create new record
+          record = this.patientDoctorRecordRepository.create({
+            patientId: Number(patientId),
+            doctorId: doctorUserId,
+            lastVisitedDate: new Date(),
+          });
+
+          console.log('creating new record');
+          console.log(record);
+        }
+
+        await this.patientDoctorRecordRepository.save(record);
 
         // Optional: publish event or logging here
         try {
