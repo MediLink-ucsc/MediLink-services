@@ -86,6 +86,38 @@ export class PatientRecordController {
     this.patientRecordService = new PatientRecordService();
   }
 
+
+   async getVisitedPatients(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const doctorUserId = decoded.userId || decoded.id;
+      if (!doctorUserId) {
+        return res.status(403).json({ message: 'Invalid token: doctor ID missing' });
+      }
+
+      // Call service
+      const visitedPatients = await this.patientRecordService.getVisitedPatients(doctorUserId);
+
+      if (!visitedPatients.length) {
+        return res.status(404).json({ message: 'No previously visited patients found' });
+      }
+
+      return res.json(visitedPatients);
+    } catch (error: any) {
+      //console.error('Error fetching visited patients:', error);
+      console.error('Error fetching visited patients:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
   async getSoapBypatientid(req: Request, res: Response): Promise<any> {
     try {
       const patientId = req.params.patientid;

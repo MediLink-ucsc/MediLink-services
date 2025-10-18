@@ -18,6 +18,7 @@ import { publishCarePlanCreated } from '../events/producers/careplanCreated.prod
 import { CarePlan } from '../entity/careplan.entity';
 import { PatientDoctorRecord } from '../entity/patientvisit.entity';
 
+
 export interface InsertCarePlanDto {
   patientId: string;
   nurseUserId: number; // ID of the nurse creating the care plan
@@ -111,6 +112,30 @@ class PatientRecordService {
     this.carePlanRepository = AppDataSource.getRepository(CarePlan);
     this.careTaskRepository = AppDataSource.getRepository(CareTask);
     this.patientDoctorRecordRepository = AppDataSource.getRepository(PatientDoctorRecord);
+  }
+
+    async getVisitedPatients(doctorUserId: number): Promise<any[]> {
+    // Step 1: Get all patients from Auth Service
+    const authResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'); 
+    const allPatients = authResponse.data;
+
+    if (!allPatients || !allPatients.length) return [];
+
+    // Step 2: Get patient-doctor visit records for this doctor
+    const records = await this.patientDoctorRecordRepository.find({
+      where: { doctorId: doctorUserId },
+    });
+
+    if (!records.length) return [];
+
+    const visitedPatientIds = records.map((r) => r.patientId);
+
+    // Step 3: Filter only previously visited patients
+    const visitedPatients = allPatients.filter((p: any) =>
+      visitedPatientIds.includes(p.patientId)
+    );
+
+    return visitedPatients;
   }
 
 
