@@ -8,6 +8,9 @@ interface Config {
   JWT_EXPIRES_IN: string;
   LOG_LEVEL: string;
   ALLOWED_ORIGINS: string;
+  NOTIFICATION_SERVICE_URL: string;
+  FRONTEND_URL: string;
+  PASSWORD_RESET_EXPIRY: string;
 }
 
 export const config: Config = {
@@ -21,4 +24,8 @@ export const config: Config = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   ALLOWED_ORIGINS: process.env.ALLOWED_ORIGINS || 'http://localhost:3000',
+  NOTIFICATION_SERVICE_URL:
+    process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3005',
+  FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',
+  PASSWORD_RESET_EXPIRY: process.env.PASSWORD_RESET_EXPIRY || '15m',
 };

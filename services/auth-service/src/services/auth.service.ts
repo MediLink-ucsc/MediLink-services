@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken';
 import ms from 'ms';
 import bcrypt from 'bcrypt';
 import axios from 'axios';
+import crypto from 'crypto';
 import { AppDataSource } from '../data-source';
 import { config } from '../config';
 import redis from '../config/redis';
@@ -12,8 +13,11 @@ import { Patient } from '../entity/patient.entity';
 import { Doctor } from '../entity/doctor.entity';
 import { LabAssistant } from '../entity/labAssistant.entity';
 import { MedicalStaff } from '../entity/medicalStaff.entity';
+import { PasswordResetToken } from '../entity/passwordResetToken.entity';
 import { createError } from '../utils';
 import { publishUserRegistered } from '../events/producers/userRegistered.producer';
+import { notificationService } from './notification.service';
+import logger from '../config/logger';
 
 interface RegisterLabAdminDto {
   firstName: string;
@@ -118,6 +122,7 @@ class AuthService {
   doctorRepository: Repository<Doctor>;
   labAssistantRepository: Repository<LabAssistant>;
   medicalStaffRepository: Repository<MedicalStaff>;
+  passwordResetTokenRepository: Repository<PasswordResetToken>;
 
   constructor() {
     this.credentialRepository = AppDataSource.getRepository(Credential);
@@ -126,10 +131,17 @@ class AuthService {
     this.doctorRepository = AppDataSource.getRepository(Doctor);
     this.labAssistantRepository = AppDataSource.getRepository(LabAssistant);
     this.medicalStaffRepository = AppDataSource.getRepository(MedicalStaff);
+    this.passwordResetTokenRepository =
+      AppDataSource.getRepository(PasswordResetToken);
   }
 
-  async updateLastVisited(patientId: number, lastVisited?: string): Promise<Patient> {
-    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+  async updateLastVisited(
+    patientId: number,
+    lastVisited?: string,
+  ): Promise<Patient> {
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
 
     if (!patient) {
       throw createError(`Patient with ID ${patientId} not found`, 404);
@@ -140,32 +152,37 @@ class AuthService {
     return this.patientRepository.save(patient);
   }
 
-   async getPatients(): Promise<any[]> {
-      const patients = await this.patientRepository.find({
-        relations: ['user'], // correct relation
-      });
+  async getPatients(): Promise<any[]> {
+    const patients = await this.patientRepository.find({
+      relations: ['user'], // correct relation
+    });
 
-      if (!patients || patients.length === 0) {
-        return []; // return empty array
-      }
-
-      return patients.map((patient) => ({
-        patientId: patient.id,
-        age: patient.age,
-        gender: patient.gender,
-        lastVisited: patient.lastVisited,
-        condition: patient.condition,
-        user: {
-          id: patient.user.id,
-          firstName: patient.user.firstName,
-          lastName: patient.user.lastName,
-          username: patient.user.username,
-        },
-      }));
+    if (!patients || patients.length === 0) {
+      return []; // return empty array
     }
 
-    async updatePatientCondition(patientId: number, condition: string): Promise<Patient | null> {
-    const patient = await this.patientRepository.findOne({ where: { id: patientId } });
+    return patients.map((patient) => ({
+      patientId: patient.id,
+      age: patient.age,
+      gender: patient.gender,
+      lastVisited: patient.lastVisited,
+      condition: patient.condition,
+      user: {
+        id: patient.user.id,
+        firstName: patient.user.firstName,
+        lastName: patient.user.lastName,
+        username: patient.user.username,
+      },
+    }));
+  }
+
+  async updatePatientCondition(
+    patientId: number,
+    condition: string,
+  ): Promise<Patient | null> {
+    const patient = await this.patientRepository.findOne({
+      where: { id: patientId },
+    });
 
     if (!patient) {
       return null;
@@ -186,66 +203,65 @@ class AuthService {
     ];
 
     if (!allowedConditions.includes(condition)) {
-      throw new Error(`Invalid condition. Allowed values: ${allowedConditions.join(', ')}`);
+      throw new Error(
+        `Invalid condition. Allowed values: ${allowedConditions.join(', ')}`,
+      );
     }
 
     patient.condition = condition;
     return this.patientRepository.save(patient);
   }
 
-    async getPatientByUsername(username: string): Promise<any | null> {
-      const patient = await this.patientRepository.findOne({
-        where: { user: { username } }, // filtering by username inside related user
-        relations: ['user'], // include related user details
-      });
+  async getPatientByUsername(username: string): Promise<any | null> {
+    const patient = await this.patientRepository.findOne({
+      where: { user: { username } }, // filtering by username inside related user
+      relations: ['user'], // include related user details
+    });
 
-      if (!patient) {
-        return null; // return null if not found
-      }
-
-      return {
-        patientId: patient.id,
-        age: patient.age,
-        gender: patient.gender,
-        user: {
-          id: patient.user.id,
-          firstName: patient.user.firstName,
-          lastName: patient.user.lastName,
-          username: patient.user.username,
-        },
-      };
+    if (!patient) {
+      return null; // return null if not found
     }
 
-    async getDoctorByUserid(userid: string): Promise<any> {
-      const doctor = await this.doctorRepository.findOne({
-        where: { user: { id: parseInt(userid) } }, // match by user ID
-        relations: ['user'], // include related user details
-      });
+    return {
+      patientId: patient.id,
+      age: patient.age,
+      gender: patient.gender,
+      user: {
+        id: patient.user.id,
+        firstName: patient.user.firstName,
+        lastName: patient.user.lastName,
+        username: patient.user.username,
+      },
+    };
+  }
 
-      if (!doctor) {
-        return null; // return null if not found
-      }
+  async getDoctorByUserid(userid: string): Promise<any> {
+    const doctor = await this.doctorRepository.findOne({
+      where: { user: { id: parseInt(userid) } }, // match by user ID
+      relations: ['user'], // include related user details
+    });
 
-      return {
-        doctorId: doctor.id,
-        licenseNumber: doctor.licenseNumber,
-        specialty: doctor.specialty,
-        yearsOfExperience: doctor.yearsOfExperience,
-        hospitalId: doctor.hospitalId,
-        hospitalName: doctor.hospitalName,
-        gender: doctor.gender,
-        dateOfBirth: doctor.dateOfBirth,
-        user: {
-          id: doctor.user.id,
-          firstName: doctor.user.firstName,
-          lastName: doctor.user.lastName,
-          username: doctor.user.username,
-        },
-      };
+    if (!doctor) {
+      return null; // return null if not found
     }
 
-
-
+    return {
+      doctorId: doctor.id,
+      licenseNumber: doctor.licenseNumber,
+      specialty: doctor.specialty,
+      yearsOfExperience: doctor.yearsOfExperience,
+      hospitalId: doctor.hospitalId,
+      hospitalName: doctor.hospitalName,
+      gender: doctor.gender,
+      dateOfBirth: doctor.dateOfBirth,
+      user: {
+        id: doctor.user.id,
+        firstName: doctor.user.firstName,
+        lastName: doctor.user.lastName,
+        username: doctor.user.username,
+      },
+    };
+  }
 
   async labAdminRegister({
     firstName,
@@ -309,6 +325,25 @@ class AuthService {
       key: user.id?.toString(),
       value: user,
     });
+
+    // Send welcome email
+    try {
+      await notificationService.sendWelcomeEmail({
+        email: username,
+        userName: `${firstName} ${lastName}`,
+      });
+      logger.info('Welcome email sent to lab admin', {
+        userId: user.id,
+        email: username,
+      });
+    } catch (emailError) {
+      logger.warn('Failed to send welcome email to lab admin', {
+        error: (emailError as Error).message,
+        userId: user.id,
+        email: username,
+      });
+      // Don't fail registration if email fails
+    }
 
     return { message: 'Lab admin and lab institution registered successfully' };
   }
@@ -378,6 +413,25 @@ class AuthService {
       value: user,
     });
 
+    // Send welcome email
+    try {
+      await notificationService.sendWelcomeEmail({
+        email: username,
+        userName: `${firstName} ${lastName}`,
+      });
+      logger.info('Welcome email sent to clinic admin', {
+        userId: user.id,
+        email: username,
+      });
+    } catch (emailError) {
+      logger.warn('Failed to send welcome email to clinic admin', {
+        error: (emailError as Error).message,
+        userId: user.id,
+        email: username,
+      });
+      // Don't fail registration if email fails
+    }
+
     return {
       message: 'Clinic admin and clinic institution registered successfully',
     };
@@ -423,8 +477,23 @@ class AuthService {
 
     await publishUserRegistered({
       key: user.id?.toString(),
-      value: { ...user, patient },
+      value: user,
     });
+
+    // Send welcome email
+    try {
+      await notificationService.sendWelcomeEmail({
+        email: username,
+        userName: `${firstName} ${lastName}`,
+      });
+    } catch (emailError) {
+      // Don't fail registration if welcome email fails
+      logger.warn('Failed to send welcome email for patient registration', {
+        error: (emailError as Error).message,
+        userId: user.id,
+        username,
+      });
+    }
 
     return user;
   }
@@ -484,6 +553,25 @@ class AuthService {
       key: user.id?.toString(),
       value: { ...user, doctor },
     });
+
+    // Send welcome email
+    try {
+      await notificationService.sendWelcomeEmail({
+        email: username,
+        userName: `${firstName} ${lastName}`,
+      });
+      logger.info('Welcome email sent to doctor', {
+        userId: user.id,
+        email: username,
+      });
+    } catch (emailError) {
+      logger.warn('Failed to send welcome email to doctor', {
+        error: (emailError as Error).message,
+        userId: user.id,
+        email: username,
+      });
+      // Don't fail registration if email fails
+    }
 
     return user;
   }
@@ -549,6 +637,25 @@ class AuthService {
       value: { ...user, labAssistant },
     });
 
+    // Send welcome email
+    try {
+      await notificationService.sendWelcomeEmail({
+        email: username,
+        userName: `${firstName} ${lastName}`,
+      });
+      logger.info('Welcome email sent to lab assistant', {
+        userId: user.id,
+        email: username,
+      });
+    } catch (emailError) {
+      logger.warn('Failed to send welcome email to lab assistant', {
+        error: (emailError as Error).message,
+        userId: user.id,
+        email: username,
+      });
+      // Don't fail registration if email fails
+    }
+
     return user;
   }
 
@@ -608,6 +715,25 @@ class AuthService {
       key: user.id?.toString(),
       value: { ...user, medicalStaff },
     });
+
+    // Send welcome email
+    try {
+      await notificationService.sendWelcomeEmail({
+        email: username,
+        userName: `${firstName} ${lastName}`,
+      });
+      logger.info('Welcome email sent to medical staff', {
+        userId: user.id,
+        email: username,
+      });
+    } catch (emailError) {
+      logger.warn('Failed to send welcome email to medical staff', {
+        error: (emailError as Error).message,
+        userId: user.id,
+        email: username,
+      });
+      // Don't fail registration if email fails
+    }
 
     return user;
   }
@@ -814,6 +940,242 @@ class AuthService {
       role,
       hospitalId,
     };
+  }
+
+  async requestPasswordReset(
+    username: string,
+    requestIp?: string,
+  ): Promise<void> {
+    try {
+      // Find user by username (could be email or username)
+      const credential = await this.credentialRepository.findOne({
+        where: { username },
+        relations: ['user'],
+      });
+
+      if (!credential) {
+        // Don't reveal if user exists or not for security
+        logger.warn('Password reset requested for non-existent user', {
+          username,
+          requestIp,
+        });
+        return;
+      }
+
+      const user = credential.user;
+
+      // Invalidate any existing password reset tokens for this user
+      await this.passwordResetTokenRepository.update(
+        { userId: user.id, isUsed: false },
+        { isUsed: true, usedAt: new Date() },
+      );
+
+      // Generate secure random token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+
+      // Calculate expiry time (default 15 minutes)
+      const expiryMinutes =
+        parseInt(config.PASSWORD_RESET_EXPIRY.replace(/\D/g, '')) || 15;
+      const expiresAt = new Date(Date.now() + expiryMinutes * 60 * 1000);
+
+      // Save password reset token
+      const passwordResetToken = this.passwordResetTokenRepository.create({
+        token: resetToken,
+        userId: user.id,
+        user,
+        expiresAt,
+        requestIp,
+      });
+
+      await this.passwordResetTokenRepository.save(passwordResetToken);
+
+      // Send password reset email via notification service
+      try {
+        await notificationService.sendPasswordResetEmail({
+          email: username, // Assuming username is email
+          resetToken,
+          userName: `${user.firstName} ${user.lastName}`,
+        });
+
+        logger.info('Password reset email sent successfully', {
+          userId: user.id,
+          username,
+          tokenId: passwordResetToken.id,
+        });
+      } catch (emailError: any) {
+        logger.error('Failed to send password reset email', {
+          error: emailError.message,
+          userId: user.id,
+          username,
+        });
+
+        // Delete the token if email sending failed
+        await this.passwordResetTokenRepository.delete(passwordResetToken.id);
+        throw createError(
+          'Failed to send password reset email. Please try again later.',
+          500,
+        );
+      }
+    } catch (error: any) {
+      logger.error('Error in requestPasswordReset', {
+        error: error.message,
+        username,
+        requestIp,
+      });
+
+      if (error.statusCode) {
+        throw error; // Re-throw known errors
+      }
+
+      throw createError('Failed to process password reset request', 500);
+    }
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    requestIp?: string,
+  ): Promise<void> {
+    try {
+      // Find valid password reset token
+      const passwordResetToken =
+        await this.passwordResetTokenRepository.findOne({
+          where: {
+            token,
+            isUsed: false,
+          },
+          relations: ['user'],
+        });
+
+      if (!passwordResetToken) {
+        throw createError('Invalid or expired password reset token', 400);
+      }
+
+      // Check if token is expired
+      if (new Date() > passwordResetToken.expiresAt) {
+        // Mark token as used
+        passwordResetToken.isUsed = true;
+        passwordResetToken.usedAt = new Date();
+        await this.passwordResetTokenRepository.save(passwordResetToken);
+
+        throw createError('Password reset token has expired', 400);
+      }
+
+      const user = passwordResetToken.user;
+
+      // Validate new password (you can add more validation here)
+      if (!newPassword || newPassword.length < 6) {
+        throw createError('Password must be at least 6 characters long', 400);
+      }
+
+      // Hash the new password
+      const passwordHash = await bcrypt.hash(newPassword, 10);
+
+      // Update the user's password
+      await this.credentialRepository.update(
+        { user: { id: user.id } },
+        { passwordHash },
+      );
+
+      // Mark token as used
+      passwordResetToken.isUsed = true;
+      passwordResetToken.usedAt = new Date();
+      await this.passwordResetTokenRepository.save(passwordResetToken);
+
+      // Invalidate all active sessions for security
+      const activeTokens = await redis.keys(`auth:${user.id}:*`);
+      if (activeTokens.length > 0) {
+        await redis.del(...activeTokens);
+      }
+
+      logger.info('Password reset completed successfully', {
+        userId: user.id,
+        username: user.username,
+        tokenId: passwordResetToken.id,
+        requestIp,
+      });
+
+      // Optionally send confirmation email
+      try {
+        await notificationService.sendEmail({
+          to: passwordResetToken.user.username, // Assuming username is email
+          toName: `${user.firstName} ${user.lastName}`,
+          subject: 'Password Reset Successful',
+          htmlContent: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2>Password Reset Successful</h2>
+              <p>Hello ${user.firstName},</p>
+              <p>Your password has been successfully reset for your MediLink account.</p>
+              <p>If you did not make this change, please contact our support team immediately.</p>
+              <hr style="margin: 30px 0;">
+              <p style="font-size: 12px; color: #666;">
+                MediLink Support Team<br>
+                This is an automated message, please do not reply.
+              </p>
+            </div>
+          `,
+          emailType: 'password_reset',
+          userId: user.id.toString(),
+        });
+      } catch (emailError) {
+        // Don't fail the password reset if confirmation email fails
+        logger.warn('Failed to send password reset confirmation email', {
+          error: (emailError as Error).message,
+          userId: user.id,
+        });
+      }
+    } catch (error: any) {
+      logger.error('Error in resetPassword', {
+        error: error.message,
+        token: token.substring(0, 8) + '...', // Log partial token for debugging
+        requestIp,
+      });
+
+      if (error.statusCode) {
+        throw error; // Re-throw known errors
+      }
+
+      throw createError('Failed to reset password', 500);
+    }
+  }
+
+  async verifyPasswordResetToken(
+    token: string,
+  ): Promise<{ valid: boolean; user?: any }> {
+    try {
+      const passwordResetToken =
+        await this.passwordResetTokenRepository.findOne({
+          where: {
+            token,
+            isUsed: false,
+          },
+          relations: ['user'],
+        });
+
+      if (!passwordResetToken) {
+        return { valid: false };
+      }
+
+      if (new Date() > passwordResetToken.expiresAt) {
+        return { valid: false };
+      }
+
+      return {
+        valid: true,
+        user: {
+          id: passwordResetToken.user.id,
+          firstName: passwordResetToken.user.firstName,
+          lastName: passwordResetToken.user.lastName,
+          username: passwordResetToken.user.username,
+        },
+      };
+    } catch (error) {
+      logger.error('Error verifying password reset token', {
+        error,
+        token: token.substring(0, 8) + '...',
+      });
+      return { valid: false };
+    }
   }
 
   async logout(userId: number, token: string) {

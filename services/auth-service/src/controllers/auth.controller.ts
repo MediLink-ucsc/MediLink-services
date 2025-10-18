@@ -3,7 +3,7 @@ import { z } from 'zod';
 import AuthService from '../services/auth.service';
 import { AppDataSource } from '../data-source';
 import { Doctor } from '../entity/doctor.entity';
-
+import logger from '../config/logger';
 
 export const registerLabAdminSchema = z.object({
   // User fields
@@ -25,8 +25,6 @@ export const registerLabAdminSchema = z.object({
   institutionLogo: z.string().optional(), // Base64 or image path
 });
 
-
-
 export const registerClinicAdminSchema = z.object({
   // User fields
   firstName: z.string().min(1, 'First name is required'),
@@ -46,7 +44,6 @@ export const registerClinicAdminSchema = z.object({
   licenseNumber: z.string().min(1, 'License number is required'),
   institutionLogo: z.string().optional(), // for file name or base64/url
 });
-
 
 const registerPatientSchema = z.object({
   firstName: z.string().min(3).max(50),
@@ -116,6 +113,25 @@ const loginWithRoleSchema = z.object({
   // role: z.enum(['DOCTOR', 'LAB_ASSISTANT', 'MEDICAL_STAFF', 'ADMIN']),
 });
 
+const requestPasswordResetSchema = z.object({
+  username: z.string().email('Must be a valid email address'),
+});
+
+const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, 'Reset token is required'),
+    newPassword: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string().min(6, 'Confirm password is required'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
+const verifyResetTokenSchema = z.object({
+  token: z.string().min(1, 'Reset token is required'),
+});
+
 export class AuthController {
   private authService: AuthService;
   private doctorRepository = AppDataSource.getRepository(Doctor);
@@ -133,7 +149,10 @@ export class AuthController {
         return res.status(400).json({ message: 'Patient ID is required' });
       }
 
-      const updatedPatient = await this.authService.updateLastVisited(patientId, lastVisited);
+      const updatedPatient = await this.authService.updateLastVisited(
+        patientId,
+        lastVisited,
+      );
 
       return res.status(200).json({
         message: 'Last visited date updated',
@@ -142,11 +161,13 @@ export class AuthController {
     } catch (error: any) {
       console.error(error);
       const status = error.status || 500;
-      return res.status(status).json({ message: error.message || 'Internal server error' });
+      return res
+        .status(status)
+        .json({ message: error.message || 'Internal server error' });
     }
   }
 
-   async updatePatientCondition(req: Request, res: Response): Promise<any> {
+  async updatePatientCondition(req: Request, res: Response): Promise<any> {
     try {
       const patientId = Number(req.params.patientId);
       const { condition } = req.body;
@@ -159,10 +180,15 @@ export class AuthController {
         return res.status(400).json({ message: 'Condition is required' });
       }
 
-      const updatedPatient = await this.authService.updatePatientCondition(patientId, condition);
+      const updatedPatient = await this.authService.updatePatientCondition(
+        patientId,
+        condition,
+      );
 
       if (!updatedPatient) {
-        return res.status(404).json({ message: `Patient with ID ${patientId} not found` });
+        return res
+          .status(404)
+          .json({ message: `Patient with ID ${patientId} not found` });
       }
 
       return res.status(200).json({
@@ -171,7 +197,9 @@ export class AuthController {
       });
     } catch (error: any) {
       console.error(error);
-      return res.status(500).json({ message: error.message || 'Internal server error' });
+      return res
+        .status(500)
+        .json({ message: error.message || 'Internal server error' });
     }
   }
 
@@ -228,7 +256,9 @@ export class AuthController {
       const patient = await this.authService.getPatientByUsername(username);
 
       if (!patient) {
-        return res.status(404).json({ message: `No patient found with username ${username}` });
+        return res
+          .status(404)
+          .json({ message: `No patient found with username ${username}` });
       }
 
       return res.json(patient);
@@ -249,7 +279,9 @@ export class AuthController {
       const doctor = await this.authService.getDoctorByUserid(userid);
 
       if (!doctor) {
-        return res.status(404).json({ message: `No doctor found with user ID ${userid}` });
+        return res
+          .status(404)
+          .json({ message: `No doctor found with user ID ${userid}` });
       }
 
       return res.json(doctor);
@@ -260,82 +292,80 @@ export class AuthController {
   }
 
   async labAdminRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-  } = registerLabAdminSchema.parse(req.body); // Validated via Zod or Joi
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      address,
+      city,
+      provinceState,
+      postalCode,
+      phoneNumber,
+      emailAddress,
+      website,
+      licenseNumber,
+      institutionLogo,
+    } = registerLabAdminSchema.parse(req.body); // Validated via Zod or Joi
 
-  const user = await this.authService.labAdminRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-  });
+    const user = await this.authService.labAdminRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      address,
+      city,
+      provinceState,
+      postalCode,
+      phoneNumber,
+      emailAddress,
+      website,
+      licenseNumber,
+      institutionLogo,
+    });
 
-  return res.status(201).json(user);
-}
+    return res.status(201).json(user);
+  }
 
+  async clinicAdminRegister(req: Request, res: Response): Promise<any> {
+    const {
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      address,
+      city,
+      provinceState,
+      postalCode,
+      phoneNumber,
+      emailAddress,
+      website,
+      licenseNumber,
+      institutionLogo,
+    } = registerClinicAdminSchema.parse(req.body); // Validated via Zod/Joi
 
- async clinicAdminRegister(req: Request, res: Response): Promise<any> {
-  const {
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-  } = registerClinicAdminSchema.parse(req.body); // Validated via Zod/Joi
+    const user = await this.authService.clinicAdminRegister({
+      firstName,
+      lastName,
+      username,
+      password,
+      institutionName,
+      address,
+      city,
+      provinceState,
+      postalCode,
+      phoneNumber,
+      emailAddress,
+      website,
+      licenseNumber,
+      institutionLogo,
+    });
 
-  const user = await this.authService.clinicAdminRegister({
-    firstName,
-    lastName,
-    username,
-    password,
-    institutionName,
-    address,
-    city,
-    provinceState,
-    postalCode,
-    phoneNumber,
-    emailAddress,
-    website,
-    licenseNumber,
-    institutionLogo,
-  });
-
-  return res.status(201).json(user);
-}
-
+    return res.status(201).json(user);
+  }
 
   async patientRegister(req: Request, res: Response): Promise<any> {
     const { firstName, lastName, username, password, age, gender } =
@@ -464,10 +494,120 @@ export class AuthController {
 
   async medvaultproLogin(req: Request, res: Response): Promise<any> {
     const { username, password } = loginSchema.parse(req.body);
-    console.log(req.body)
+    console.log(req.body);
     const result = await this.authService.medvaultproLogin(username, password);
 
     return res.status(200).json(result);
+  }
+
+  async requestPasswordReset(req: Request, res: Response): Promise<any> {
+    try {
+      const { username } = requestPasswordResetSchema.parse(req.body);
+      const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+
+      await this.authService.requestPasswordReset(username, clientIp);
+
+      // Always return success for security (don't reveal if user exists)
+      return res.status(200).json({
+        success: true,
+        message:
+          'If an account with that email exists, a password reset link has been sent.',
+      });
+    } catch (error: any) {
+      logger.error('Request password reset error:', {
+        error: error.message,
+        username: req.body.username,
+        ip: req.ip,
+      });
+
+      if (error.issues) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.issues,
+        });
+      }
+
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to process password reset request',
+      });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response): Promise<any> {
+    try {
+      const { token, newPassword } = resetPasswordSchema.parse(req.body);
+      const clientIp = req.ip || req.connection.remoteAddress || 'unknown';
+
+      await this.authService.resetPassword(token, newPassword, clientIp);
+
+      return res.status(200).json({
+        success: true,
+        message:
+          'Password has been reset successfully. You can now log in with your new password.',
+      });
+    } catch (error: any) {
+      logger.error('Reset password error:', {
+        error: error.message,
+        token: req.body.token?.substring(0, 8) + '...',
+        ip: req.ip,
+      });
+
+      if (error.issues) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.issues,
+        });
+      }
+
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || 'Failed to reset password',
+      });
+    }
+  }
+
+  async verifyResetToken(req: Request, res: Response): Promise<any> {
+    try {
+      const { token } = verifyResetTokenSchema.parse(req.body);
+
+      const result = await this.authService.verifyPasswordResetToken(token);
+
+      if (!result.valid) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired reset token',
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Token is valid',
+        data: {
+          user: result.user,
+        },
+      });
+    } catch (error: any) {
+      logger.error('Verify reset token error:', {
+        error: error.message,
+        token: req.body.token?.substring(0, 8) + '...',
+      });
+
+      if (error.issues) {
+        return res.status(400).json({
+          success: false,
+          message: 'Validation error',
+          errors: error.issues,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to verify reset token',
+      });
+    }
   }
 
   async logout(req: Request, res: Response): Promise<any> {
