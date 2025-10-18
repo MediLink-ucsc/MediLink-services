@@ -348,6 +348,81 @@ export class LabWorkflowService {
       throw error;
     }
   }
+
+  /**
+   * Get lab dashboard analytics/statistics for a specific lab
+   */
+  async getLabDashboardStats(labId: string) {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Get all samples for this lab
+      const allSamples = await reportHandlerService.getLabSamplesByLabId(
+        labId,
+        {}
+      );
+
+      // Calculate statistics
+      const pendingTests = allSamples.filter(
+        (sample) => sample.status === "pending"
+      ).length;
+
+      const completedToday = allSamples.filter(
+        (sample) =>
+          sample.status === "completed" &&
+          sample.updatedAt >= today &&
+          sample.updatedAt < tomorrow
+      ).length;
+
+      const totalReports = allSamples.filter(
+        (sample) => sample.status === "completed"
+      ).length;
+
+      const urgentTests = allSamples.filter(
+        (sample) =>
+          sample.priority === "urgent" &&
+          (sample.status === "pending" || sample.status === "in-progress")
+      ).length;
+
+      // Additional useful stats
+      const inProgressTests = allSamples.filter(
+        (sample) => sample.status === "in-progress"
+      ).length;
+
+      const failedTests = allSamples.filter(
+        (sample) => sample.status === "failed"
+      ).length;
+
+      const highPriorityTests = allSamples.filter(
+        (sample) =>
+          sample.priority === "high" &&
+          (sample.status === "pending" || sample.status === "in-progress")
+      ).length;
+
+      console.log(` Retrieved dashboard stats for lab: ${labId}`);
+
+      return {
+        labId,
+        pendingTests,
+        completedToday,
+        totalReports,
+        urgentTests,
+        additionalStats: {
+          inProgressTests,
+          failedTests,
+          highPriorityTests,
+          totalSamples: allSamples.length,
+        },
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      console.error(" Failed to get lab dashboard stats:", error);
+      throw error;
+    }
+  }
 }
 
 export const labWorkflowService = new LabWorkflowService();

@@ -722,4 +722,55 @@ export class LabWorkflowController {
       });
     }
   }
+
+  // Get lab dashboard analytics/statistics
+  async getLabDashboardStats(
+    req: AuthenticatedRequest,
+    res: Response
+  ): Promise<void> {
+    try {
+      if (!req.user?.labId) {
+        res.status(401).json({
+          success: false,
+          message: "Lab ID not found in token. Please login again.",
+        });
+        return;
+      }
+
+      const userLabId = req.user.labId;
+      const labId = req.params.labId || userLabId;
+
+      // Check if user is authorized to view this lab's dashboard
+      if (labId !== userLabId && req.user.role !== "admin") {
+        res.status(403).json({
+          success: false,
+          message: "Access denied. You can only view your own lab's dashboard.",
+          debug: {
+            requestedLabId: labId,
+            userLabId: userLabId,
+            userRole: req.user.role,
+          },
+        });
+        return;
+      }
+
+      const dashboardStats = await labWorkflowService.getLabDashboardStats(
+        labId
+      );
+
+      res.status(200).json({
+        success: true,
+        data: dashboardStats,
+        message: "Lab dashboard statistics retrieved successfully",
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get lab dashboard statistics",
+      });
+    }
+  }
 }

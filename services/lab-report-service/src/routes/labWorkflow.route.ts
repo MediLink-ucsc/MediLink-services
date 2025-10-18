@@ -94,4 +94,18 @@ labWorkflowRouter.get(
   labWorkflowController.getLabResultsBySpecificLabId.bind(labWorkflowController)
 );
 
+// Get lab dashboard statistics (from token)
+labWorkflowRouter.get(
+  "/lab/dashboard/stats",
+  verifyToken,
+  labWorkflowController.getLabDashboardStats.bind(labWorkflowController)
+);
+
+// Get lab dashboard statistics by specific lab ID (with authorization)
+labWorkflowRouter.get(
+  "/lab/:labId/dashboard/stats",
+  verifyToken,
+  labWorkflowController.getLabDashboardStats.bind(labWorkflowController)
+);
+
 export { labWorkflowRouter };
