@@ -11,6 +11,7 @@ export enum TemplateType {
   PASSWORD_RESET = "password_reset",
   USER_ONBOARDING = "user_onboarding",
   WELCOME = "welcome",
+  WELCOME_WITH_PASSWORD = "welcome_with_password",
   EMAIL_VERIFICATION = "email_verification",
   LAB_REPORT = "lab_report",
   CLINIC_VISIT = "clinic_visit",

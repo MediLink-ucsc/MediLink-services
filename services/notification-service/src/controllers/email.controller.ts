@@ -50,6 +50,13 @@ const welcomeEmailSchema = z.object({
   verificationToken: z.string().optional(),
 });
 
+const welcomeEmailWithPasswordSchema = z.object({
+  email: z.string().email(),
+  userName: z.string().min(1),
+  temporaryPassword: z.string().min(1),
+  userRole: z.string().min(1),
+});
+
 export class EmailController {
   private emailService: EmailService;
 
@@ -198,6 +205,48 @@ export class EmailController {
       res.status(500).json({
         success: false,
         message: "Failed to send welcome email",
+        error: error.message,
+      });
+    }
+  }
+
+  async sendWelcomeEmailWithPassword(
+    req: Request,
+    res: Response
+  ): Promise<void> {
+    try {
+      const validatedData = welcomeEmailWithPasswordSchema.parse(req.body);
+
+      const emailLog = await this.emailService.sendWelcomeEmailWithPassword(
+        validatedData.email,
+        validatedData.userName,
+        validatedData.temporaryPassword,
+        validatedData.userRole
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Welcome email with password sent successfully",
+        data: {
+          emailId: emailLog.id,
+          status: emailLog.status,
+        },
+      });
+    } catch (error: any) {
+      logger.error("Send welcome email with password error:", error);
+
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          message: "Validation error",
+          errors: error.errors,
+        });
+        return;
+      }
+
+      res.status(500).json({
+        success: false,
+        message: "Failed to send welcome email with password",
         error: error.message,
       });
     }

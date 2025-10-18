@@ -17,6 +17,10 @@ router.post(
   emailController.sendPasswordResetEmail.bind(emailController)
 );
 router.post("/welcome", emailController.sendWelcomeEmail.bind(emailController));
+router.post(
+  "/welcome-with-password",
+  emailController.sendWelcomeEmailWithPassword.bind(emailController)
+);
 
 // Email management
 router.get("/history", emailController.getEmailHistory.bind(emailController));

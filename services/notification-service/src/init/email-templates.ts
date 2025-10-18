@@ -115,6 +115,98 @@ export const initEmailTemplates = async (): Promise<void> => {
         description: "Welcome email for new users",
       },
       {
+        templateType: TemplateType.WELCOME_WITH_PASSWORD,
+        name: "Welcome Email with Password",
+        subject: "Welcome to MediLink - Your Account Details",
+        htmlTemplate: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Welcome to MediLink!</h2>
+            <p>Hello {{userName}},</p>
+            <p>Your account has been created by your administrator. Welcome to the MediLink healthcare management platform as a <strong>{{userRole}}</strong>.</p>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Your Login Credentials</h3>
+              <p style="margin: 10px 0;"><strong>Email:</strong> Your registered email address</p>
+              <p style="margin: 10px 0;"><strong>Temporary Password:</strong> <code style="background-color: #e9ecef; padding: 5px 10px; border-radius: 4px; font-size: 16px;">{{temporaryPassword}}</code></p>
+            </div>
+
+            <div style="background-color: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0;">
+              <p style="margin: 0;"><strong>⚠️ Important Security Notice:</strong></p>
+              <p style="margin: 10px 0 0 0;">For your security, please change this temporary password immediately after your first login.</p>
+            </div>
+
+            <p>To get started:</p>
+            <ol>
+              <li>Click the login button below</li>
+              <li>Use your email and the temporary password provided above</li>
+              <li>You will be prompted to change your password</li>
+              <li>Set a strong, unique password for your account</li>
+            </ol>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="{{loginUrl}}" style="background-color: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">Login to MediLink</a>
+            </div>
+
+            <p>As a {{userRole}}, you will have access to:</p>
+            <ul>
+              <li>Patient management and records</li>
+              <li>Healthcare service tools</li>
+              <li>Communication with your team</li>
+              <li>And much more...</li>
+            </ul>
+
+            <p>If you have any questions or need assistance, please contact our support team at {{supportEmail}}.</p>
+            
+            <hr style="margin: 30px 0;">
+            <p style="font-size: 12px; color: #666;">
+              MediLink Support Team<br>
+              This is an automated message, please do not reply.
+            </p>
+          </div>
+        `,
+        textTemplate: `
+          Welcome to MediLink!
+          
+          Hello {{userName}},
+          
+          Your account has been created by your administrator. Welcome to the MediLink healthcare management platform as a {{userRole}}.
+          
+          YOUR LOGIN CREDENTIALS
+          =======================
+          Email: Your registered email address
+          Temporary Password: {{temporaryPassword}}
+          
+          ⚠️ IMPORTANT SECURITY NOTICE
+          For your security, please change this temporary password immediately after your first login.
+          
+          TO GET STARTED:
+          1. Visit the login page: {{loginUrl}}
+          2. Use your email and the temporary password provided above
+          3. You will be prompted to change your password
+          4. Set a strong, unique password for your account
+          
+          As a {{userRole}}, you will have access to:
+          - Patient management and records
+          - Healthcare service tools
+          - Communication with your team
+          - And much more...
+          
+          If you have any questions or need assistance, please contact our support team at {{supportEmail}}.
+          
+          --
+          MediLink Support Team
+        `,
+        variables: {
+          userName: "User name",
+          temporaryPassword: "Temporary password for first login",
+          userRole: "User role (Doctor, Lab Assistant, Medical Staff)",
+          loginUrl: "Login page URL",
+          supportEmail: "Support email address",
+        },
+        description:
+          "Welcome email with temporary password for admin-created accounts",
+      },
+      {
         templateType: TemplateType.EMAIL_VERIFICATION,
         name: "Email Verification",
         subject: "Verify Your Email Address",

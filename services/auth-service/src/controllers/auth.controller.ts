@@ -58,11 +58,11 @@ const registerDoctorSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
   username: z.string().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(6).max(100).optional(), // Optional for admin registration
   licenseNumber: z.string().min(3).max(50),
   specialty: z.string().min(3).max(100),
   yearsOfExperience: z.number().int().min(0),
-  contactNumber: z.string().min(7).max(15),
+  contactNumber: z.string().min(7).max(15).optional(), // Optional field
   hospitalId: z.number().int().optional(),
   hospitalName: z.string().max(100).optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),
@@ -73,11 +73,11 @@ const registerLabAssistantSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
   username: z.string().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(6).max(100).optional(), // Optional for admin registration
   qualification: z.string().min(2).max(100),
   department: z.string().min(2).max(100),
   yearsOfExperience: z.number().int().min(0),
-  contactNumber: z.string().min(7).max(15),
+  contactNumber: z.string().min(7).max(15).optional(), // Optional field
   labId: z.number().int().optional(),
   labName: z.string().max(100).optional(),
   hospitalId: z.number().int().optional(),
@@ -90,12 +90,12 @@ const registerMedicalStaffSchema = z.object({
   firstName: z.string().min(3).max(50),
   lastName: z.string().min(3).max(50),
   username: z.string().email(),
-  password: z.string().min(6).max(100),
+  password: z.string().min(6).max(100).optional(), // Optional for admin registration
   position: z.string().min(2).max(100),
   qualification: z.string().min(2).max(100).optional(),
   department: z.string().min(2).max(100).optional(),
   yearsOfExperience: z.number().int().min(0),
-  contactNumber: z.string().min(7).max(15),
+  contactNumber: z.string().min(7).max(15).optional(), // Optional field
   hospitalId: z.number().int().optional(),
   hospitalName: z.string().max(100).optional(),
   gender: z.enum(['male', 'female', 'other']).optional(),

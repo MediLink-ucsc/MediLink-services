@@ -14,7 +14,7 @@ import { Doctor } from '../entity/doctor.entity';
 import { LabAssistant } from '../entity/labAssistant.entity';
 import { MedicalStaff } from '../entity/medicalStaff.entity';
 import { PasswordResetToken } from '../entity/passwordResetToken.entity';
-import { createError } from '../utils';
+import { createError, generateRandomPassword } from '../utils';
 import { publishUserRegistered } from '../events/producers/userRegistered.producer';
 import { notificationService } from './notification.service';
 import logger from '../config/logger';
@@ -68,7 +68,7 @@ interface RegisterDoctorDto {
   firstName: string;
   lastName: string;
   username: string;
-  password: string;
+  password?: string; // Optional - will be auto-generated if not provided
 
   licenseNumber: string;
   specialty: string;
@@ -84,7 +84,7 @@ interface RegisterLabAssistantDto {
   firstName: string;
   lastName: string;
   username: string;
-  password: string;
+  password?: string; // Optional - will be auto-generated if not provided
 
   qualification: string;
   department: string;
@@ -102,7 +102,7 @@ interface RegisterMedicalStaffDto {
   firstName: string;
   lastName: string;
   username: string;
-  password: string;
+  password?: string; // Optional - will be auto-generated if not provided
 
   position: string;
   qualification?: string;
@@ -516,7 +516,10 @@ class AuthService {
       throw createError('email already in use', 400);
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Generate random password if not provided (admin registration)
+    const isAdminRegistration = !password;
+    const actualPassword = password || generateRandomPassword(12);
+    const passwordHash = await bcrypt.hash(actualPassword, 10);
 
     const user = new User();
     user.firstName = firstName;
@@ -554,16 +557,31 @@ class AuthService {
       value: { ...user, doctor },
     });
 
-    // Send welcome email
+    // Send appropriate welcome email
     try {
-      await notificationService.sendWelcomeEmail({
-        email: username,
-        userName: `${firstName} ${lastName}`,
-      });
-      logger.info('Welcome email sent to doctor', {
-        userId: user.id,
-        email: username,
-      });
+      if (isAdminRegistration) {
+        // Send welcome email with temporary password
+        await notificationService.sendWelcomeEmailWithPassword({
+          email: username,
+          userName: `${firstName} ${lastName}`,
+          temporaryPassword: actualPassword,
+          userRole: 'Doctor',
+        });
+        logger.info('Welcome email with password sent to doctor', {
+          userId: user.id,
+          email: username,
+        });
+      } else {
+        // Send regular welcome email (self-registration scenario)
+        await notificationService.sendWelcomeEmail({
+          email: username,
+          userName: `${firstName} ${lastName}`,
+        });
+        logger.info('Welcome email sent to doctor', {
+          userId: user.id,
+          email: username,
+        });
+      }
     } catch (emailError) {
       logger.warn('Failed to send welcome email to doctor', {
         error: (emailError as Error).message,
@@ -597,7 +615,10 @@ class AuthService {
       throw createError('email already in use', 400);
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Generate random password if not provided (admin registration)
+    const isAdminRegistration = !password;
+    const actualPassword = password || generateRandomPassword(12);
+    const passwordHash = await bcrypt.hash(actualPassword, 10);
 
     const user = new User();
     user.firstName = firstName;
@@ -637,16 +658,31 @@ class AuthService {
       value: { ...user, labAssistant },
     });
 
-    // Send welcome email
+    // Send appropriate welcome email
     try {
-      await notificationService.sendWelcomeEmail({
-        email: username,
-        userName: `${firstName} ${lastName}`,
-      });
-      logger.info('Welcome email sent to lab assistant', {
-        userId: user.id,
-        email: username,
-      });
+      if (isAdminRegistration) {
+        // Send welcome email with temporary password
+        await notificationService.sendWelcomeEmailWithPassword({
+          email: username,
+          userName: `${firstName} ${lastName}`,
+          temporaryPassword: actualPassword,
+          userRole: 'Lab Assistant',
+        });
+        logger.info('Welcome email with password sent to lab assistant', {
+          userId: user.id,
+          email: username,
+        });
+      } else {
+        // Send regular welcome email (self-registration scenario)
+        await notificationService.sendWelcomeEmail({
+          email: username,
+          userName: `${firstName} ${lastName}`,
+        });
+        logger.info('Welcome email sent to lab assistant', {
+          userId: user.id,
+          email: username,
+        });
+      }
     } catch (emailError) {
       logger.warn('Failed to send welcome email to lab assistant', {
         error: (emailError as Error).message,
@@ -679,7 +715,10 @@ class AuthService {
       throw createError('email already in use', 400);
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Generate random password if not provided (admin registration)
+    const isAdminRegistration = !password;
+    const actualPassword = password || generateRandomPassword(12);
+    const passwordHash = await bcrypt.hash(actualPassword, 10);
 
     const user = new User();
     user.firstName = firstName;
@@ -716,16 +755,31 @@ class AuthService {
       value: { ...user, medicalStaff },
     });
 
-    // Send welcome email
+    // Send appropriate welcome email
     try {
-      await notificationService.sendWelcomeEmail({
-        email: username,
-        userName: `${firstName} ${lastName}`,
-      });
-      logger.info('Welcome email sent to medical staff', {
-        userId: user.id,
-        email: username,
-      });
+      if (isAdminRegistration) {
+        // Send welcome email with temporary password
+        await notificationService.sendWelcomeEmailWithPassword({
+          email: username,
+          userName: `${firstName} ${lastName}`,
+          temporaryPassword: actualPassword,
+          userRole: 'Medical Staff',
+        });
+        logger.info('Welcome email with password sent to medical staff', {
+          userId: user.id,
+          email: username,
+        });
+      } else {
+        // Send regular welcome email (self-registration scenario)
+        await notificationService.sendWelcomeEmail({
+          email: username,
+          userName: `${firstName} ${lastName}`,
+        });
+        logger.info('Welcome email sent to medical staff', {
+          userId: user.id,
+          email: username,
+        });
+      }
     } catch (emailError) {
       logger.warn('Failed to send welcome email to medical staff', {
         error: (emailError as Error).message,

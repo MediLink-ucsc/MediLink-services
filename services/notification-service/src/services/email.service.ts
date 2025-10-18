@@ -185,6 +185,28 @@ export class EmailService {
     });
   }
 
+  async sendWelcomeEmailWithPassword(
+    email: string,
+    userName: string,
+    temporaryPassword: string,
+    userRole: string
+  ): Promise<EmailLog> {
+    const loginUrl = `${process.env.FRONTEND_URL}/login`;
+
+    return this.sendTemplateEmail({
+      to: email,
+      toName: userName,
+      templateType: TemplateType.WELCOME_WITH_PASSWORD,
+      templateParams: {
+        userName,
+        temporaryPassword,
+        userRole,
+        loginUrl,
+        supportEmail: process.env.BREVO_SENDER_EMAIL,
+      },
+    });
+  }
+
   async getEmailHistory(
     userId?: string,
     limit: number = 50,
@@ -275,6 +297,7 @@ export class EmailService {
       [TemplateType.PASSWORD_RESET]: EmailType.PASSWORD_RESET,
       [TemplateType.USER_ONBOARDING]: EmailType.USER_ONBOARDING,
       [TemplateType.WELCOME]: EmailType.WELCOME,
+      [TemplateType.WELCOME_WITH_PASSWORD]: EmailType.WELCOME_WITH_PASSWORD,
       [TemplateType.EMAIL_VERIFICATION]: EmailType.EMAIL_VERIFICATION,
       [TemplateType.LAB_REPORT]: EmailType.LAB_REPORT,
       [TemplateType.CLINIC_VISIT]: EmailType.CLINIC_VISIT,

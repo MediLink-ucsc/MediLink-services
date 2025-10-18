@@ -25,6 +25,13 @@ export interface WelcomeEmailRequest {
   verificationToken?: string;
 }
 
+export interface WelcomeEmailWithPasswordRequest {
+  email: string;
+  userName: string;
+  temporaryPassword: string;
+  userRole: string;
+}
+
 export class NotificationServiceClient {
   private baseURL: string;
 
@@ -127,6 +134,43 @@ export class NotificationServiceClient {
       });
 
       throw new Error(`Failed to send welcome email: ${error.message}`);
+    }
+  }
+
+  async sendWelcomeEmailWithPassword(
+    request: WelcomeEmailWithPasswordRequest,
+  ): Promise<any> {
+    try {
+      const response = await axios.post(
+        `${this.baseURL}/api/v1/email/welcome-with-password`,
+        request,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        },
+      );
+
+      logger.info('Welcome email with password sent successfully', {
+        recipient: request.email,
+        role: request.userRole,
+        emailId: (response.data as any)?.data?.emailId,
+      });
+
+      return response.data;
+    } catch (error: any) {
+      logger.error('Failed to send welcome email with password:', {
+        error: error.message,
+        recipient: request.email,
+        role: request.userRole,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+      });
+
+      throw new Error(
+        `Failed to send welcome email with password: ${error.message}`,
+      );
     }
   }
 
