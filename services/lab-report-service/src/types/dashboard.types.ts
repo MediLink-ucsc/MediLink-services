@@ -5,6 +5,60 @@
  */
 
 /**
+ * Time elapsed information
+ */
+export interface TimeElapsed {
+  /** Hours since creation */
+  hours: number;
+  /** Minutes since creation (remainder after hours) */
+  minutes: number;
+  /** Human-readable display text */
+  displayText: string;
+}
+
+/**
+ * Due status information
+ */
+export interface DueStatus {
+  /** Whether the test is overdue */
+  isOverdue: boolean;
+  /** Hours until due (absolute value) */
+  hoursUntilDue: number;
+  /** Human-readable display text */
+  displayText: string;
+}
+
+/**
+ * Detailed urgent test information
+ */
+export interface UrgentTestDetail {
+  /** Sample ID */
+  id: number;
+  /** Sample barcode */
+  barcode: string;
+  /** Test type label (human-readable) */
+  testType: string;
+  /** Test type value */
+  testTypeValue: string;
+  /** Patient ID */
+  patientId: string;
+  /** Sample type (e.g., Blood, Urine) */
+  sampleType: string;
+  /** Current status */
+  status: LabSampleStatus;
+  /** When the sample was created */
+  createdAt: Date;
+  /** Expected completion time */
+  expectedTime: Date;
+  /** Time elapsed since creation */
+  timeElapsed: TimeElapsed;
+  /** Due status information */
+  dueStatus: DueStatus;
+  /** Optional notes */
+  notes?: string;
+}
+
+/**
  * Additional statistics for the lab dashboard
  */
 export interface DashboardAdditionalStats {
@@ -32,6 +86,8 @@ export interface DashboardStats {
   totalReports: number;
   /** Number of urgent tests (pending or in-progress) */
   urgentTests: number;
+  /** Detailed list of urgent tests */
+  urgentTestsDetails: UrgentTestDetail[];
   /** Additional useful statistics */
   additionalStats: DashboardAdditionalStats;
   /** Timestamp when the statistics were generated */

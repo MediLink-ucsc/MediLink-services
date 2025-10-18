@@ -381,11 +381,72 @@ export class LabWorkflowService {
         (sample) => sample.status === "completed"
       ).length;
 
-      const urgentTests = allSamples.filter(
-        (sample) =>
-          sample.priority === "urgent" &&
-          (sample.status === "pending" || sample.status === "in-progress")
-      ).length;
+      // Get detailed urgent tests data
+      const urgentTestsList = allSamples
+        .filter(
+          (sample) =>
+            sample.priority === "URGENT" &&
+            (sample.status === "pending" || sample.status === "in-progress")
+        )
+        .map((sample) => {
+          // Calculate time elapsed since creation
+          const createdAt = new Date(sample.createdAt);
+          const now = new Date();
+          const hoursAgo = Math.floor(
+            (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+          );
+          const minutesAgo = Math.floor(
+            ((now.getTime() - createdAt.getTime()) % (1000 * 60 * 60)) /
+              (1000 * 60)
+          );
+
+          // Calculate time until expected completion
+          const expectedTime = new Date(sample.expectedTime);
+          const timeUntilDue = expectedTime.getTime() - now.getTime();
+          const hoursUntilDue = Math.floor(timeUntilDue / (1000 * 60 * 60));
+          const isOverdue = timeUntilDue < 0;
+
+          return {
+            id: sample.id,
+            barcode: sample.barcode,
+            testType: sample.testType.label,
+            testTypeValue: sample.testType.value,
+            patientId: sample.patientId,
+            sampleType: sample.sampleType,
+            status: sample.status,
+            createdAt: sample.createdAt,
+            expectedTime: sample.expectedTime,
+            timeElapsed: {
+              hours: hoursAgo,
+              minutes: minutesAgo,
+              displayText:
+                hoursAgo > 0
+                  ? `${hoursAgo} hour${hoursAgo > 1 ? "s" : ""} ago`
+                  : `${minutesAgo} minute${minutesAgo > 1 ? "s" : ""} ago`,
+            },
+            dueStatus: {
+              isOverdue: isOverdue,
+              hoursUntilDue: Math.abs(hoursUntilDue),
+              displayText: isOverdue
+                ? `Overdue by ${Math.abs(hoursUntilDue)} hour${
+                    Math.abs(hoursUntilDue) > 1 ? "s" : ""
+                  }`
+                : `Due in ${hoursUntilDue} hour${hoursUntilDue > 1 ? "s" : ""}`,
+            },
+            notes: sample.notes,
+          };
+        })
+        .sort((a, b) => {
+          // Sort by overdue first, then by time until due
+          if (a.dueStatus.isOverdue && !b.dueStatus.isOverdue) return -1;
+          if (!a.dueStatus.isOverdue && b.dueStatus.isOverdue) return 1;
+          return (
+            new Date(a.expectedTime).getTime() -
+            new Date(b.expectedTime).getTime()
+          );
+        });
+
+      const urgentTests = urgentTestsList.length;
 
       // Additional useful stats
       const inProgressTests = allSamples.filter(
@@ -410,6 +471,7 @@ export class LabWorkflowService {
         completedToday,
         totalReports,
         urgentTests,
+        urgentTestsDetails: urgentTestsList,
         additionalStats: {
           inProgressTests,
           failedTests,
