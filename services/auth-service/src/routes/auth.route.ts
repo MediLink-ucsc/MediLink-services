@@ -68,6 +68,20 @@ authRouter.get(
   authController.getDoctorByUserid.bind(authController),
 );
 
+// Staff list endpoints for institution admins
+authRouter.get(
+  '/medvaultpro/hospital/:hospitalId/doctors',
+  authController.getDoctorsByHospitalId.bind(authController),
+);
+authRouter.get(
+  '/medvaultpro/hospital/:hospitalId/medical-staff',
+  authController.getMedicalStaffByHospitalId.bind(authController),
+);
+authRouter.get(
+  '/medvaultpro/lab/:labId/assistants',
+  authController.getLabAssistantsByLabId.bind(authController),
+);
+
 authRouter.patch(
   '/medvaultpro/patient/:patientId/last-visited',
   authController.updatePatientLastVisited.bind(authController),

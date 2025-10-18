@@ -16,8 +16,6 @@ const registerLabSchema = z.object({
   adminUserId: z.number(),
 });
 
-
-
 export const registerClinicSchema = z.object({
   institutionName: z.string().min(1, 'Institution name is required'),
   address: z.string().min(1, 'Address is required'),
@@ -35,7 +33,6 @@ export const registerClinicSchema = z.object({
   }),
 });
 
-
 export class InstitutionController {
   private institutionService: InstitutionService;
 
@@ -43,7 +40,11 @@ export class InstitutionController {
     this.institutionService = new InstitutionService();
   }
 
-  async labRegister(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async labRegister(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
     try {
       const {
         institutionName,
@@ -79,8 +80,11 @@ export class InstitutionController {
     }
   }
 
-
-  async clinicRegister(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async clinicRegister(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
     try {
       const {
         institutionName,
@@ -101,7 +105,7 @@ export class InstitutionController {
         address,
         city,
         provinceState,
-        postalCode: postalCode ?? "",
+        postalCode: postalCode ?? '',
         phoneNumber,
         emailAddress,
         website,
@@ -116,7 +120,11 @@ export class InstitutionController {
     }
   }
 
-  async verifyLab(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async verifyLab(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
     try {
       const { labid } = req.params; // ✅ using labid from the route
       const lab = await this.institutionService.verifyLab(Number(labid));
@@ -130,10 +138,16 @@ export class InstitutionController {
     }
   }
 
-  async verifyClinic(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async verifyClinic(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
     try {
       const { clinicid } = req.params; // ✅ using clinicid from the route
-      const clinic = await this.institutionService.verifyClinic(Number(clinicid));
+      const clinic = await this.institutionService.verifyClinic(
+        Number(clinicid),
+      );
 
       return res.status(200).json({
         message: 'Clinic verified successfully',
@@ -144,7 +158,11 @@ export class InstitutionController {
     }
   }
 
- async getAllClinics(req: Request, res: Response, next: NextFunction): Promise<any> {
+  async getAllClinics(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
     try {
       const clinics = await this.institutionService.getAllClinics();
 
@@ -155,16 +173,100 @@ export class InstitutionController {
       next(error);
     }
   }
-  async getAllLabs(req: Request, res: Response, next: NextFunction): Promise<any> {
-      try {
-        const labs = await this.institutionService.getAllLabs();
-  
-        return res.status(200).json({
-          data: labs,
-        });
-      } catch (error) {
-        next(error);
-      }
-    } 
+  async getAllLabs(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      const labs = await this.institutionService.getAllLabs();
 
+      return res.status(200).json({
+        data: labs,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getClinicStaff(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      console.log('🔍 [Institution Controller] getClinicStaff called');
+      console.log('📝 [Institution Controller] Request params:', req.params);
+      // console.log('👤 [Institution Controller] Request user:', req.user);
+      console.log('🔑 [Institution Controller] Request headers:', req.headers);
+
+      const { clinicId } = req.params;
+      console.log(
+        `🏥 [Institution Controller] Fetching staff for clinic ID: ${clinicId}`,
+      );
+
+      // Extract authorization token to forward to auth service
+      const authHeader = req.headers.authorization;
+      console.log(
+        '🔑 [Institution Controller] Authorization header:',
+        authHeader ? 'Present' : 'Missing',
+      );
+
+      const staff = await this.institutionService.getClinicStaff(
+        Number(clinicId),
+        authHeader,
+      );
+
+      console.log(
+        '✅ [Institution Controller] Successfully fetched clinic staff',
+      );
+      return res.status(200).json({
+        data: staff,
+      });
+    } catch (error) {
+      console.error(
+        '❌ [Institution Controller] Error in getClinicStaff:',
+        error,
+      );
+      next(error);
+    }
+  }
+
+  async getLabStaff(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      console.log('🔍 [Institution Controller] getLabStaff called');
+      console.log('📝 [Institution Controller] Request params:', req.params);
+      // console.log('👤 [Institution Controller] Request user:', req.user);
+      console.log('🔑 [Institution Controller] Request headers:', req.headers);
+
+      const { labId } = req.params;
+      console.log(
+        `🧪 [Institution Controller] Fetching staff for lab ID: ${labId}`,
+      );
+
+      // Extract authorization token to forward to auth service
+      const authHeader = req.headers.authorization;
+      console.log(
+        '🔑 [Institution Controller] Authorization header:',
+        authHeader ? 'Present' : 'Missing',
+      );
+
+      const staff = await this.institutionService.getLabStaff(
+        Number(labId),
+        authHeader,
+      );
+
+      console.log('✅ [Institution Controller] Successfully fetched lab staff');
+      return res.status(200).json({
+        data: staff,
+      });
+    } catch (error) {
+      console.error('❌ [Institution Controller] Error in getLabStaff:', error);
+      next(error);
+    }
+  }
 }

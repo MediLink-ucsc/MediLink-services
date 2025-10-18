@@ -263,6 +263,109 @@ class AuthService {
     };
   }
 
+  async getDoctorsByHospitalId(hospitalId: number): Promise<any[]> {
+    console.log(
+      `🔍 [Auth Service] getDoctorsByHospitalId called for hospital ID: ${hospitalId}`,
+    );
+
+    const doctors = await this.doctorRepository.find({
+      where: { hospitalId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+
+    console.log(
+      `✅ [Auth Service] Found ${doctors.length} doctors for hospital ID: ${hospitalId}`,
+    );
+
+    return doctors.map((doctor) => ({
+      doctorId: doctor.id,
+      licenseNumber: doctor.licenseNumber,
+      specialty: doctor.specialty,
+      yearsOfExperience: doctor.yearsOfExperience,
+      hospitalId: doctor.hospitalId,
+      hospitalName: doctor.hospitalName,
+      gender: doctor.gender,
+      dateOfBirth: doctor.dateOfBirth,
+      user: {
+        id: doctor.user.id,
+        firstName: doctor.user.firstName,
+        lastName: doctor.user.lastName,
+        username: doctor.user.username,
+      },
+      createdAt: doctor.createdAt,
+    }));
+  }
+
+  async getMedicalStaffByHospitalId(hospitalId: number): Promise<any[]> {
+    console.log(
+      `🔍 [Auth Service] getMedicalStaffByHospitalId called for hospital ID: ${hospitalId}`,
+    );
+
+    const medicalStaff = await this.medicalStaffRepository.find({
+      where: { hospitalId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+
+    console.log(
+      `✅ [Auth Service] Found ${medicalStaff.length} medical staff for hospital ID: ${hospitalId}`,
+    );
+
+    return medicalStaff.map((staff) => ({
+      staffId: staff.id,
+      position: staff.position,
+      qualification: staff.qualification,
+      department: staff.department,
+      yearsOfExperience: staff.yearsOfExperience,
+      hospitalId: staff.hospitalId,
+      hospitalName: staff.hospitalName,
+      gender: staff.gender,
+      dateOfBirth: staff.dateOfBirth,
+      user: {
+        id: staff.user.id,
+        firstName: staff.user.firstName,
+        lastName: staff.user.lastName,
+        username: staff.user.username,
+      },
+      createdAt: staff.createdAt,
+    }));
+  }
+
+  async getLabAssistantsByLabId(labId: number): Promise<any[]> {
+    console.log(
+      `🔍 [Auth Service] getLabAssistantsByLabId called for lab ID: ${labId}`,
+    );
+
+    const labAssistants = await this.labAssistantRepository.find({
+      where: { labId },
+      relations: ['user'],
+      order: { createdAt: 'DESC' },
+    });
+
+    console.log(
+      `✅ [Auth Service] Found ${labAssistants.length} lab assistants for lab ID: ${labId}`,
+    );
+
+    return labAssistants.map((assistant) => ({
+      assistantId: assistant.id,
+      qualification: assistant.qualification,
+      department: assistant.department,
+      yearsOfExperience: assistant.yearsOfExperience,
+      labId: assistant.labId,
+      labName: assistant.labName,
+      gender: assistant.gender,
+      dateOfBirth: assistant.dateOfBirth,
+      user: {
+        id: assistant.user.id,
+        firstName: assistant.user.firstName,
+        lastName: assistant.user.lastName,
+        username: assistant.user.username,
+      },
+      createdAt: assistant.createdAt,
+    }));
+  }
+
   async labAdminRegister({
     firstName,
     lastName,

@@ -291,6 +291,112 @@ export class AuthController {
     }
   }
 
+  async getDoctorsByHospitalId(req: Request, res: Response): Promise<any> {
+    try {
+      console.log('🔍 [Auth Controller] getDoctorsByHospitalId called');
+      console.log('📝 [Auth Controller] Request params:', req.params);
+      // console.log('👤 [Auth Controller] Request user:', req.user);
+      console.log('🔑 [Auth Controller] Request headers:', req.headers);
+
+      const hospitalId = parseInt(req.params.hospitalId);
+
+      if (!hospitalId || isNaN(hospitalId)) {
+        console.error(
+          '❌ [Auth Controller] Invalid hospital ID:',
+          req.params.hospitalId,
+        );
+        return res
+          .status(400)
+          .json({ message: 'Valid hospital ID is required' });
+      }
+
+      console.log(
+        `🏥 [Auth Controller] Fetching doctors for hospital ID: ${hospitalId}`,
+      );
+      const doctors = await this.authService.getDoctorsByHospitalId(hospitalId);
+      console.log(`✅ [Auth Controller] Found ${doctors.length} doctors`);
+
+      return res.json({ data: doctors });
+    } catch (error) {
+      console.error(
+        '❌ [Auth Controller] Error in getDoctorsByHospitalId:',
+        error,
+      );
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getMedicalStaffByHospitalId(req: Request, res: Response): Promise<any> {
+    try {
+      console.log('🔍 [Auth Controller] getMedicalStaffByHospitalId called');
+      console.log('📝 [Auth Controller] Request params:', req.params);
+      // console.log('👤 [Auth Controller] Request user:', req.user);
+      console.log('🔑 [Auth Controller] Request headers:', req.headers);
+
+      const hospitalId = parseInt(req.params.hospitalId);
+
+      if (!hospitalId || isNaN(hospitalId)) {
+        console.error(
+          '❌ [Auth Controller] Invalid hospital ID:',
+          req.params.hospitalId,
+        );
+        return res
+          .status(400)
+          .json({ message: 'Valid hospital ID is required' });
+      }
+
+      console.log(
+        `🏥 [Auth Controller] Fetching medical staff for hospital ID: ${hospitalId}`,
+      );
+      const medicalStaff =
+        await this.authService.getMedicalStaffByHospitalId(hospitalId);
+      console.log(
+        `✅ [Auth Controller] Found ${medicalStaff.length} medical staff`,
+      );
+
+      return res.json({ data: medicalStaff });
+    } catch (error) {
+      console.error(
+        '❌ [Auth Controller] Error in getMedicalStaffByHospitalId:',
+        error,
+      );
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getLabAssistantsByLabId(req: Request, res: Response): Promise<any> {
+    try {
+      console.log('🔍 [Auth Controller] getLabAssistantsByLabId called');
+      console.log('📝 [Auth Controller] Request params:', req.params);
+      // console.log('👤 [Auth Controller] Request user:', req.user);
+      console.log('🔑 [Auth Controller] Request headers:', req.headers);
+
+      const labId = parseInt(req.params.labId);
+
+      if (!labId || isNaN(labId)) {
+        console.error('❌ [Auth Controller] Invalid lab ID:', req.params.labId);
+        return res.status(400).json({ message: 'Valid lab ID is required' });
+      }
+
+      console.log(
+        `🧪 [Auth Controller] Fetching lab assistants for lab ID: ${labId}`,
+      );
+      const labAssistants =
+        await this.authService.getLabAssistantsByLabId(labId);
+      console.log(
+        `✅ [Auth Controller] Found ${labAssistants.length} lab assistants`,
+      );
+
+      return res.json({ data: labAssistants });
+    } catch (error) {
+      console.error(
+        '❌ [Auth Controller] Error in getLabAssistantsByLabId:',
+        error,
+      );
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
   async labAdminRegister(req: Request, res: Response): Promise<any> {
     const {
       firstName,
