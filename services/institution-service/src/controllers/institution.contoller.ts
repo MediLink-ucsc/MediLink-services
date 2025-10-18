@@ -232,6 +232,114 @@ export class InstitutionController {
     }
   }
 
+  async getInstitutionDetails(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      const institutionId = parseInt(req.params.institutionId);
+      const type = req.params.type as 'clinic' | 'lab';
+
+      console.log(
+        `🔍 [Institution Controller] getInstitutionDetails called for ${type} ID: ${institutionId}`,
+      );
+
+      if (isNaN(institutionId)) {
+        return res.status(400).json({
+          error: 'Invalid institution ID',
+        });
+      }
+
+      if (type !== 'clinic' && type !== 'lab') {
+        return res.status(400).json({
+          error: 'Invalid institution type. Must be "clinic" or "lab"',
+        });
+      }
+
+      const institution = await this.institutionService.getInstitutionDetails(
+        institutionId,
+        type,
+      );
+
+      if (!institution) {
+        return res.status(404).json({
+          error: `${type.charAt(0).toUpperCase() + type.slice(1)} with ID ${institutionId} not found`,
+        });
+      }
+
+      console.log(
+        `✅ [Institution Controller] Institution details fetched successfully`,
+      );
+
+      return res.status(200).json({
+        data: institution,
+      });
+    } catch (error) {
+      console.error(
+        '❌ [Institution Controller] Error in getInstitutionDetails:',
+        error,
+      );
+      next(error);
+    }
+  }
+
+  async updateInstitutionDetails(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      const institutionId = parseInt(req.params.institutionId);
+      const type = req.params.type as 'clinic' | 'lab';
+      const updateData = req.body;
+
+      console.log(
+        `🔍 [Institution Controller] updateInstitutionDetails called for ${type} ID: ${institutionId}`,
+      );
+
+      if (isNaN(institutionId)) {
+        return res.status(400).json({
+          error: 'Invalid institution ID',
+        });
+      }
+
+      if (type !== 'clinic' && type !== 'lab') {
+        return res.status(400).json({
+          error: 'Invalid institution type. Must be "clinic" or "lab"',
+        });
+      }
+
+      const updatedInstitution =
+        await this.institutionService.updateInstitutionDetails(
+          institutionId,
+          type,
+          updateData,
+        );
+
+      if (!updatedInstitution) {
+        return res.status(404).json({
+          error: `${type.charAt(0).toUpperCase() + type.slice(1)} with ID ${institutionId} not found`,
+        });
+      }
+
+      console.log(
+        `✅ [Institution Controller] Institution updated successfully`,
+      );
+
+      return res.status(200).json({
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} updated successfully`,
+        data: updatedInstitution,
+      });
+    } catch (error) {
+      console.error(
+        '❌ [Institution Controller] Error in updateInstitutionDetails:',
+        error,
+      );
+      next(error);
+    }
+  }
+
   async getClinicStaff(
     req: Request,
     res: Response,

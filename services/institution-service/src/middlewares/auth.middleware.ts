@@ -13,6 +13,7 @@ const publicRoutes = [
   '/api/v1/institutions/clinics',
   '/api/v1/institutions/labs',
   '/api/v1/institutions/admin/:adminUserId/institution',
+  '/api/v1/institutions/:type/:institutionId/details', // Get institution details
   '/api/v1/institutions/clinic/:clinicId/staff',
   '/api/v1/institutions/lab/:labId/staff',
 ];

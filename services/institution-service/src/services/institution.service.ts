@@ -236,6 +236,123 @@ class InstitutionService {
     return null;
   }
 
+  async getInstitutionDetails(
+    institutionId: number,
+    type: 'clinic' | 'lab',
+  ): Promise<Clinic | Lab | null> {
+    console.log(
+      `🔍 [Institution Service] Getting ${type} details for ID: ${institutionId}`,
+    );
+
+    if (type === 'clinic') {
+      const clinic = await this.clinicRepository.findOne({
+        where: { id: institutionId },
+      });
+      if (!clinic) {
+        console.log(
+          `⚠️ [Institution Service] Clinic with ID ${institutionId} not found`,
+        );
+        return null;
+      }
+      console.log(
+        `✅ [Institution Service] Found clinic: ${clinic.institutionName}`,
+      );
+      return clinic;
+    } else {
+      const lab = await this.labRepository.findOne({
+        where: { id: institutionId },
+      });
+      if (!lab) {
+        console.log(
+          `⚠️ [Institution Service] Lab with ID ${institutionId} not found`,
+        );
+        return null;
+      }
+      console.log(`✅ [Institution Service] Found lab: ${lab.institutionName}`);
+      return lab;
+    }
+  }
+
+  async updateInstitutionDetails(
+    institutionId: number,
+    type: 'clinic' | 'lab',
+    updateData: Partial<RegisterClinicDto | RegisterLabDto>,
+  ): Promise<Clinic | Lab | null> {
+    console.log(
+      `🔍 [Institution Service] Updating ${type} details for ID: ${institutionId}`,
+    );
+    console.log(`📝 [Institution Service] Update data:`, updateData);
+
+    if (type === 'clinic') {
+      const clinic = await this.clinicRepository.findOne({
+        where: { id: institutionId },
+      });
+
+      if (!clinic) {
+        console.log(
+          `⚠️ [Institution Service] Clinic with ID ${institutionId} not found`,
+        );
+        return null;
+      }
+
+      // Update only provided fields
+      if (updateData.institutionName)
+        clinic.institutionName = updateData.institutionName;
+      if (updateData.address) clinic.address = updateData.address;
+      if (updateData.city) clinic.city = updateData.city;
+      if (updateData.provinceState)
+        clinic.provinceState = updateData.provinceState;
+      if (updateData.postalCode) clinic.postalCode = updateData.postalCode;
+      if (updateData.phoneNumber) clinic.phoneNumber = updateData.phoneNumber;
+      if (updateData.emailAddress)
+        clinic.emailAddress = updateData.emailAddress;
+      if (updateData.website !== undefined) clinic.website = updateData.website;
+      if (updateData.licenseNumber)
+        clinic.licenseNumber = updateData.licenseNumber;
+      if (updateData.institutionLogo !== undefined)
+        clinic.institutionLogo = updateData.institutionLogo;
+
+      const updatedClinic = await this.clinicRepository.save(clinic);
+      console.log(
+        `✅ [Institution Service] Clinic updated: ${updatedClinic.institutionName}`,
+      );
+      return updatedClinic;
+    } else {
+      const lab = await this.labRepository.findOne({
+        where: { id: institutionId },
+      });
+
+      if (!lab) {
+        console.log(
+          `⚠️ [Institution Service] Lab with ID ${institutionId} not found`,
+        );
+        return null;
+      }
+
+      // Update only provided fields
+      if (updateData.institutionName)
+        lab.institutionName = updateData.institutionName;
+      if (updateData.address) lab.address = updateData.address;
+      if (updateData.city) lab.city = updateData.city;
+      if (updateData.provinceState)
+        lab.provinceState = updateData.provinceState;
+      if (updateData.postalCode) lab.postalCode = updateData.postalCode;
+      if (updateData.phoneNumber) lab.phoneNumber = updateData.phoneNumber;
+      if (updateData.emailAddress) lab.emailAddress = updateData.emailAddress;
+      if (updateData.website !== undefined) lab.website = updateData.website;
+      if (updateData.licenseNumber)
+        lab.licenseNumber = updateData.licenseNumber;
+      if (updateData.institutionLogo !== undefined)
+        lab.institutionLogo = updateData.institutionLogo;
+
+      const updatedLab = await this.labRepository.save(lab);
+      console.log(
+        `✅ [Institution Service] Lab updated: ${updatedLab.institutionName}`,
+      );
+      return updatedLab;
+    }
+  }
+
   async getClinicStaff(clinicId: number, authHeader?: string): Promise<any> {
     console.log(
       `🔍 [Institution Service] getClinicStaff called for clinic ID: ${clinicId}`,

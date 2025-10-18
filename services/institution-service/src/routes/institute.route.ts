@@ -36,6 +36,18 @@ institutionRouter.get(
   institutionController.getInstitutionByAdminUserId.bind(institutionController),
 );
 
+// Get institution details by ID and type
+institutionRouter.get(
+  '/:type/:institutionId/details',
+  institutionController.getInstitutionDetails.bind(institutionController),
+);
+
+// Update institution details by ID and type
+institutionRouter.patch(
+  '/:type/:institutionId/details',
+  institutionController.updateInstitutionDetails.bind(institutionController),
+);
+
 // Staff listing endpoints for institution admins
 institutionRouter.get(
   '/clinic/:clinicId/staff',
