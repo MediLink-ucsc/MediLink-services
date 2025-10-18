@@ -4,6 +4,8 @@ import { Lab } from '../entity/lab.entity';
 import { Clinic } from '../entity/clinic.entity';
 import { createError } from '../utils';
 import { publishUserRegistered } from '../events/producers/institutionRegistered.producer';
+import { publishInstitutionUpdated } from '../events/producers/institutionUpdated.producer';
+import { publishInstitutionVerified } from '../events/producers/institutionVerified.producer';
 import logger from '../config/logger';
 import axios from 'axios';
 import { config } from '../config';
@@ -169,7 +171,29 @@ class InstitutionService {
     }
 
     lab.status = 'verified';
-    return this.labRepository.save(lab);
+    const verifiedLab = await this.labRepository.save(lab);
+
+    // Publish verification event to Kafka
+    try {
+      await publishInstitutionVerified({
+        key: verifiedLab.id?.toString() || '',
+        value: {
+          institutionId: verifiedLab.id,
+          type: 'lab',
+          institutionName: verifiedLab.institutionName,
+          status: verifiedLab.status,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (kafkaError) {
+      logger.error(
+        'Failed to publish lab verification event to Kafka:',
+        kafkaError,
+      );
+      // Continue - don't fail the verification because of Kafka issues
+    }
+
+    return verifiedLab;
   }
 
   async verifyClinic(id: number): Promise<Clinic> {
@@ -180,7 +204,29 @@ class InstitutionService {
     }
 
     clinic.status = 'verified';
-    return this.clinicRepository.save(clinic);
+    const verifiedClinic = await this.clinicRepository.save(clinic);
+
+    // Publish verification event to Kafka
+    try {
+      await publishInstitutionVerified({
+        key: verifiedClinic.id?.toString() || '',
+        value: {
+          institutionId: verifiedClinic.id,
+          type: 'clinic',
+          institutionName: verifiedClinic.institutionName,
+          status: verifiedClinic.status,
+          timestamp: new Date().toISOString(),
+        },
+      });
+    } catch (kafkaError) {
+      logger.error(
+        'Failed to publish clinic verification event to Kafka:',
+        kafkaError,
+      );
+      // Continue - don't fail the verification because of Kafka issues
+    }
+
+    return verifiedClinic;
   }
 
   async getAllClinics(): Promise<Clinic[]> {
@@ -316,6 +362,28 @@ class InstitutionService {
       console.log(
         `✅ [Institution Service] Clinic updated: ${updatedClinic.institutionName}`,
       );
+
+      // Publish update event to Kafka
+      try {
+        const updatedFields = Object.keys(updateData);
+        await publishInstitutionUpdated({
+          key: updatedClinic.id?.toString() || '',
+          value: {
+            institutionId: updatedClinic.id,
+            type: 'clinic',
+            institutionName: updatedClinic.institutionName,
+            updatedFields,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (kafkaError) {
+        logger.error(
+          'Failed to publish clinic update event to Kafka:',
+          kafkaError,
+        );
+        // Continue - don't fail the update because of Kafka issues
+      }
+
       return updatedClinic;
     } else {
       const lab = await this.labRepository.findOne({
@@ -349,6 +417,28 @@ class InstitutionService {
       console.log(
         `✅ [Institution Service] Lab updated: ${updatedLab.institutionName}`,
       );
+
+      // Publish update event to Kafka
+      try {
+        const updatedFields = Object.keys(updateData);
+        await publishInstitutionUpdated({
+          key: updatedLab.id?.toString() || '',
+          value: {
+            institutionId: updatedLab.id,
+            type: 'lab',
+            institutionName: updatedLab.institutionName,
+            updatedFields,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (kafkaError) {
+        logger.error(
+          'Failed to publish lab update event to Kafka:',
+          kafkaError,
+        );
+        // Continue - don't fail the update because of Kafka issues
+      }
+
       return updatedLab;
     }
   }

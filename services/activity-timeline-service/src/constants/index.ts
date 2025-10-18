@@ -3,6 +3,8 @@ export const ACTIVITY_TOPICS = {
   // User management topics
   USER_REGISTERED: "user.registered",
   INSTITUTION_REGISTERED: "institution.registered",
+  INSTITUTION_UPDATED: "institution.updated",
+  INSTITUTION_VERIFIED: "institution.verified",
 
   // Patient record topics
   PRESCRIPTION_FILLED: "prescription.filled",
@@ -28,6 +30,8 @@ export const ACTIVITY_TOPICS = {
 export const ACTIVITY_TYPES = {
   USER_REGISTRATION: "user_registration",
   INSTITUTION_REGISTRATION: "institution_registration",
+  INSTITUTION_UPDATED: "institution_updated",
+  INSTITUTION_VERIFIED: "institution_verified",
   PRESCRIPTION_FILLED: "prescription_filled",
   LAB_ORDER_CREATED: "lab_order_created",
   SOAP_NOTE_CREATED: "soap_note_created",

@@ -77,6 +77,14 @@ export class EventProcessor {
           this.createInstitutionRegistrationActivity(value, eventTimestamp),
         ];
 
+      case ACTIVITY_TOPICS.INSTITUTION_UPDATED:
+        return [this.createInstitutionUpdateActivity(value, eventTimestamp)];
+
+      case ACTIVITY_TOPICS.INSTITUTION_VERIFIED:
+        return [
+          this.createInstitutionVerificationActivity(value, eventTimestamp),
+        ];
+
       case ACTIVITY_TOPICS.PRESCRIPTION_FILLED:
         return [this.createPrescriptionActivity(value, eventTimestamp)];
 
@@ -169,6 +177,63 @@ export class EventProcessor {
       source: {
         service: "institution-service",
         topic: ACTIVITY_TOPICS.INSTITUTION_REGISTERED,
+      },
+    };
+  }
+
+  private createInstitutionUpdateActivity(
+    value: any,
+    timestamp: Date
+  ): Omit<ActivityEvent, "id"> {
+    const updatedFieldsText =
+      value.updatedFields && value.updatedFields.length > 0
+        ? value.updatedFields.join(", ")
+        : "details";
+
+    return {
+      entityType: "institution",
+      entityId: value.institutionId?.toString() || value.id?.toString(),
+      activityType: ACTIVITY_TYPES.INSTITUTION_UPDATED,
+      description: `${value.type === "clinic" ? "Clinic" : "Lab"} ${
+        value.institutionName || "Unknown"
+      } updated (${updatedFieldsText})`,
+      timestamp,
+      metadata: {
+        institutionId: value.institutionId,
+        institutionName: value.institutionName,
+        type: value.type,
+        updatedFields: value.updatedFields || [],
+        updatedBy: value.updatedBy,
+      },
+      source: {
+        service: "institution-service",
+        topic: ACTIVITY_TOPICS.INSTITUTION_UPDATED,
+      },
+    };
+  }
+
+  private createInstitutionVerificationActivity(
+    value: any,
+    timestamp: Date
+  ): Omit<ActivityEvent, "id"> {
+    return {
+      entityType: "institution",
+      entityId: value.institutionId?.toString() || value.id?.toString(),
+      activityType: ACTIVITY_TYPES.INSTITUTION_VERIFIED,
+      description: `${value.type === "clinic" ? "Clinic" : "Lab"} ${
+        value.institutionName || "Unknown"
+      } verified`,
+      timestamp,
+      metadata: {
+        institutionId: value.institutionId,
+        institutionName: value.institutionName,
+        type: value.type,
+        status: value.status,
+        verifiedBy: value.verifiedBy,
+      },
+      source: {
+        service: "institution-service",
+        topic: ACTIVITY_TOPICS.INSTITUTION_VERIFIED,
       },
     };
   }
