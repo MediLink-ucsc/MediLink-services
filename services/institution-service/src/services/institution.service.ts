@@ -199,6 +199,43 @@ class InstitutionService {
     });
   }
 
+  async getInstitutionByAdminUserId(
+    adminUserId: number,
+  ): Promise<{ type: 'clinic' | 'lab'; id: number } | null> {
+    console.log(
+      `🔍 [Institution Service] Searching for institution with admin user ID: ${adminUserId}`,
+    );
+
+    // First check if admin is a clinic admin
+    const clinic = await this.clinicRepository.findOne({
+      where: { adminUserId },
+    });
+
+    if (clinic) {
+      console.log(
+        `✅ [Institution Service] Found clinic ID ${clinic.id} for admin user ${adminUserId}`,
+      );
+      return { type: 'clinic', id: clinic.id };
+    }
+
+    // If not clinic admin, check if admin is a lab admin
+    const lab = await this.labRepository.findOne({
+      where: { adminUserId },
+    });
+
+    if (lab) {
+      console.log(
+        `✅ [Institution Service] Found lab ID ${lab.id} for admin user ${adminUserId}`,
+      );
+      return { type: 'lab', id: lab.id };
+    }
+
+    console.log(
+      `⚠️ [Institution Service] No institution found for admin user ${adminUserId}`,
+    );
+    return null;
+  }
+
   async getClinicStaff(clinicId: number, authHeader?: string): Promise<any> {
     console.log(
       `🔍 [Institution Service] getClinicStaff called for clinic ID: ${clinicId}`,

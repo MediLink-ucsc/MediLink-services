@@ -189,6 +189,49 @@ export class InstitutionController {
     }
   }
 
+  async getInstitutionByAdminUserId(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<any> {
+    try {
+      const adminUserId = parseInt(req.params.adminUserId);
+      console.log(
+        `🔍 [Institution Controller] getInstitutionByAdminUserId called for admin user ID: ${adminUserId}`,
+      );
+
+      if (isNaN(adminUserId)) {
+        return res.status(400).json({
+          error: 'Invalid admin user ID',
+        });
+      }
+
+      const institution =
+        await this.institutionService.getInstitutionByAdminUserId(adminUserId);
+
+      if (!institution) {
+        return res.status(404).json({
+          error: 'No institution found for this admin user',
+        });
+      }
+
+      console.log(
+        `✅ [Institution Controller] Institution found:`,
+        institution,
+      );
+
+      return res.status(200).json({
+        data: institution,
+      });
+    } catch (error) {
+      console.error(
+        '❌ [Institution Controller] Error in getInstitutionByAdminUserId:',
+        error,
+      );
+      next(error);
+    }
+  }
+
   async getClinicStaff(
     req: Request,
     res: Response,

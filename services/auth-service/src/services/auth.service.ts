@@ -1068,7 +1068,45 @@ class AuthService {
       hospitalId = medicalStaff?.hospitalId ?? null;
     }
 
-    // ADMIN will keep hospitalId as null
+    if (role === 'ADMIN' || role === 'LAB_ADMIN') {
+      // Check both clinic and lab tables for admin user
+      try {
+        console.log(
+          `🔍 [Auth Service] Looking up institution for admin user ID: ${credential.user.id}`,
+        );
+
+        const response = await axios.get<{
+          data: { type: 'clinic' | 'lab'; id: number };
+        }>(
+          `http://localhost:3000/api/v1/institutions/admin/${credential.user.id}/institution`,
+        );
+
+        if (response.data && response.data.data) {
+          const institution = response.data.data;
+          hospitalId = institution.id;
+          console.log(
+            `✅ [Auth Service] Admin user ${credential.user.id} found as ${institution.type} admin with hospitalId: ${hospitalId}`,
+          );
+        } else {
+          console.log(
+            `⚠️ [Auth Service] Admin user ${credential.user.id} not found in any institution`,
+          );
+          hospitalId = null;
+        }
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          console.log(
+            `⚠️ [Auth Service] Admin user ${credential.user.id} not found in any institution`,
+          );
+        } else {
+          console.error(
+            '❌ [Auth Service] Failed to fetch institution data for admin:',
+            error.message,
+          );
+        }
+        hospitalId = null;
+      }
+    }
 
     const token = jwt.sign(
       {

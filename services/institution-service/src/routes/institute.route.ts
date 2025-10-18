@@ -30,6 +30,12 @@ institutionRouter.get(
   institutionController.getAllLabs.bind(institutionController),
 );
 
+// Get institution by admin user ID (for ADMIN login)
+institutionRouter.get(
+  '/admin/:adminUserId/institution',
+  institutionController.getInstitutionByAdminUserId.bind(institutionController),
+);
+
 // Staff listing endpoints for institution admins
 institutionRouter.get(
   '/clinic/:clinicId/staff',
