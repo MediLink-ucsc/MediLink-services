@@ -124,6 +124,27 @@ export class AuthController {
     this.authService = new AuthService();
   }
 
+   async getDoctorsByHospital(req: Request, res: Response): Promise<any>  {
+    try {
+      const hospitalId = parseInt(req.params.hospitalId, 10);
+
+      if (isNaN(hospitalId)) {
+        return res.status(400).json({ message: 'Invalid hospital ID' });
+      }
+
+      const doctors = await this.authService.getDoctorsByHospitalId(hospitalId);
+
+      if (!doctors.length) {
+        return res.status(404).json({ message: 'No doctors found for this hospital' });
+      }
+
+      return res.json(doctors);
+    } catch (error: any) {
+      console.error('Error fetching doctors:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
   async updatePatientLastVisited(req: Request, res: Response): Promise<any> {
     try {
       const patientId = Number(req.params.patientId);

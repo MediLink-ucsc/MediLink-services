@@ -33,6 +33,8 @@ authRouter.get('/medvaultpro/doctor/:doctorUserid',authController.getDoctorByUse
 authRouter.patch('/medvaultpro/patient/:patientId/last-visited',authController.updatePatientLastVisited.bind(authController));
 authRouter.patch('/medvaultpro/patient/:patientId/condition',authController.updatePatientCondition.bind(authController));
 
+authRouter.get('/medvaultpro/doctors/:hospitalId',authController.getDoctorsByHospital.bind(authController));
+
 
 
 export { authRouter };

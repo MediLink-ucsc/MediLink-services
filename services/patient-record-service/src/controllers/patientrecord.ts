@@ -118,6 +118,36 @@ export class PatientRecordController {
     }
   }
 
+  async getPatientsForNurse(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const hospitalId = decoded.hospitalId;
+      if (!hospitalId) {
+        return res.status(403).json({ message: 'Invalid token: hospital ID missing' });
+      }
+
+      // Call service
+      const nursePatients = await this.patientRecordService.getPatientsForNurse(hospitalId);
+
+      if (!nursePatients.length) {
+        return res.status(404).json({ message: 'No patients found for this nurse' });
+      }
+
+      return res.json(nursePatients);
+    } catch (error: any) {
+      console.error('Error fetching nurse patients:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
   async getSoapBypatientid(req: Request, res: Response): Promise<any> {
     try {
       const patientId = req.params.patientid;
