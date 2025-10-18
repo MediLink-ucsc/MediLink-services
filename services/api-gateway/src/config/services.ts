@@ -31,6 +31,18 @@ class ServiceProxy {
       pathRewrite: { '^/': '/api/v1/labReport/' },
       name: 'lab-report-service',
     },
+    {
+      path: '/api/v1/activity/',
+      url: config.ACTIVITY_TIMELINE_SERVICE_URL,
+      pathRewrite: { '^/': '/api/v1/activity/' },
+      name: 'activity-timeline-service',
+    },
+    {
+      path: '/api/v1/notification/',
+      url: config.NOTIFICATION_SERVICE_URL,
+      pathRewrite: { '^/': '/api/v1/notification/' },
+      name: 'notification-service',
+    },
   ];
 
   private static createProxyOptions(service: ServiceConfig): Options {

@@ -11,6 +11,8 @@ interface Config {
   INSTITUTION_SERVICE_URL: string;
   PATIENT_RECORD_SERVICE_URL: string;
   LAB_REPORT_SERVICE_URL: string;
+  ACTIVITY_TIMELINE_SERVICE_URL: string;
+  NOTIFICATION_SERVICE_URL: string;
   NODE_ENV: string;
 }
 
@@ -31,5 +33,9 @@ export const config: Config = {
     process.env.PATIENT_RECORD_SERVICE_URL || 'http://localhost:3005',
   LAB_REPORT_SERVICE_URL:
     process.env.LAB_REPORT_SERVICE_URL || 'http://localhost:3004',
+  ACTIVITY_TIMELINE_SERVICE_URL:
+    process.env.ACTIVITY_TIMELINE_SERVICE_URL || 'http://localhost:3006',
+  NOTIFICATION_SERVICE_URL:
+    process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3007',
   NODE_ENV: process.env.NODE_ENV || 'development',
 };
