@@ -155,6 +155,17 @@ class AuthService {
     return this.patientRepository.save(patient);
   }
 
+  //  async getDoctorsByHospitalId(hospitalId: number): Promise<Doctor[]> {
+  //     if (!hospitalId) return [];
+
+  //     const doctors = await this.doctorRepository.find({
+  //       where: { hospitalId },
+  //       relations: ['user'], // include User entity
+  //     });
+
+  //     return doctors;
+  //   }
+
   async getPatients(): Promise<any[]> {
     const patients = await this.patientRepository.find({
       relations: ['user'], // correct relation

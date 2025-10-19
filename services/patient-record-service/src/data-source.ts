@@ -8,6 +8,7 @@ import { QuickExam } from './entity/quickexam.entity';
 import { CarePlan } from './entity/careplan.entity';
 import { CareTask } from './entity/caretask.entity';
 import { Metric } from './entity/metric.entity';
+import { PatientDoctorRecord } from './entity/patientvisit.entity'; 
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -24,5 +25,6 @@ export const AppDataSource = new DataSource({
     CarePlan,
     CareTask,
     Metric,
+    PatientDoctorRecord,
   ],
 });

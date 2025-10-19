@@ -86,6 +86,126 @@ export class PatientRecordController {
     this.patientRecordService = new PatientRecordService();
   }
 
+    async getCarePlanByPatientId(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        const carePlans = await this.patientRecordService.getCarePlanByPatientId(patientId);
+
+        if (!carePlans || carePlans.length === 0) {
+          return res.status(404).json({
+            message: `No care plans found for patient ID ${patientId}`,
+          });
+        }
+
+        return res.json(carePlans);
+      } catch (error) {
+        console.error('Error fetching care plans:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
+
+   async getVisitedPatients(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const doctorUserId = decoded.userId || decoded.id;
+      if (!doctorUserId) {
+        return res.status(403).json({ message: 'Invalid token: doctor ID missing' });
+      }
+
+      // Call service
+      const visitedPatients = await this.patientRecordService.getVisitedPatients(doctorUserId);
+
+      if (!visitedPatients.length) {
+        return res.status(404).json({ message: 'No previously visited patients found' });
+      }
+
+      return res.json(visitedPatients);
+    } catch (error: any) {
+      //console.error('Error fetching visited patients:', error);
+      console.error('Error fetching visited patients:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getPatientsForNurse(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const hospitalId = decoded.hospitalId;
+      if (!hospitalId) {
+        return res.status(403).json({ message: 'Invalid token: hospital ID missing' });
+      }
+
+      // Call service
+      const nursePatients = await this.patientRecordService.getPatientsForNurse(hospitalId);
+
+      if (!nursePatients.length) {
+        return res.status(404).json({ message: 'No patients found for this nurse' });
+      }
+
+      return res.json(nursePatients);
+    } catch (error: any) {
+      console.error('Error fetching nurse patients:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getTodayPrescriptionsForNurse(req: Request, res: Response): Promise<any> {
+      try {
+        // Step 1: Extract token
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({ message: 'Missing or invalid token' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+        const hospitalId = decoded.hospitalId;
+        if (!hospitalId) {
+          return res.status(403).json({ message: 'Invalid token: hospital ID missing' });
+        }
+
+        // Step 2: Call service
+        const prescriptions =
+          await this.patientRecordService.getTodayPrescriptionsForNurse(hospitalId);
+
+        if (!prescriptions.length) {
+          return res.status(404).json({ message: 'No prescriptions found for today' });
+        }
+
+        // Step 3: Return response
+        return res.status(200).json(prescriptions);
+
+      } catch (error: any) {
+        console.error('Error fetching today’s prescriptions for nurse:', error.message, error.stack);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
   async getSoapBypatientid(req: Request, res: Response): Promise<any> {
     try {
       const patientId = req.params.patientid;

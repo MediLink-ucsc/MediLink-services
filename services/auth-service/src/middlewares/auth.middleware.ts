@@ -44,6 +44,7 @@ const publicRoutes = [
   '/auth/medvaultpro/medical-staff/:medicalStaffId',
   '/api/v1/auth/medvaultpro/lab-assistant/:labAssistantId',
   '/auth/medvaultpro/lab-assistant/:labAssistantId',
+  '/api/v1/auth/medvaultpro/doctors/:hospitalId',
 ];
 
 function isPublicRoute(path: string): boolean {

@@ -91,6 +91,11 @@ authRouter.patch(
   authController.updatePatientCondition.bind(authController),
 );
 
+authRouter.get(
+  '/medvaultpro/doctors/:hospitalId',
+  authController.getDoctorsByHospital.bind(authController),
+);
+
 // Password reset routes
 authRouter.post(
   '/password-reset/request',
