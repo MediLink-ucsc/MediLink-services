@@ -237,6 +237,8 @@ class PatientRecordService {
           (p: any) => Number(p.patientId) === Number(prescription.patientId)
         );
 
+        console.log('Doctor Info:', doctorInfo);
+
         return {
           ...prescription,
           doctor: doctorInfo
@@ -244,7 +246,7 @@ class PatientRecordService {
                 firstName: doctorInfo.user.firstName,
                 lastName: doctorInfo.user.lastName,
                 specialty: doctorInfo.specialty,
-                hospitalName: doctorInfo.hospital?.hospitalName || 'N/A',
+                hospitalName: doctorInfo.hospitalName,
               }
             : null,
           patient: patientInfo
