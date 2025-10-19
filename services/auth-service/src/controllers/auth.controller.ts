@@ -724,4 +724,140 @@ export class AuthController {
 
     return res.status(200).json({ message: 'logged out successfully' });
   }
+
+  // Update staff methods
+  async updateDoctor(req: Request, res: Response): Promise<any> {
+    try {
+      const doctorId = parseInt(req.params.doctorId);
+      const updateData = req.body;
+
+      console.log(
+        `🔍 [Auth Controller] Update doctor request for ID: ${doctorId}`,
+      );
+
+      if (isNaN(doctorId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid doctor ID',
+        });
+      }
+
+      const updatedDoctor = await this.authService.updateDoctor(
+        doctorId,
+        updateData,
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Doctor updated successfully',
+        data: updatedDoctor,
+      });
+    } catch (error: any) {
+      console.error('❌ [Auth Controller] Error updating doctor:', error);
+
+      if (error.statusCode === 404) {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update doctor',
+      });
+    }
+  }
+
+  async updateMedicalStaff(req: Request, res: Response): Promise<any> {
+    try {
+      const medicalStaffId = parseInt(req.params.medicalStaffId);
+      const updateData = req.body;
+
+      console.log(
+        `🔍 [Auth Controller] Update medical staff request for ID: ${medicalStaffId}`,
+      );
+
+      if (isNaN(medicalStaffId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid medical staff ID',
+        });
+      }
+
+      const updatedMedicalStaff = await this.authService.updateMedicalStaff(
+        medicalStaffId,
+        updateData,
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Medical staff updated successfully',
+        data: updatedMedicalStaff,
+      });
+    } catch (error: any) {
+      console.error(
+        '❌ [Auth Controller] Error updating medical staff:',
+        error,
+      );
+
+      if (error.statusCode === 404) {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update medical staff',
+      });
+    }
+  }
+
+  async updateLabAssistant(req: Request, res: Response): Promise<any> {
+    try {
+      const labAssistantId = parseInt(req.params.labAssistantId);
+      const updateData = req.body;
+
+      console.log(
+        `🔍 [Auth Controller] Update lab assistant request for ID: ${labAssistantId}`,
+      );
+
+      if (isNaN(labAssistantId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid lab assistant ID',
+        });
+      }
+
+      const updatedLabAssistant = await this.authService.updateLabAssistant(
+        labAssistantId,
+        updateData,
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Lab assistant updated successfully',
+        data: updatedLabAssistant,
+      });
+    } catch (error: any) {
+      console.error(
+        '❌ [Auth Controller] Error updating lab assistant:',
+        error,
+      );
+
+      if (error.statusCode === 404) {
+        return res.status(404).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update lab assistant',
+      });
+    }
+  }
 }

@@ -105,4 +105,18 @@ authRouter.post(
   authController.verifyResetToken.bind(authController),
 );
 
+// Update staff routes (for admin use)
+authRouter.patch(
+  '/medvaultpro/doctor/:doctorId',
+  authController.updateDoctor.bind(authController),
+);
+authRouter.patch(
+  '/medvaultpro/medical-staff/:medicalStaffId',
+  authController.updateMedicalStaff.bind(authController),
+);
+authRouter.patch(
+  '/medvaultpro/lab-assistant/:labAssistantId',
+  authController.updateLabAssistant.bind(authController),
+);
+
 export { authRouter };

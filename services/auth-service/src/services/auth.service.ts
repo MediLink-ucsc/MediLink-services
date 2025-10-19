@@ -1376,6 +1376,209 @@ class AuthService {
   async logout(userId: number, token: string) {
     await redis.del(`auth:${userId}:${token}`);
   }
+
+  // Update staff methods
+  async updateDoctor(
+    doctorId: number,
+    updateData: Partial<{
+      licenseNumber: string;
+      specialty: string;
+      yearsOfExperience: number;
+      hospitalId: number;
+      hospitalName: string;
+      gender: string;
+      dateOfBirth: string;
+      firstName: string;
+      lastName: string;
+    }>,
+  ) {
+    console.log(
+      `🔍 [Auth Service] Updating doctor ID: ${doctorId}`,
+      updateData,
+    );
+
+    const doctor = await this.doctorRepository.findOne({
+      where: { id: doctorId },
+      relations: ['user'],
+    });
+
+    if (!doctor) {
+      console.log(`❌ [Auth Service] Doctor with ID ${doctorId} not found`);
+      throw createError(`Doctor with ID ${doctorId} not found`, 404);
+    }
+
+    // Update doctor fields
+    if (updateData.licenseNumber !== undefined)
+      doctor.licenseNumber = updateData.licenseNumber;
+    if (updateData.specialty !== undefined)
+      doctor.specialty = updateData.specialty;
+    if (updateData.yearsOfExperience !== undefined)
+      doctor.yearsOfExperience = updateData.yearsOfExperience;
+    if (updateData.hospitalId !== undefined)
+      doctor.hospitalId = updateData.hospitalId;
+    if (updateData.hospitalName !== undefined)
+      doctor.hospitalName = updateData.hospitalName;
+    if (updateData.gender !== undefined) doctor.gender = updateData.gender;
+    if (updateData.dateOfBirth !== undefined)
+      doctor.dateOfBirth = new Date(updateData.dateOfBirth);
+
+    // Update user fields
+    if (updateData.firstName !== undefined)
+      doctor.user.firstName = updateData.firstName;
+    if (updateData.lastName !== undefined)
+      doctor.user.lastName = updateData.lastName;
+
+    await this.userRepository.save(doctor.user);
+    const updatedDoctor = await this.doctorRepository.save(doctor);
+
+    console.log(
+      `✅ [Auth Service] Doctor updated successfully: ${doctor.user.firstName} ${doctor.user.lastName}`,
+    );
+
+    return updatedDoctor;
+  }
+
+  async updateMedicalStaff(
+    medicalStaffId: number,
+    updateData: Partial<{
+      position: string;
+      qualification: string;
+      department: string;
+      yearsOfExperience: number;
+      hospitalId: number;
+      hospitalName: string;
+      gender: string;
+      dateOfBirth: string;
+      firstName: string;
+      lastName: string;
+    }>,
+  ) {
+    console.log(
+      `🔍 [Auth Service] Updating medical staff ID: ${medicalStaffId}`,
+      updateData,
+    );
+
+    const medicalStaff = await this.medicalStaffRepository.findOne({
+      where: { id: medicalStaffId },
+      relations: ['user'],
+    });
+
+    if (!medicalStaff) {
+      console.log(
+        `❌ [Auth Service] Medical staff with ID ${medicalStaffId} not found`,
+      );
+      throw createError(
+        `Medical staff with ID ${medicalStaffId} not found`,
+        404,
+      );
+    }
+
+    // Update medical staff fields
+    if (updateData.position !== undefined)
+      medicalStaff.position = updateData.position;
+    if (updateData.qualification !== undefined)
+      medicalStaff.qualification = updateData.qualification;
+    if (updateData.department !== undefined)
+      medicalStaff.department = updateData.department;
+    if (updateData.yearsOfExperience !== undefined)
+      medicalStaff.yearsOfExperience = updateData.yearsOfExperience;
+    if (updateData.hospitalId !== undefined)
+      medicalStaff.hospitalId = updateData.hospitalId;
+    if (updateData.hospitalName !== undefined)
+      medicalStaff.hospitalName = updateData.hospitalName;
+    if (updateData.gender !== undefined)
+      medicalStaff.gender = updateData.gender;
+    if (updateData.dateOfBirth !== undefined)
+      medicalStaff.dateOfBirth = new Date(updateData.dateOfBirth);
+
+    // Update user fields
+    if (updateData.firstName !== undefined)
+      medicalStaff.user.firstName = updateData.firstName;
+    if (updateData.lastName !== undefined)
+      medicalStaff.user.lastName = updateData.lastName;
+
+    await this.userRepository.save(medicalStaff.user);
+    const updatedMedicalStaff =
+      await this.medicalStaffRepository.save(medicalStaff);
+
+    console.log(
+      `✅ [Auth Service] Medical staff updated successfully: ${medicalStaff.user.firstName} ${medicalStaff.user.lastName}`,
+    );
+
+    return updatedMedicalStaff;
+  }
+
+  async updateLabAssistant(
+    labAssistantId: number,
+    updateData: Partial<{
+      qualification: string;
+      department: string;
+      yearsOfExperience: number;
+      labId: number;
+      labName: string;
+      hospitalId: number;
+      hospitalName: string;
+      gender: string;
+      dateOfBirth: string;
+      firstName: string;
+      lastName: string;
+    }>,
+  ) {
+    console.log(
+      `🔍 [Auth Service] Updating lab assistant ID: ${labAssistantId}`,
+      updateData,
+    );
+
+    const labAssistant = await this.labAssistantRepository.findOne({
+      where: { id: labAssistantId },
+      relations: ['user'],
+    });
+
+    if (!labAssistant) {
+      console.log(
+        `❌ [Auth Service] Lab assistant with ID ${labAssistantId} not found`,
+      );
+      throw createError(
+        `Lab assistant with ID ${labAssistantId} not found`,
+        404,
+      );
+    }
+
+    // Update lab assistant fields
+    if (updateData.qualification !== undefined)
+      labAssistant.qualification = updateData.qualification;
+    if (updateData.department !== undefined)
+      labAssistant.department = updateData.department;
+    if (updateData.yearsOfExperience !== undefined)
+      labAssistant.yearsOfExperience = updateData.yearsOfExperience;
+    if (updateData.labId !== undefined) labAssistant.labId = updateData.labId;
+    if (updateData.labName !== undefined)
+      labAssistant.labName = updateData.labName;
+    if (updateData.hospitalId !== undefined)
+      labAssistant.hospitalId = updateData.hospitalId;
+    if (updateData.hospitalName !== undefined)
+      labAssistant.hospitalName = updateData.hospitalName;
+    if (updateData.gender !== undefined)
+      labAssistant.gender = updateData.gender;
+    if (updateData.dateOfBirth !== undefined)
+      labAssistant.dateOfBirth = new Date(updateData.dateOfBirth);
+
+    // Update user fields
+    if (updateData.firstName !== undefined)
+      labAssistant.user.firstName = updateData.firstName;
+    if (updateData.lastName !== undefined)
+      labAssistant.user.lastName = updateData.lastName;
+
+    await this.userRepository.save(labAssistant.user);
+    const updatedLabAssistant =
+      await this.labAssistantRepository.save(labAssistant);
+
+    console.log(
+      `✅ [Auth Service] Lab assistant updated successfully: ${labAssistant.user.firstName} ${labAssistant.user.lastName}`,
+    );
+
+    return updatedLabAssistant;
+  }
 }
 
 export default AuthService;

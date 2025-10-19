@@ -38,6 +38,12 @@ const publicRoutes = [
   '/auth/medvaultpro/hospital/:hospitalId/medical-staff',
   '/api/v1/auth/medvaultpro/lab/:labId/assistants',
   '/auth/medvaultpro/lab/:labId/assistants',
+  '/api/v1/auth/medvaultpro/doctor/:doctorId',
+  '/auth/medvaultpro/doctor/:doctorId',
+  '/api/v1/auth/medvaultpro/medical-staff/:medicalStaffId',
+  '/auth/medvaultpro/medical-staff/:medicalStaffId',
+  '/api/v1/auth/medvaultpro/lab-assistant/:labAssistantId',
+  '/auth/medvaultpro/lab-assistant/:labAssistantId',
 ];
 
 function isPublicRoute(path: string): boolean {
