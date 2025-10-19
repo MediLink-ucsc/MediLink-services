@@ -3,7 +3,10 @@ import { createMetric, getMetrics } from '../controllers/metrics.controller';
 
 const router = Router();
 
-router.post('/', createMetric);
-router.get('/', getMetrics);
+
+router.post('/users/:userId/metrics', createMetric);
+
+
+router.get('/metrics', getMetrics);
 
 export default router;

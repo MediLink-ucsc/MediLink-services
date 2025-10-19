@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 
+
 @Entity()
 export class Metric {
   @PrimaryGeneratedColumn('uuid')
@@ -19,4 +20,7 @@ export class Metric {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column()
+  userId: string;
 }
