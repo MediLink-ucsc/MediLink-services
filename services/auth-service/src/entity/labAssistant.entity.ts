@@ -45,10 +45,12 @@ export class LabAssistant {
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
   dateOfBirth: Date;
 
+  @Column({ name: 'contact_no', nullable: true })
+  contactNo: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
-

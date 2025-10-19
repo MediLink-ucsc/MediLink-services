@@ -78,6 +78,7 @@ interface RegisterDoctorDto {
   hospitalName?: string;
   gender?: string;
   dateOfBirth?: string;
+  contactNo?: string;
 }
 
 interface RegisterLabAssistantDto {
@@ -96,6 +97,7 @@ interface RegisterLabAssistantDto {
   hospitalName?: string;
   gender?: string;
   dateOfBirth?: string;
+  contactNo?: string;
 }
 
 interface RegisterMedicalStaffDto {
@@ -113,6 +115,7 @@ interface RegisterMedicalStaffDto {
   hospitalName?: string;
   gender?: string;
   dateOfBirth?: string;
+  contactNo?: string;
 }
 
 class AuthService {
@@ -254,6 +257,7 @@ class AuthService {
       hospitalName: doctor.hospitalName,
       gender: doctor.gender,
       dateOfBirth: doctor.dateOfBirth,
+      contactNo: doctor.contactNo,
       user: {
         id: doctor.user.id,
         firstName: doctor.user.firstName,
@@ -287,6 +291,7 @@ class AuthService {
       hospitalName: doctor.hospitalName,
       gender: doctor.gender,
       dateOfBirth: doctor.dateOfBirth,
+      contactNo: doctor.contactNo,
       user: {
         id: doctor.user.id,
         firstName: doctor.user.firstName,
@@ -322,6 +327,7 @@ class AuthService {
       hospitalName: staff.hospitalName,
       gender: staff.gender,
       dateOfBirth: staff.dateOfBirth,
+      contactNo: staff.contactNo,
       user: {
         id: staff.user.id,
         firstName: staff.user.firstName,
@@ -356,6 +362,7 @@ class AuthService {
       labName: assistant.labName,
       gender: assistant.gender,
       dateOfBirth: assistant.dateOfBirth,
+      contactNo: assistant.contactNo,
       user: {
         id: assistant.user.id,
         firstName: assistant.user.firstName,
@@ -613,6 +620,7 @@ class AuthService {
     hospitalName,
     gender,
     dateOfBirth,
+    contactNo,
   }: RegisterDoctorDto) {
     const existing = await this.credentialRepository.findOneBy({ username });
     if (existing) {
@@ -652,6 +660,7 @@ class AuthService {
     if (dateOfBirth) {
       doctor.dateOfBirth = new Date(dateOfBirth);
     }
+    if (contactNo) doctor.contactNo = contactNo;
 
     await this.doctorRepository.save(doctor);
 
@@ -711,6 +720,7 @@ class AuthService {
     hospitalName,
     gender,
     dateOfBirth,
+    contactNo,
   }: RegisterLabAssistantDto) {
     const existing = await this.credentialRepository.findOneBy({ username });
 
@@ -753,6 +763,7 @@ class AuthService {
     labAssistant.dateOfBirth = dateOfBirth
       ? new Date(dateOfBirth)
       : new Date(0);
+    if (contactNo) labAssistant.contactNo = contactNo;
 
     await this.labAssistantRepository.save(labAssistant);
 
@@ -811,6 +822,7 @@ class AuthService {
     hospitalName,
     gender,
     dateOfBirth,
+    contactNo,
   }: RegisterMedicalStaffDto) {
     const existing = await this.credentialRepository.findOneBy({ username });
 
@@ -850,6 +862,7 @@ class AuthService {
     medicalStaff.dateOfBirth = dateOfBirth
       ? new Date(dateOfBirth)
       : new Date(0);
+    if (contactNo) medicalStaff.contactNo = contactNo;
 
     await this.medicalStaffRepository.save(medicalStaff);
 
@@ -1388,6 +1401,7 @@ class AuthService {
       hospitalName: string;
       gender: string;
       dateOfBirth: string;
+      contactNo: string;
       firstName: string;
       lastName: string;
     }>,
@@ -1421,6 +1435,8 @@ class AuthService {
     if (updateData.gender !== undefined) doctor.gender = updateData.gender;
     if (updateData.dateOfBirth !== undefined)
       doctor.dateOfBirth = new Date(updateData.dateOfBirth);
+    if (updateData.contactNo !== undefined)
+      doctor.contactNo = updateData.contactNo;
 
     // Update user fields
     if (updateData.firstName !== undefined)
@@ -1449,6 +1465,7 @@ class AuthService {
       hospitalName: string;
       gender: string;
       dateOfBirth: string;
+      contactNo: string;
       firstName: string;
       lastName: string;
     }>,
@@ -1490,6 +1507,8 @@ class AuthService {
       medicalStaff.gender = updateData.gender;
     if (updateData.dateOfBirth !== undefined)
       medicalStaff.dateOfBirth = new Date(updateData.dateOfBirth);
+    if (updateData.contactNo !== undefined)
+      medicalStaff.contactNo = updateData.contactNo;
 
     // Update user fields
     if (updateData.firstName !== undefined)
@@ -1520,6 +1539,7 @@ class AuthService {
       hospitalName: string;
       gender: string;
       dateOfBirth: string;
+      contactNo: string;
       firstName: string;
       lastName: string;
     }>,
@@ -1562,6 +1582,8 @@ class AuthService {
       labAssistant.gender = updateData.gender;
     if (updateData.dateOfBirth !== undefined)
       labAssistant.dateOfBirth = new Date(updateData.dateOfBirth);
+    if (updateData.contactNo !== undefined)
+      labAssistant.contactNo = updateData.contactNo;
 
     // Update user fields
     if (updateData.firstName !== undefined)

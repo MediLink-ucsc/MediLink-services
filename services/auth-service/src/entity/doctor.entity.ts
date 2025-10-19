@@ -27,7 +27,6 @@ export class Doctor {
   @Column({ name: 'years_of_experience' })
   yearsOfExperience: number;
 
-
   @Column({ name: 'hospital_id', nullable: true })
   hospitalId: number;
 
@@ -39,6 +38,9 @@ export class Doctor {
 
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
   dateOfBirth: Date;
+
+  @Column({ name: 'contact_no', nullable: true })
+  contactNo: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
