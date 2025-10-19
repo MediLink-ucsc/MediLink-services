@@ -115,6 +115,16 @@ class PatientRecordService {
     this.patientDoctorRecordRepository = AppDataSource.getRepository(PatientDoctorRecord);
   }
 
+    async getCarePlanByPatientId(patientId: string): Promise<any[]> {
+      const carePlans = await this.carePlanRepository.find({
+        where: { patientId: patientId },
+        order: { createdAt: 'DESC' },
+        take: 3, // ✅ only the latest 3
+      });
+
+      return carePlans;
+    }
+
     async getVisitedPatients(doctorUserId: number): Promise<any[]> {
     // Step 1: Get all patients from Auth Service
     const authResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'); 
@@ -432,7 +442,8 @@ class PatientRecordService {
       const prescriptions = await this.prescriptionRepository.find({
         where: { patientId: patientId }, // patientId is string (UUID)
         relations: ['medications'], // include associated medications
-        order: { createdAt: 'DESC' }, // latest prescriptions first
+        order: { createdAt: 'DESC' },
+        take: 5 // latest prescriptions first
       });
 
       if (!prescriptions || prescriptions.length === 0) {

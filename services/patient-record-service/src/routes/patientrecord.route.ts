@@ -16,6 +16,7 @@ const patientrecordController = new PatientRecordController();
     patientrecordRouter.get('/quickexam/last/:patientid',patientrecordController.getLastQuickExamByPatientId.bind(patientrecordController));
     patientrecordRouter.get('/visitedpatients',patientrecordController.getVisitedPatients.bind(patientrecordController));
     patientrecordRouter.get('/patientlist',patientrecordController.getPatientsForNurse.bind(patientrecordController));
+    patientrecordRouter.get('/careplans/:patientid',patientrecordController.getCarePlanByPatientId.bind(patientrecordController));
 
 
 

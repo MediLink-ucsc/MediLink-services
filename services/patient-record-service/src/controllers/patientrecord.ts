@@ -86,6 +86,30 @@ export class PatientRecordController {
     this.patientRecordService = new PatientRecordService();
   }
 
+    async getCarePlanByPatientId(req: Request, res: Response): Promise<any> {
+      try {
+        const patientId = req.params.patientid;
+
+        if (!patientId) {
+          return res.status(400).json({ message: 'Patient ID is required' });
+        }
+
+        const carePlans = await this.patientRecordService.getCarePlanByPatientId(patientId);
+
+        if (!carePlans || carePlans.length === 0) {
+          return res.status(404).json({
+            message: `No care plans found for patient ID ${patientId}`,
+          });
+        }
+
+        return res.json(carePlans);
+      } catch (error) {
+        console.error('Error fetching care plans:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+
 
    async getVisitedPatients(req: Request, res: Response): Promise<any> {
     try {
