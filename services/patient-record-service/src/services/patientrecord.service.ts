@@ -17,7 +17,7 @@ import { CareTask } from '../entity/caretask.entity';
 import { publishCarePlanCreated } from '../events/producers/careplanCreated.producer';
 import { CarePlan } from '../entity/careplan.entity';
 import { PatientDoctorRecord } from '../entity/patientvisit.entity';
-import { In } from 'typeorm';
+import { In, Between } from 'typeorm';
 
 
 export interface InsertCarePlanDto {
@@ -153,43 +153,114 @@ class PatientRecordService {
 
 
     async getPatientsForNurse(hospitalId: number): Promise<any[]> {
-  // Step 1: Get all doctors in this hospital from Auth Service
-  const doctorResponse = await axios.get(`http://localhost:3000/api/v1/auth/medvaultpro/doctors/${hospitalId}`);
-  const allDoctors = doctorResponse.data;
-  console.log('All Doctors:', allDoctors);
+      // Step 1: Get all doctors in this hospital from Auth Service
+      const doctorResponse = await axios.get(`http://localhost:3000/api/v1/auth/medvaultpro/doctors/${hospitalId}`);
+      const allDoctors = doctorResponse.data;
+      console.log('All Doctors:', allDoctors);
 
-  if (!allDoctors || !allDoctors.length) return [];
+      if (!allDoctors || !allDoctors.length) return [];
 
-  const doctorIds = allDoctors.map((doc: any) => Number(doc.user.id));
-  console.log('Doctor IDs in Hospital:', doctorIds);
+      const doctorIds = allDoctors.map((doc: any) => Number(doc.user.id));
+      console.log('Doctor IDs in Hospital:', doctorIds);
 
-  // Step 2: Get all patients from Auth Service
-  const patientResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients');
-  const allPatients = patientResponse.data;
-  console.log('All Patients:', allPatients);
+      // Step 2: Get all patients from Auth Service
+      const patientResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients');
+      const allPatients = patientResponse.data;
+      console.log('All Patients:', allPatients);
 
-  if (!allPatients || !allPatients.length) return [];
+      if (!allPatients || !allPatients.length) return [];
 
-  // Step 3: Get patient-doctor visit records for all doctors in this hospital
-  const records = await this.patientDoctorRecordRepository.find({
-    where: { doctorId: In(doctorIds) },
-  });
+      // Step 3: Get patient-doctor visit records for all doctors in this hospital
+      const records = await this.patientDoctorRecordRepository.find({
+        where: { doctorId: In(doctorIds) },
+      });
 
-  console.log('Patient-Doctor Visit Records:', records);
-  if (!records.length) return [];
+      console.log('Patient-Doctor Visit Records:', records);
+      if (!records.length) return [];
 
-  const visitedPatientIds = records.map(r => Number(r.patientId)); // ensure numeric IDs
-  console.log('Visited Patient IDs:', visitedPatientIds);
+      const visitedPatientIds = records.map(r => Number(r.patientId)); // ensure numeric IDs
+      console.log('Visited Patient IDs:', visitedPatientIds);
 
-  // ✅ Step 4: Filter patients who visited these doctors (convert both to same type)
-  const visitedPatients = allPatients.filter((patient: any) =>
-    visitedPatientIds.includes(Number(patient.patientId))
-  );
+      // ✅ Step 4: Filter patients who visited these doctors (convert both to same type)
+      const visitedPatients = allPatients.filter((patient: any) =>
+        visitedPatientIds.includes(Number(patient.patientId))
+      );
 
-  console.log('Visited Patients:', visitedPatients);
+      console.log('Visited Patients:', visitedPatients);
 
-  return visitedPatients;
-}
+      return visitedPatients;
+    }
+
+    async getTodayPrescriptionsForNurse(hospitalId: number): Promise<any[]> {
+      // Step 1️⃣ - Get all doctors in this hospital from Auth Service
+      const doctorResponse = await axios.get(
+        `http://localhost:3000/api/v1/auth/medvaultpro/doctors/${hospitalId}`
+      );
+      const allDoctors = doctorResponse.data;
+      if (!allDoctors || !allDoctors.length) return [];
+
+      const doctorIds = allDoctors.map((doc: any) => Number(doc.user.id));
+      console.log('Doctor IDs in Hospital:', doctorIds);
+
+      // Step 2️⃣ - Get all patients from Auth Service
+      const patientResponse = await axios.get(
+        'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
+      );
+      const allPatients = patientResponse.data;
+      console.log('All Patients:', allPatients);
+
+      if (!allPatients || !allPatients.length) return [];
+
+      // Step 3️⃣ - Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+      // Step 4️⃣ - Get prescriptions for today issued by those doctors
+      const prescriptions = await this.prescriptionRepository.find({
+        where: {
+          doctorUserId: In(doctorIds),
+          createdAt: Between(startOfDay, endOfDay),
+        },
+        relations: ['medications'],
+      });
+
+      if (!prescriptions.length) return [];
+
+      // Step 5️⃣ - Combine doctor + patient info into prescriptions
+      const enrichedPrescriptions = prescriptions.map((prescription) => {
+        const doctorInfo = allDoctors.find(
+          (doc: any) => Number(doc.user.id) === Number(prescription.doctorUserId)
+        );
+
+        const patientInfo = allPatients.find(
+          (p: any) => Number(p.patientId) === Number(prescription.patientId)
+        );
+
+        return {
+          ...prescription,
+          doctor: doctorInfo
+            ? {
+                firstName: doctorInfo.user.firstName,
+                lastName: doctorInfo.user.lastName,
+                specialty: doctorInfo.specialty,
+                hospitalName: doctorInfo.hospital?.hospitalName || 'N/A',
+              }
+            : null,
+          patient: patientInfo
+            ? {
+                firstName: patientInfo.user.firstName,
+                lastName: patientInfo.user.lastName,
+                gender: patientInfo.gender,
+                age: patientInfo.age,
+              }
+            : null,
+        };
+      });
+
+      return enrichedPrescriptions;
+    }
+
 
 
 
