@@ -120,35 +120,48 @@ class PatientRecordService {
         where: { patientId: patientId },
         order: { createdAt: 'DESC' },
         take: 3, // ✅ only the latest 3
+        relations: ['tasks'],
       });
 
       return carePlans;
     }
 
     async getVisitedPatients(doctorUserId: number): Promise<any[]> {
-    // Step 1: Get all patients from Auth Service
-    const authResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'); 
-    const allPatients = authResponse.data;
+  // Step 1: Get all patients from Auth Service
+  const authResponse = await axios.get(
+    'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
+  ); 
+  const allPatients = authResponse.data;
 
-    if (!allPatients || !allPatients.length) return [];
+  if (!allPatients || !allPatients.length) return [];
 
-    // Step 2: Get patient-doctor visit records for this doctor
-    const records = await this.patientDoctorRecordRepository.find({
-      where: { doctorId: doctorUserId },
+  // Step 2: Get patient-doctor visit records for this doctor
+  const records = await this.patientDoctorRecordRepository.find({
+    where: { doctorId: doctorUserId },
+  });
+
+  if (!records.length) return [];
+
+  const visitedPatientIds = records.map((r) => Number(r.patientId));
+
+  // Step 3: Filter only previously visited patients
+  const visitedPatients = allPatients
+    .filter((p: any) => visitedPatientIds.includes(Number(p.patientId)))
+    .map((patient: any) => {
+      // find corresponding visit record(s) for this patient
+      const patientRecords = records.filter(
+        (r) => Number(r.patientId) === Number(patient.patientId)
+      );
+
+      return {
+        ...patient,
+        visitRecords: patientRecords, // include visit record data
+      };
     });
 
-    if (!records.length) return [];
+  return visitedPatients;
+}
 
-    const visitedPatientIds = records.map((r) => r.patientId);
-
-    // Step 3: Filter only previously visited patients
-    const visitedPatients = allPatients.filter((p: any) =>
-     
-      visitedPatientIds.includes(Number(p.patientId))
-    );
-
-    return visitedPatients;
-  }
 
 
 
@@ -190,6 +203,35 @@ class PatientRecordService {
 
       return visitedPatients;
     }
+
+    async getPatientCountForNurse(hospitalId: number): Promise<number> {
+      // Step 1: Get all doctors in this hospital
+      const doctorResponse = await axios.get(`http://localhost:3000/api/v1/auth/medvaultpro/doctors/${hospitalId}`);
+      const allDoctors = doctorResponse.data;
+      if (!allDoctors || !allDoctors.length) return 0;
+
+      const doctorIds = allDoctors.map((doc: any) => Number(doc.user.id));
+
+      // Step 2: Get all patients
+      const patientResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients');
+      const allPatients = patientResponse.data;
+      if (!allPatients || !allPatients.length) return 0;
+
+      // Step 3: Get patient-doctor visit records for these doctors
+      const records = await this.patientDoctorRecordRepository.find({
+        where: { doctorId: In(doctorIds) },
+      });
+      if (!records.length) return 0;
+
+      // Step 4: Count unique patients who visited these doctors
+      const visitedPatientIds = new Set(records.map(r => Number(r.patientId)));
+      const visitedPatients = allPatients.filter((patient: any) =>
+        visitedPatientIds.has(Number(patient.patientId))
+      );
+
+      return visitedPatients.length;
+    }
+
 
     async getTodayPrescriptionsForNurse(hospitalId: number): Promise<any[]> {
       // Step 1️⃣ - Get all doctors in this hospital from Auth Service
@@ -264,12 +306,93 @@ class PatientRecordService {
     }
 
 
+    async getTodayPrescriptionCountForNurse(hospitalId: number): Promise<number> {
+      // Step 1️⃣ - Get all doctors in this hospital from Auth Service
+      const doctorResponse = await axios.get(
+        `http://localhost:3000/api/v1/auth/medvaultpro/doctors/${hospitalId}`
+      );
+      const allDoctors = doctorResponse.data;
+      if (!allDoctors || !allDoctors.length) return 0;
+
+      const doctorIds = allDoctors.map((doc: any) => Number(doc.user.id));
+      console.log('Doctor IDs in Hospital:', doctorIds);
+
+      // Step 2️⃣ - Get all patients from Auth Service
+      const patientResponse = await axios.get(
+        'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
+      );
+      const allPatients = patientResponse.data;
+      console.log('All Patients:', allPatients);
+
+      if (!allPatients || !allPatients.length) return 0;
+
+      // Step 3️⃣ - Get today's date range
+      const today = new Date();
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+      // Step 4️⃣ - Get prescriptions for today issued by those doctors
+      const prescriptions = await this.prescriptionRepository.find({
+        where: {
+          doctorUserId: In(doctorIds),
+          createdAt: Between(startOfDay, endOfDay),
+        },
+      });
+
+      // Step 5️⃣ - Return count
+      const count = prescriptions.length;
+      console.log(`Today's Prescription Count for Hospital ${hospitalId}:`, count);
+      return count;
+    }
+
+    async getEmergencyPatientCountForNurse(hospitalId: number): Promise<number> {
+      // Step 1️⃣ - Get all doctors in this hospital
+      const doctorResponse = await axios.get(
+        `http://localhost:3000/api/v1/auth/medvaultpro/doctors/${hospitalId}`
+      );
+      const allDoctors = doctorResponse.data;
+      if (!allDoctors || !allDoctors.length) return 0;
+
+      const doctorIds = allDoctors.map((doc: any) => Number(doc.user.id));
+      console.log('Doctor IDs in Hospital:', doctorIds);
+
+      // Step 2️⃣ - Get all patients
+      const patientResponse = await axios.get(
+        'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
+      );
+      const allPatients = patientResponse.data;
+      if (!allPatients || !allPatients.length) return 0;
+
+      // Step 3️⃣ - Get patient-doctor visit records for these doctors
+      const records = await this.patientDoctorRecordRepository.find({
+        where: { doctorId: In(doctorIds) },
+      });
+      if (!records || !records.length) return 0;
+
+      const visitedPatientIds = records.map((r) => Number(r.patientId));
+
+      // Step 4️⃣ - Filter emergency patients
+      const emergencyPatients = allPatients.filter(
+        (p: any) =>
+          visitedPatientIds.includes(Number(p.patientId)) &&
+          p.condition?.toLowerCase() === 'emergency'
+      );
+
+      const count = emergencyPatients.length;
+      console.log(`Emergency Patients Count for Hospital ${hospitalId}:`, count);
+
+      return count;
+    }
+
+
+
 
 
     async getSoapBypatientid(patientId: string): Promise<any[]> {
       // 1. Fetch SOAP notes for the patient
       const soapNotes = await this.soapNoteRepository.find({
         where: { patientId },
+        order: { dateTime: 'DESC' },
       });
 
       if (!soapNotes || soapNotes.length === 0) {

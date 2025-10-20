@@ -18,6 +18,9 @@ const patientrecordController = new PatientRecordController();
     patientrecordRouter.get('/patientlist',patientrecordController.getPatientsForNurse.bind(patientrecordController));
     patientrecordRouter.get('/careplans/:patientid',patientrecordController.getCarePlanByPatientId.bind(patientrecordController));
     patientrecordRouter.get('/nurse/prescriptions',patientrecordController.getTodayPrescriptionsForNurse.bind(patientrecordController));
+    patientrecordRouter.get('/nurse/patientcount',patientrecordController.getPatientCountForNurse.bind(patientrecordController));
+    patientrecordRouter.get('/nurse/prescriptioncount',patientrecordController.getTodayPrescriptionCountForNurse.bind(patientrecordController));
+    patientrecordRouter.get('/nurse/emergencypatients',patientrecordController.getEmergencyPatientCountForNurse.bind(patientrecordController));
 
 
 
