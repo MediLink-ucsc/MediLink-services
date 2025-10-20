@@ -120,35 +120,48 @@ class PatientRecordService {
         where: { patientId: patientId },
         order: { createdAt: 'DESC' },
         take: 3, // ✅ only the latest 3
+        relations: ['tasks'],
       });
 
       return carePlans;
     }
 
     async getVisitedPatients(doctorUserId: number): Promise<any[]> {
-    // Step 1: Get all patients from Auth Service
-    const authResponse = await axios.get('http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'); 
-    const allPatients = authResponse.data;
+  // Step 1: Get all patients from Auth Service
+  const authResponse = await axios.get(
+    'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
+  ); 
+  const allPatients = authResponse.data;
 
-    if (!allPatients || !allPatients.length) return [];
+  if (!allPatients || !allPatients.length) return [];
 
-    // Step 2: Get patient-doctor visit records for this doctor
-    const records = await this.patientDoctorRecordRepository.find({
-      where: { doctorId: doctorUserId },
+  // Step 2: Get patient-doctor visit records for this doctor
+  const records = await this.patientDoctorRecordRepository.find({
+    where: { doctorId: doctorUserId },
+  });
+
+  if (!records.length) return [];
+
+  const visitedPatientIds = records.map((r) => Number(r.patientId));
+
+  // Step 3: Filter only previously visited patients
+  const visitedPatients = allPatients
+    .filter((p: any) => visitedPatientIds.includes(Number(p.patientId)))
+    .map((patient: any) => {
+      // find corresponding visit record(s) for this patient
+      const patientRecords = records.filter(
+        (r) => Number(r.patientId) === Number(patient.patientId)
+      );
+
+      return {
+        ...patient,
+        visitRecords: patientRecords, // include visit record data
+      };
     });
 
-    if (!records.length) return [];
+  return visitedPatients;
+}
 
-    const visitedPatientIds = records.map((r) => r.patientId);
-
-    // Step 3: Filter only previously visited patients
-    const visitedPatients = allPatients.filter((p: any) =>
-     
-      visitedPatientIds.includes(Number(p.patientId))
-    );
-
-    return visitedPatients;
-  }
 
 
 
@@ -379,6 +392,7 @@ class PatientRecordService {
       // 1. Fetch SOAP notes for the patient
       const soapNotes = await this.soapNoteRepository.find({
         where: { patientId },
+        order: { dateTime: 'DESC' },
       });
 
       if (!soapNotes || soapNotes.length === 0) {
