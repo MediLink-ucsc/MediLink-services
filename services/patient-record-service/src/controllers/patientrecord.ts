@@ -172,6 +172,36 @@ export class PatientRecordController {
     }
   }
 
+  async getPatientCountForNurse(req: Request, res: Response): Promise<any> {
+  try {
+    // Extract token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'Missing or invalid token' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+    const hospitalId = decoded.hospitalId;
+    if (!hospitalId) {
+      return res.status(403).json({ message: 'Invalid token: hospital ID missing' });
+    }
+
+    // Call service
+    const patientCount = await this.patientRecordService.getPatientCountForNurse(hospitalId);
+
+    return res.json({
+      hospitalId,
+      patientCount,
+    });
+  } catch (error: any) {
+    console.error('Error fetching nurse patient count:', error.message, error.stack);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+
   async getTodayPrescriptionsForNurse(req: Request, res: Response): Promise<any> {
       try {
         // Step 1: Extract token
@@ -204,6 +234,61 @@ export class PatientRecordController {
         return res.status(500).json({ message: 'Internal server error' });
       }
     }
+
+    async getTodayPrescriptionCountForNurse(req: Request, res: Response): Promise<any> {
+      try {
+        // Extract token
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return res.status(401).json({ message: 'Missing or invalid token' });
+        }
+
+        const token = authHeader.split(' ')[1];
+        const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+        const hospitalId = decoded.hospitalId;
+        if (!hospitalId) {
+          return res.status(403).json({ message: 'Invalid token: hospital ID missing' });
+        }
+
+        // Call service
+        const count = await this.patientRecordService.getTodayPrescriptionCountForNurse(hospitalId);
+
+        return res.json({ todayPrescriptionCount: count });
+      } catch (error: any) {
+        console.error('Error fetching today’s prescription count for nurse:', error.message);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    }
+
+  async getEmergencyPatientCountForNurse(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const hospitalId = decoded.hospitalId;
+      if (!hospitalId) {
+        return res.status(403).json({ message: 'Invalid token: hospital ID missing' });
+      }
+
+      // Call service to get emergency patient count
+      const count = await this.patientRecordService.getEmergencyPatientCountForNurse(hospitalId);
+
+      return res.json({ emergencyPatientCount: count });
+    } catch (error: any) {
+      console.error('Error fetching emergency patient count for nurse:', error.message);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+
+
 
 
   async getSoapBypatientid(req: Request, res: Response): Promise<any> {
