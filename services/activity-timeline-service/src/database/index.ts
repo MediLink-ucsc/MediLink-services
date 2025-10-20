@@ -17,18 +17,13 @@ export const connectDatabase = async (): Promise<void> => {
     // Initialize the data source
     await AppDataSource.initialize();
 
-    // Drop and recreate schema to ensure clean state
-    await AppDataSource.query(
-      `DROP SCHEMA IF EXISTS activity_timeline CASCADE`
-    );
-    await AppDataSource.query(`CREATE SCHEMA activity_timeline`);
+    // Ensure schema exists (won't drop if it already exists)
+    await AppDataSource.query(`CREATE SCHEMA IF NOT EXISTS activity_timeline`);
 
-    // Now sync the database schema
+    // Sync the database schema (will update tables without dropping data)
     await AppDataSource.synchronize();
 
-    logger.info(
-      "Connected to PostgreSQL database with fresh activity_timeline schema"
-    );
+    logger.info("Connected to PostgreSQL database (activity_timeline schema)");
   } catch (error) {
     logger.error("Failed to connect to PostgreSQL database:", error);
     throw error;
