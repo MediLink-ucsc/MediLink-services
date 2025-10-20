@@ -8,13 +8,13 @@ import { QuickExam } from './entity/quickexam.entity';
 import { CarePlan } from './entity/careplan.entity';
 import { CareTask } from './entity/caretask.entity';
 import { Metric } from './entity/metric.entity';
-import { PatientDoctorRecord } from './entity/patientvisit.entity'; 
+import { PatientDoctorRecord } from './entity/patientvisit.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
   url: process.env.DATABASE_URL,
   synchronize: true,
-  logging: false,
+  logging: true,
   entities: [
     Prescription,
     Medication,

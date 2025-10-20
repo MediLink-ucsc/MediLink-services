@@ -4,26 +4,32 @@ import { MetricsService } from '../services/metrics.service';
 const metricsService = new MetricsService();
 
 export const createMetric = async (req: Request, res: Response) => {
-  console.log('Received req.body:', req.body);  // <-- Add this line
+  const { userId } = req.params; // get userId from URL
+  const data = req.body;
 
-  if (!req.body) {
-    return res.status(400).json({ message: 'Request body is missing' });
+  if (!userId) {
+    return res.status(400).json({ message: 'userId is required in URL' });
   }
 
-  if (!req.body.date) {
+  if (!data.date) {
     return res.status(400).json({ message: 'Date field is required' });
   }
 
+  if (data.weight === undefined || data.weight === null) {
+    return res.status(400).json({ message: 'Weight field is required' });
+  }
+
   try {
-    const saved = await metricsService.createMetric(req.body);
+    const saved = await metricsService.createMetric({ ...data, userId });
+    console.log('Metric saved successfully:', saved);
     res.status(201).json(saved);
   } catch (err: any) {
     console.error('Error saving metric:', err);
-    res.status(500).json({ message: 'Error saving metric', error: err.message || err });
+    res
+      .status(500)
+      .json({ message: 'Error saving metric', error: err.message || err });
   }
 };
-
-
 
 export const getMetrics = async (_req: Request, res: Response) => {
   try {
