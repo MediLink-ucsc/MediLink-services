@@ -7,6 +7,6 @@ const router = Router();
 router.post('/users/:userId/metrics', createMetric);
 
 
-router.get('/metrics', getMetrics);
+router.get('/users/:userId/metrics', getMetrics);
 
 export default router;
