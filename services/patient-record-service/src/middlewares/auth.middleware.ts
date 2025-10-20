@@ -21,6 +21,9 @@ const publicRoutes = ['/', '/health',
   '/api/v1/patientRecords/nurse/patientcount',
   '/api/v1/patientRecords/nurse/prescriptioncount',
   '/api/v1/patientRecords/nurse/emergencypatients',
+  '/api/v1/patientRecords/doctor/visitedpatientcount',
+  '/api/v1/patientRecords/doctor/prescriptioncount',
+  '/api/v1/patientRecords/doctor/emergencypatientcount'
 ];
 
   function isPublicRoute(path: string): boolean {

@@ -127,40 +127,72 @@ class PatientRecordService {
     }
 
     async getVisitedPatients(doctorUserId: number): Promise<any[]> {
-  // Step 1: Get all patients from Auth Service
-  const authResponse = await axios.get(
-    'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
-  ); 
-  const allPatients = authResponse.data;
+      // Step 1: Get all patients from Auth Service
+      const authResponse = await axios.get(
+        'http://localhost:3000/api/v1/auth/medvaultpro/doctor/patients'
+      ); 
+      const allPatients = authResponse.data;
 
-  if (!allPatients || !allPatients.length) return [];
+      if (!allPatients || !allPatients.length) return [];
 
-  // Step 2: Get patient-doctor visit records for this doctor
-  const records = await this.patientDoctorRecordRepository.find({
-    where: { doctorId: doctorUserId },
-  });
+      // Step 2: Get patient-doctor visit records for this doctor
+      const records = await this.patientDoctorRecordRepository.find({
+        where: { doctorId: doctorUserId },
+      });
 
-  if (!records.length) return [];
+      if (!records.length) return [];
 
-  const visitedPatientIds = records.map((r) => Number(r.patientId));
+      const visitedPatientIds = records.map((r) => Number(r.patientId));
 
-  // Step 3: Filter only previously visited patients
-  const visitedPatients = allPatients
-    .filter((p: any) => visitedPatientIds.includes(Number(p.patientId)))
-    .map((patient: any) => {
-      // find corresponding visit record(s) for this patient
-      const patientRecords = records.filter(
-        (r) => Number(r.patientId) === Number(patient.patientId)
+      // Step 3: Filter only previously visited patients
+      const visitedPatients = allPatients
+        .filter((p: any) => visitedPatientIds.includes(Number(p.patientId)))
+        .map((patient: any) => {
+          // find corresponding visit record(s) for this patient
+          const patientRecords = records.filter(
+            (r) => Number(r.patientId) === Number(patient.patientId)
+          );
+
+          return {
+            ...patient,
+            visitRecords: patientRecords, // include visit record data
+          };
+        });
+
+      return visitedPatients;
+    }
+
+    async getVisitedPatientsCount(doctorUserId: number): Promise<number> {
+      // Step 1: Get visited patients using your existing function
+      const visitedPatients = await this.getVisitedPatients(doctorUserId);
+
+      // Step 2: Return the count
+      return visitedPatients.length;
+    }
+
+    async getVisitedEmergencyPatientsCount(doctorUserId: number): Promise<number> {
+      // Step 1: Get all visited patients
+      const visitedPatients = await this.getVisitedPatients(doctorUserId);
+
+      // Step 2: Filter patients whose condition is 'Serious' (emergency)
+      const emergencyPatients = visitedPatients.filter(
+        (patient) => patient.condition === 'Emergency'
       );
 
-      return {
-        ...patient,
-        visitRecords: patientRecords, // include visit record data
-      };
-    });
+      // Step 3: Return count
+      return emergencyPatients.length;
+    }
 
-  return visitedPatients;
-}
+        // patientRecord.service.ts
+
+    async getPrescriptionCountByDoctor(doctorUserId: number): Promise<number> {
+      const count = await this.prescriptionRepository.count({
+        where: { doctorUserId },
+      });
+      return count;
+    }
+
+
 
 
 

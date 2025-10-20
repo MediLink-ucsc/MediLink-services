@@ -142,6 +142,88 @@ export class PatientRecordController {
     }
   }
 
+  async getVisitedPatientsCount(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const doctorUserId = decoded.userId || decoded.id;
+      if (!doctorUserId) {
+        return res.status(403).json({ message: 'Invalid token: doctor ID missing' });
+      }
+
+      // Call service method to get count
+      const count = await this.patientRecordService.getVisitedPatientsCount(doctorUserId);
+
+      return res.json({ visitedPatientsCount: count });
+    } catch (error: any) {
+      console.error('Error fetching visited patients count:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  // patientRecord.controller.ts
+
+  async getPrescriptionCount(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const doctorUserId = decoded.userId || decoded.id;
+      if (!doctorUserId) {
+        return res.status(403).json({ message: 'Invalid token: doctor ID missing' });
+      }
+
+      // Call service
+      const count = await this.patientRecordService.getPrescriptionCountByDoctor(doctorUserId);
+
+      return res.json({ prescriptionsCount: count });
+    } catch (error: any) {
+      console.error('Error fetching prescription count:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getEmergencyPatientsCount(req: Request, res: Response): Promise<any> {
+    try {
+      // Extract token
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ message: 'Missing or invalid token' });
+      }
+
+      const token = authHeader.split(' ')[1];
+      const decoded: any = jwt.verify(token, process.env.AUTH_JWT_SECRET!);
+
+      const doctorUserId = decoded.userId || decoded.id;
+      if (!doctorUserId) {
+        return res.status(403).json({ message: 'Invalid token: doctor ID missing' });
+      }
+
+      // Call service
+      const count = await this.patientRecordService.getVisitedEmergencyPatientsCount(doctorUserId);
+
+      return res.json({ emergencyPatientsCount: count });
+    } catch (error: any) {
+      console.error('Error fetching emergency patients count:', error.message, error.stack);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+
+
   async getPatientsForNurse(req: Request, res: Response): Promise<any> {
     try {
       // Extract token
