@@ -41,7 +41,7 @@ services:
     restart: unless-stopped
 
   kafka:
-    image: bitnami/kafka:3.9.0
+    image: soldevelo/kafka:3.9.2
     container_name: kafka
     ports:
       - "9094:9094"
@@ -207,7 +207,7 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: bitnami/mongodb:7.0
+    image: soldevelo/mongodb:7.0
     container_name: mongo
     environment:
       MONGODB_ROOT_USER: admin
